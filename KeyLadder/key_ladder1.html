@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!-- Coding By CodingNepal - codingnepalweb.com -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mtk29073</title>
+    <link rel="stylesheet" href="../style.css" />
+    <!-- Fontawesome CDN Link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
+  </head>
+  <body>
+    <nav class="sidebar">
+      <a href="../index.html" class="logo">Coding note</a>
+      <div class="menu-content">
+        <ul class="menu-items">
+          <div class="menu-title"><a href="../index.html">Go back</a></div>
+        </ul>
+      </div>
+    </nav>
+    <nav class="navbar">
+      <i class="fa-solid fa-bars" id="sidebar-close"></i>
+    </nav>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 0px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 10px;
+            width: 80%;
+            max-width: 400px;
+        }
+        button {
+            cursor: pointer;
+        }
+        .result {
+            font-weight: bold;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+    </style>
+        <h1>Key Ladder online calculator</h1><br>
+        <label>SCK（128-bit，32位16進制）:</label>
+        <input type="text" id="SCK" placeholder="77656C636F6D65746F6D797061727479" maxlength="32" value="77656C636F6D65746F6D797061727479"><br>
+        <label>Secret Mask Key（128-bit，32位16進制）:</label>
+        <input type="text" id="SecretMaskKey" placeholder="F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF" maxlength="32" value="F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF"><br>
+        <!---<button onclick="encrypt()">加密</button><br>-->
+    
+        <label>Vender ID（128-bit，32位16進制）:</label>
+        <input type="text" id="Vender_ID" placeholder="00000000000000000000000000002A42" maxlength="32" value="00000000000000000000000000002A42"><br>
+        <label>Module ID（128-bit，32位16進制）:</label>
+        <input type="text" id="Module_ID" placeholder="000000000000000000000000000000A5" maxlength="32" value="000000000000000000000000000000A5"><br>
+        <label>Ek3（128-bit，32位16進制）:</label>
+        <input type="text" id="EK3" placeholder="202122232425262728292A2B2C2D2E2F" maxlength="32" value="202122232425262728292A2B2C2D2E2F"><br>
+        <label>Ek2（128-bit，32位16進制）:</label>
+        <input type="text" id="EK2" placeholder="101112131415161718191A1B1C1D1E1F" maxlength="32" value="101112131415161718191A1B1C1D1E1F"><br>
+        <label>Ek1（128-bit，32位16進制）:</label>
+        <input type="text" id="EK1" placeholder="4DBEA3E862E9990A1C5A7A9F780C9CC0" maxlength="32" value="4DBEA3E862E9990A1C5A7A9F780C9CC0"><br>
+        <button onclick="decrypt()">解密</button><br>
+    
+        <!--- result  -->
+        <div class="result">
+            <!--<p>加密結果: <span id="encryptedText"></span></p>-->
+            <p>SCKv: <span id="SCKv"></span></p>
+            <p>Seedv: <span id="Seedv"></span></p>
+            <p>Modkv: <span id="Modkv"></span></p>
+            <p>K3: <span id="K3"></span></p>
+            <p>K2: <span id="K2"></span></p>
+            <p>K1: <span id="K1"></span></p>
+            <p>CW: <span id="CW"></span></p>
+        </div>
+    
+        <script>
+    
+            function encrypt() {
+                let keyHex = document.getElementById("keyHex").value.trim();
+                let plaintextHex = document.getElementById("plaintextHex").value.trim();
+    
+                if (!isValidHex(keyHex, 32) || !isValidHex(plaintextHex, 32)) {
+                    alert("密鑰和明文必須是 32 位 16 進制字符串（128-bit）");
+                    return;
+                }
+    
+                let key = CryptoJS.enc.Hex.parse(keyHex);
+                let plaintext = CryptoJS.enc.Hex.parse(plaintextHex);
+                let encrypted = CryptoJS.AES.encrypt(plaintext, key, {mode: CryptoJS.mode.ECB,padding: CryptoJS.pad.NoPadding });
+                document.getElementById("encryptedText0").innerText = encrypted.ciphertext.toString().toUpperCase();
+            }
+    
+            function decrypt() {
+                let SCKkeyHex = document.getElementById("SCK").value.trim();
+                let SecretMaskKey = document.getElementById("SecretMaskKey").value.trim();
+                let Vender_ID = document.getElementById("Vender_ID").value.trim();
+                let Module_ID = document.getElementById("Module_ID").value.trim();
+                let Ek3 = document.getElementById("EK3").value.trim();
+                let Ek2 = document.getElementById("EK2").value.trim();
+                let Ek1 = document.getElementById("EK1").value.trim();
+    
+                if (!isValidHex(SCKkeyHex, 32) || !isValidHex(SecretMaskKey, 32) || !isValidHex(Vender_ID, 32)) {
+                    alert("密鑰和密文必須是 32 位 16 進制字符串（128-bit）");
+                    return;
+                }
+                // for SCKv
+                let key0 = CryptoJS.enc.Hex.parse(SCKkeyHex);
+                let ciphertext = CryptoJS.enc.Hex.parse(Vender_ID);
+                let decrypted = CryptoJS.AES.decrypt({ ciphertext: ciphertext }, key0, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+                document.getElementById("SCKv").innerText = decrypted.toString(CryptoJS.enc.Hex).toUpperCase();
+                
+                // for Seedv
+                let key1 = CryptoJS.enc.Hex.parse(SecretMaskKey);
+                let ciphertext1 = CryptoJS.enc.Hex.parse(Vender_ID);
+                let decrypted1 = CryptoJS.AES.decrypt({ ciphertext: ciphertext1 }, key1, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+                document.getElementById("Seedv").innerText = decrypted1.toString(CryptoJS.enc.Hex).toUpperCase();
+    
+                // for Modkv
+                let decrypted2 = CryptoJS.AES.decrypt({ ciphertext: decrypted1 }, decrypted, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+                
+                // 逐位進行 XOR 操作
+                let xorResult = [];
+                let words1 = decrypted1.words;
+                let words2 = decrypted2.words;
+    
+                // 假設兩個解密結果的長度相同
+                for (let i = 0; i < words1.length; i++) {
+                    xorResult.push(words1[i] ^ words2[i]);  // 對應位置的 32 位整數進行 XOR 操作
+                }
+    
+                // 顯示 XOR 結果
+                let xorHex = CryptoJS.enc.Hex.stringify(CryptoJS.lib.WordArray.create(xorResult));
+                console.log(typeof xorHex);
+                document.getElementById("Modkv").innerText = xorHex.toUpperCase();
+                
+                // for K3
+                let ModkvKey = CryptoJS.enc.Hex.parse(xorHex);
+                let ciphertext2 = CryptoJS.enc.Hex.parse(Module_ID);
+                let decrypted3 = CryptoJS.AES.decrypt({ ciphertext: ciphertext2 }, ModkvKey, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+                document.getElementById("K3").innerText = decrypted3.toString(CryptoJS.enc.Hex).toUpperCase();
+    
+                // for K2
+                let ciphertext3 = CryptoJS.enc.Hex.parse(Ek3);
+                let decrypted4 = CryptoJS.AES.decrypt({ ciphertext: ciphertext3 }, decrypted3, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+                document.getElementById("K2").innerText = decrypted4.toString(CryptoJS.enc.Hex).toUpperCase();
+    
+                // for K1
+                let ciphertext4 = CryptoJS.enc.Hex.parse(Ek2);
+                let decrypted5 = CryptoJS.AES.decrypt({ ciphertext: ciphertext4 }, decrypted4, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+                document.getElementById("K1").innerText = decrypted5.toString(CryptoJS.enc.Hex).toUpperCase();
+    
+                // for CW
+                let ciphertext5 = CryptoJS.enc.Hex.parse(Ek1);
+                let decrypted6 = CryptoJS.AES.decrypt({ ciphertext: ciphertext5 }, decrypted5, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding });
+                document.getElementById("CW").innerText = decrypted6.toString(CryptoJS.enc.Hex).toUpperCase();
+    
+    
+    
+    
+    
+                
+            }
+    
+            function isValidHex(str, length) {
+                return /^[0-9A-Fa-f]+$/.test(str) && str.length === length;
+            }
+            // XOR 兩個 32 位 16 進制字串
+            
+        </script>
+        <img src="KeyLadder.jpg" alt="Background Image">
+        <img src="Root Key Derivation.jpg" alt="Background Image">
+        <img src="2BGolden.jpg" alt="Background Image">
+  </body>
+</html>
