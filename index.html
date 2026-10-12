@@ -1,96 +1,1272 @@
-<!DOCTYPE html>
-<!-- Coding By CodingNepal - codingnepalweb.com -->
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sidebar Menu for Admin Dashboard | CodingNepal</title>
-    <link rel="stylesheet" href="style.css" />
-    <!-- Fontawesome CDN Link -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
-  </head>
-  <body>
-    <nav class="sidebar">
-      <a href="#" class="logo">Coding note</a>
-      <div class="menu-content">
-        <ul class="menu-items">
-          <div class="menu-title">Cryptography</div>
-          <li class="item">
-            <div class="submenu-item">
-              <span>AES</span>
-              <i class="fa-solid fa-chevron-right"></i>
-            </div>
-            <ul class="menu-items submenu">
-              <div class="menu-title">
-                <i class="fa-solid fa-chevron-left"></i>
-                AES
-              </div>
-              <li class="item">
-                <a href="#">ECB</a>
-              </li>
-              <li class="item">
-                <a href="#">CBC</a>
-              </li>
-              <li class="item">
-                <a href="#">CTR</a>
-              </li>
-              <li class="item">
-                <a href="#">GCM</a>
-              </li>
-            </ul>
-          </li>
-          <li class="item">
-            <div class="submenu-item">
-              <span>ECDSA</span>
-              <i class="fa-solid fa-chevron-right"></i>
-            </div>
-            <ul class="menu-items submenu">
-              <div class="menu-title">
-                <i class="fa-solid fa-chevron-left"></i>
-                ECDSA
-              </div>
-              <li class="item">
-                <a href="#">ECDSA sign</a>
-              </li>
-              <li class="item">
-                <a href="#">ECDSA verify</a>
-              </li>
-            </ul>
-          </li>
-          <li class="item"></li>
-            <div class="submenu-item">
-              <span>MAC</span>
-              <i class="fa-solid fa-chevron-right"></i>
-            </div>
-            <ul class="menu-items submenu">
-              <div class="menu-title">
-                <i class="fa-solid fa-chevron-left"></i>
-                MAC
-              </div>
-              <li class="item">
-                <a href="#">HMAC</a>
-              </li>
-              <li class="item">
-                <a href="#">GMAC</a>
-              </li>
-            </ul>
-          </li>
-          <li class="item">
-            <a href="#">RSA</a>
-          </li>
-          <li class="item">
-            <a href="KeyLadder/key_ladder1.html">Key ladder</a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-    <nav class="navbar">
-      <i class="fa-solid fa-bars" id="sidebar-close"></i>
-    </nav>
-    <main class="main">
-      <h1>Dashboard Content</h1>
-    </main>
-    <script src="script.js"></script>
-  </body>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Hex 加密測試台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* 版面：頂部標題列 + 演算法分頁；每頁左側輸入、右側輸出，窄螢幕堆疊 */
+:root {
+  --bg: #eef0f3; --panel: #ffffff; --well: #f6f7f9; --line: #d5d9e0;
+  --fg: #161a22; --muted: #5d6573; --accent: #2747c9; --accent-ink: #ffffff;
+  --ok: #17794a; --ok-bg: #e3f4ea; --err: #b4232f; --err-bg: #fbe7e8;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1217; --panel: #171b22; --well: #1d222b; --line: #2d3440;
+  --fg: #e4e8ee; --muted: #9099a8; --accent: #8199ff; --accent-ink: #0f1217;
+  --ok: #5fd39a; --ok-bg: #12301f; --err: #ff8b93; --err-bg: #3a1a1e; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1217; --panel: #171b22; --well: #1d222b; --line: #2d3440;
+  --fg: #e4e8ee; --muted: #9099a8; --accent: #8199ff; --accent-ink: #0f1217;
+  --ok: #5fd39a; --ok-bg: #12301f; --err: #ff8b93; --err-bg: #3a1a1e; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 14px; }
+h1 { font-family: var(--mono); font-weight: 600; font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+h1 b { color: var(--accent); font-weight: 600; }
+header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+nav { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 18px; scrollbar-width: thin; }
+nav button { font: 500 0.92rem var(--sans); background: none; border: 0; color: var(--muted); padding: 8px 12px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+nav button:hover { color: var(--fg); }
+nav button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+section.panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 820px) { section.panel { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h2 { font: 600 0.78rem var(--sans); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0; }
+.card h2 span { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.row > .f { flex: 1 1 140px; }
+.f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.f label { display: block; font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+.f label > span:last-child { float: right; margin-left: 8px; }
+#aesIvLabel, #aesTagLabel, #aesInLabel { float: none !important; margin-left: 0 !important; }
+[hidden] { display: none !important; }
+.f label .len { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 400; }
+textarea, input, select { font: 0.88rem var(--mono); color: var(--fg); background: var(--well); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; width: 100%; min-width: 0; }
+select, input[type="number"] { font-family: var(--sans); }
+textarea { resize: vertical; word-break: break-all; line-height: 1.45; min-height: 2.6em; overflow-y: hidden; }
+textarea[readonly] { background: transparent; border-style: dashed; }
+textarea:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button.b { font: 500 0.88rem var(--sans); border-radius: 6px; padding: 7px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+button.b:hover { border-color: var(--accent); }
+button.b.pri { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.b.pri:hover { filter: brightness(1.08); }
+button.b.ghost { border-style: dashed; color: var(--muted); }
+button.cp { font: 0.75rem var(--sans); background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; }
+.st { margin: 0; font-size: 0.86rem; padding: 7px 10px; border-radius: 6px; background: var(--well); color: var(--muted); }
+.st.ok { background: var(--ok-bg); color: var(--ok); }
+.st.err { background: var(--err-bg); color: var(--err); }
+.note { margin: 0; color: var(--muted); font-size: 0.8rem; }
+.note code, .st code { font-family: var(--mono); }
+table.hashes { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+table.hashes td { border-top: 1px solid var(--line); padding: 6px 4px; vertical-align: top; }
+table.hashes td:first-child { white-space: nowrap; color: var(--muted); font-weight: 500; width: 1%; padding-right: 12px; }
+table.hashes td:last-child { font-family: var(--mono); word-break: break-all; }
+.span2 { grid-column: 1 / -1; }
+.klimgs { display: grid; gap: 14px; }
+.klimgs img { width: 100%; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.drop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 26px 16px; border: 2px dashed var(--line); border-radius: 8px; background: var(--well); color: var(--muted); cursor: pointer; }
+.drop strong { color: var(--accent); font-weight: 600; }
+.drop:hover, .drop.over { border-color: var(--accent); }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.drop #upLimit { font-size: 0.8rem; }
+table.uplist td:first-child { white-space: normal; width: auto; color: var(--fg); word-break: break-all; }
+table.uplist td.s { white-space: nowrap; font-family: var(--sans); width: 1%; }
+table.uplist td.s.ok { color: var(--ok); } table.uplist td.s.err { color: var(--err); }
+table.uplist small { color: var(--muted); font-family: var(--mono); }
+hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+<header>
+  <h1><b>0x</b> 加密測試台</h1>
+  <p>所有輸入與輸出皆為 16 進位（可含空白、冒號、0x 前綴）。運算全部在瀏覽器本機完成。</p>
+</header>
+
+<nav role="tablist" id="tabs">
+  <button role="tab" data-tab="aes" aria-selected="true">AES</button>
+  <button role="tab" data-tab="rsa">RSA</button>
+  <button role="tab" data-tab="ecc">ECC / ECDH</button>
+  <button role="tab" data-tab="ecdsa">ECDSA</button>
+  <button role="tab" data-tab="hash">SHA / Hash</button>
+  <button role="tab" data-tab="hmac">HMAC</button>
+  <button role="tab" data-tab="kl">Key Ladder</button>
+  <button role="tab" data-tab="tools">轉換工具</button>
+  <button role="tab" data-tab="up">上傳檔案</button>
+</nav>
+
+<!-- ============ AES ============ -->
+<section class="panel" id="p-aes">
+  <div class="card">
+    <h2>參數</h2>
+    <div class="row">
+      <div class="f"><label for="aesMode">模式</label>
+        <select id="aesMode"><option>ECB</option><option>CBC</option><option>CTR</option><option>GCM</option><option>CMAC</option></select></div>
+      <div class="f" id="aesPadBox"><label for="aesPad">填充</label>
+        <select id="aesPad"><option value="none">None（需 16 倍數）</option><option value="pkcs7">PKCS#7</option><option value="zero">Zero（解密不移除）</option></select></div>
+      <div class="f" id="aesTagLenBox"><label for="aesTagLen" id="aesTagLenLabel">Tag 長度（bytes）</label>
+        <input id="aesTagLen" type="number" min="1" max="16" value="16"></div>
+    </div>
+    <div class="f"><label for="aesKey">Key <span>128 / 192 / 256 bit</span><span class="len"></span></label><textarea id="aesKey" class="hx" rows="2"></textarea></div>
+    <div class="f" id="aesIvBox"><label for="aesIv"><span id="aesIvLabel">IV</span><span class="len"></span></label><textarea id="aesIv" class="hx" rows="1"></textarea></div>
+    <div class="f" id="aesAadBox"><label for="aesAad">AAD（附加驗證資料，可空白）<span class="len"></span></label><textarea id="aesAad" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="aesIn"><span id="aesInLabel">輸入（明文 / 密文）</span><span class="len"></span></label><textarea id="aesIn" class="hx" rows="4"></textarea></div>
+    <div class="btns">
+      <button class="b pri" id="aesEnc">加密</button>
+      <button class="b pri" id="aesDec">解密</button>
+      <button class="b" id="aesRand">隨機 Key / IV</button>
+      <button class="b ghost" id="aesSample">載入 NIST 範例</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>結果</h2>
+    <div class="f"><label for="aesOut">輸出 <span><span class="len"></span> <button class="cp" data-copy="aesOut">複製</button></span></label><textarea id="aesOut" class="hx" rows="5" readonly></textarea></div>
+    <div id="aesCmacBox" class="f" style="gap:10px">
+      <div class="f"><label for="aesCmacL">L = AES(K, 0¹²⁸) <span><span class="len"></span> <button class="cp" data-copy="aesCmacL">複製</button></span></label><textarea id="aesCmacL" class="hx" rows="1" readonly></textarea></div>
+      <div class="f"><label for="aesCmacK1">K1 = L ≪ 1（若 L 最高位為 1 則再 ⊕ 87） <span><span class="len"></span> <button class="cp" data-copy="aesCmacK1">複製</button></span></label><textarea id="aesCmacK1" class="hx" rows="1" readonly></textarea></div>
+      <div class="f"><label for="aesCmacK2">K2 = K1 ≪ 1（若 K1 最高位為 1 則再 ⊕ 87） <span><span class="len"></span> <button class="cp" data-copy="aesCmacK2">複製</button></span></label><textarea id="aesCmacK2" class="hx" rows="1" readonly></textarea></div>
+      <p class="note" id="aesCmacUse"></p>
+    </div>
+    <div class="f" id="aesTagBox"><label for="aesTag"><span id="aesTagLabel">Tag（加密時輸出 / 解密時輸入）</span><span class="len"></span></label><textarea id="aesTag" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="aesExp">預期輸出（選填，用來比對）<span class="len"></span></label><textarea id="aesExp" class="hx" rows="2"></textarea></div>
+    <p class="st" id="aesSt">就緒</p>
+    <p class="note" id="aesNote"></p>
+  </div>
+</section>
+
+<!-- ============ RSA ============ -->
+<section class="panel" id="p-rsa" hidden>
+  <div class="card span2">
+    <h2>金鑰 <span>（私鑰只需 n、e、d，其餘會自動推算）</span></h2>
+    <div class="row">
+      <div class="f"><label for="rsaBits">金鑰長度</label>
+        <select id="rsaBits"><option>1024</option><option selected>2048</option><option>3072</option><option>4096</option></select></div>
+      <div class="f" style="justify-content:flex-end"><button class="b" id="rsaGen">產生新金鑰</button></div>
+    </div>
+    <div class="f"><label for="rsa_n">n（模數）<span class="len"></span></label><textarea id="rsa_n" class="hx" rows="4"></textarea></div>
+    <div class="f"><label for="rsa_e">e（公開指數）<span class="len"></span></label><textarea id="rsa_e" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="rsa_d">d（私密指數）<span class="len"></span></label><textarea id="rsa_d" class="hx" rows="4"></textarea></div>
+    <div class="row">
+      <div class="f"><label for="rsa_p">p <span class="len"></span></label><textarea id="rsa_p" class="hx" rows="2"></textarea></div>
+      <div class="f"><label for="rsa_q">q <span class="len"></span></label><textarea id="rsa_q" class="hx" rows="2"></textarea></div>
+    </div>
+    <div class="row">
+      <div class="f"><label for="rsa_dp">dp <span class="len"></span></label><textarea id="rsa_dp" class="hx" rows="2"></textarea></div>
+      <div class="f"><label for="rsa_dq">dq <span class="len"></span></label><textarea id="rsa_dq" class="hx" rows="2"></textarea></div>
+      <div class="f"><label for="rsa_qi">qi <span class="len"></span></label><textarea id="rsa_qi" class="hx" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>加密 / 解密</h2>
+    <div class="row">
+      <div class="f"><label for="rsaEncScheme">方案</label>
+        <select id="rsaEncScheme"><option value="oaep">RSAES-OAEP</option><option value="pkcs1">RSAES-PKCS1-v1_5</option><option value="raw">Raw（教科書 m^e mod n）</option></select></div>
+      <div class="f"><label for="rsaHash">雜湊（OAEP / 簽章）</label>
+        <select id="rsaHash"><option>SHA-1</option><option selected>SHA-256</option><option>SHA-384</option><option>SHA-512</option></select></div>
+    </div>
+    <div class="f" id="rsaLabelBox"><label for="rsaLabel">OAEP Label（可空白）<span class="len"></span></label><textarea id="rsaLabel" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="rsaIn">輸入（明文 / 密文）<span class="len"></span></label><textarea id="rsaIn" class="hx" rows="3"></textarea></div>
+    <div class="btns"><button class="b pri" id="rsaEnc">公鑰加密</button><button class="b pri" id="rsaDec">私鑰解密</button></div>
+    <div class="f"><label for="rsaOut">輸出 <span><span class="len"></span> <button class="cp" data-copy="rsaOut">複製</button></span></label><textarea id="rsaOut" class="hx" rows="4" readonly></textarea></div>
+    <p class="st" id="rsaSt">就緒</p>
+  </div>
+  <div class="card">
+    <h2>簽章 / 驗證</h2>
+    <div class="row">
+      <div class="f"><label for="rsaSigScheme">方案</label>
+        <select id="rsaSigScheme"><option value="pkcs1">RSASSA-PKCS1-v1_5</option><option value="pss">RSASSA-PSS</option></select></div>
+      <div class="f" id="rsaSaltBox"><label for="rsaSalt">PSS Salt 長度（bytes）</label><input id="rsaSalt" type="number" min="0" placeholder="預設 = 雜湊長度"></div>
+    </div>
+    <div class="f"><label for="rsaMsg">訊息 <span class="len"></span></label><textarea id="rsaMsg" class="hx" rows="2"></textarea></div>
+    <div class="btns"><button class="b pri" id="rsaSign">私鑰簽章</button><button class="b pri" id="rsaVerify">公鑰驗證</button></div>
+    <div class="f"><label for="rsaSig">簽章（簽章時輸出 / 驗證時輸入）<span><span class="len"></span> <button class="cp" data-copy="rsaSig">複製</button></span></label><textarea id="rsaSig" class="hx" rows="4"></textarea></div>
+    <p class="st" id="rsaSigSt">就緒</p>
+  </div>
+</section>
+
+<!-- ============ ECC / ECDH ============ -->
+<section class="panel" id="p-ecc" hidden>
+  <div class="card">
+    <h2>甲方金鑰</h2>
+    <div class="row">
+      <div class="f"><label for="eccCurve">曲線</label>
+        <select id="eccCurve"><option>P-256</option><option>P-384</option><option>P-521</option><option>secp256k1</option></select></div>
+      <div class="f" style="justify-content:flex-end"><button class="b" id="eccGenA">產生甲方金鑰</button></div>
+    </div>
+    <div class="f"><label for="eccDA">私鑰 d<sub>A</sub> <span class="len"></span></label><textarea id="eccDA" class="hx" rows="2"></textarea></div>
+    <div class="f"><label for="eccQA">公鑰 Q<sub>A</sub>（04||X||Y，或壓縮 02/03||X）<span class="len"></span></label><textarea id="eccQA" class="hx" rows="3"></textarea></div>
+    <div class="btns"><button class="b" id="eccPubA">由 d<sub>A</sub> 計算 Q<sub>A</sub></button></div>
+    <hr class="sep">
+    <h2>乙方金鑰</h2>
+    <div class="btns"><button class="b" id="eccGenB">產生乙方金鑰</button></div>
+    <div class="f"><label for="eccDB">私鑰 d<sub>B</sub>（可空白）<span class="len"></span></label><textarea id="eccDB" class="hx" rows="2"></textarea></div>
+    <div class="f"><label for="eccQB">公鑰 Q<sub>B</sub> <span class="len"></span></label><textarea id="eccQB" class="hx" rows="3"></textarea></div>
+    <div class="btns"><button class="b" id="eccPubB">由 d<sub>B</sub> 計算 Q<sub>B</sub></button></div>
+  </div>
+  <div class="card">
+    <h2>ECDH 共享密鑰 <span>（輸出為共享點的 X 座標）</span></h2>
+    <div class="btns"><button class="b pri" id="eccDh">計算共享密鑰</button></div>
+    <div class="f"><label for="eccSA">d<sub>A</sub> · Q<sub>B</sub> <span><span class="len"></span> <button class="cp" data-copy="eccSA">複製</button></span></label><textarea id="eccSA" class="hx" rows="2" readonly></textarea></div>
+    <div class="f"><label for="eccSB">d<sub>B</sub> · Q<sub>A</sub> <span><span class="len"></span> <button class="cp" data-copy="eccSB">複製</button></span></label><textarea id="eccSB" class="hx" rows="2" readonly></textarea></div>
+    <p class="st" id="eccSt">就緒</p>
+    <hr class="sep">
+    <h2>公鑰格式</h2>
+    <div class="f"><label for="eccQAc">Q<sub>A</sub> 壓縮格式 <span><span class="len"></span> <button class="cp" data-copy="eccQAc">複製</button></span></label><textarea id="eccQAc" class="hx" rows="2" readonly></textarea></div>
+    <div class="row">
+      <div class="f"><label for="eccQAx">Q<sub>A</sub>.X <span class="len"></span></label><textarea id="eccQAx" class="hx" rows="2" readonly></textarea></div>
+      <div class="f"><label for="eccQAy">Q<sub>A</sub>.Y <span class="len"></span></label><textarea id="eccQAy" class="hx" rows="2" readonly></textarea></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ECDSA ============ -->
+<section class="panel" id="p-ecdsa" hidden>
+  <div class="card">
+    <h2>金鑰與訊息</h2>
+    <div class="row">
+      <div class="f"><label for="dsaCurve">曲線</label>
+        <select id="dsaCurve"><option>P-256</option><option>P-384</option><option>P-521</option><option>secp256k1</option></select></div>
+      <div class="f"><label for="dsaHash">雜湊</label>
+        <select id="dsaHash"><option>SHA-1</option><option selected>SHA-256</option><option>SHA-384</option><option>SHA-512</option><option>SHA3-256</option><option>SHA3-512</option><option value="none">不雜湊（輸入即為雜湊值）</option></select></div>
+    </div>
+    <div class="btns"><button class="b" id="dsaGen">產生金鑰</button><button class="b" id="dsaPub">由 d 計算公鑰</button></div>
+    <div class="f"><label for="dsaD">私鑰 d <span class="len"></span></label><textarea id="dsaD" class="hx" rows="2"></textarea></div>
+    <div class="f"><label for="dsaQ">公鑰 Q（04||X||Y，或壓縮）<span class="len"></span></label><textarea id="dsaQ" class="hx" rows="3"></textarea></div>
+    <div class="f"><label for="dsaMsg">訊息 <span class="len"></span></label><textarea id="dsaMsg" class="hx" rows="3"></textarea></div>
+    <div class="f"><label for="dsaK">隨機數 k（選填，留空則隨機產生）<span class="len"></span></label><textarea id="dsaK" class="hx" rows="2"></textarea></div>
+    <div class="btns"><button class="b pri" id="dsaSign">簽章</button><button class="b pri" id="dsaVerify">驗證</button></div>
+  </div>
+  <div class="card">
+    <h2>簽章</h2>
+    <div class="f"><label for="dsaH">訊息雜湊值 <span class="len"></span></label><textarea id="dsaH" class="hx" rows="2" readonly></textarea></div>
+    <div class="row">
+      <div class="f"><label for="dsaR">r <span class="len"></span></label><textarea id="dsaR" class="hx" rows="2" readonly></textarea></div>
+      <div class="f"><label for="dsaS">s <span class="len"></span></label><textarea id="dsaS" class="hx" rows="2" readonly></textarea></div>
+    </div>
+    <div class="f"><label for="dsaSig">簽章 r||s（驗證時輸入，也接受 DER）<span><span class="len"></span> <button class="cp" data-copy="dsaSig">複製</button></span></label><textarea id="dsaSig" class="hx" rows="3"></textarea></div>
+    <div class="f"><label for="dsaDer">DER 編碼 <span><span class="len"></span> <button class="cp" data-copy="dsaDer">複製</button></span></label><textarea id="dsaDer" class="hx" rows="3" readonly></textarea></div>
+    <p class="st" id="dsaSt">就緒</p>
+  </div>
+</section>
+
+<!-- ============ HASH ============ -->
+<section class="panel" id="p-hash" hidden>
+  <div class="card">
+    <h2>輸入</h2>
+    <div class="f"><label for="hashAlg">演算法</label>
+      <select id="hashAlg"></select></div>
+    <div class="f"><label for="hashIn">資料 <span class="len"></span></label><textarea id="hashIn" class="hx" rows="5"></textarea></div>
+    <div class="btns"><button class="b pri" id="hashRun">計算</button><button class="b" id="hashAll">全部演算法</button><button class="b ghost" id="hashSample">範例 "abc"</button></div>
+    <div class="f"><label for="hashExp">預期輸出（選填）<span class="len"></span></label><textarea id="hashExp" class="hx" rows="2"></textarea></div>
+  </div>
+  <div class="card">
+    <h2>結果</h2>
+    <div class="f"><label for="hashOut">摘要 <span><span class="len"></span> <button class="cp" data-copy="hashOut">複製</button></span></label><textarea id="hashOut" class="hx" rows="3" readonly></textarea></div>
+    <p class="st" id="hashSt">就緒</p>
+    <div style="overflow-x:auto"><table class="hashes" id="hashTable"></table></div>
+  </div>
+</section>
+
+<!-- ============ HMAC ============ -->
+<section class="panel" id="p-hmac" hidden>
+  <div class="card">
+    <h2>輸入</h2>
+    <div class="f"><label for="hmacAlg">雜湊</label><select id="hmacAlg"></select></div>
+    <div class="f"><label for="hmacKey">Key <span class="len"></span></label><textarea id="hmacKey" class="hx" rows="2"></textarea></div>
+    <div class="f"><label for="hmacIn">資料 <span class="len"></span></label><textarea id="hmacIn" class="hx" rows="4"></textarea></div>
+    <div class="btns"><button class="b pri" id="hmacRun">計算 HMAC</button><button class="b" id="hmacRand">隨機 Key</button><button class="b ghost" id="hmacSample">RFC 4231 範例</button></div>
+    <div class="f"><label for="hmacExp">預期輸出（選填）<span class="len"></span></label><textarea id="hmacExp" class="hx" rows="2"></textarea></div>
+  </div>
+  <div class="card">
+    <h2>結果</h2>
+    <div class="f"><label for="hmacOut">MAC <span><span class="len"></span> <button class="cp" data-copy="hmacOut">複製</button></span></label><textarea id="hmacOut" class="hx" rows="3" readonly></textarea></div>
+    <p class="st" id="hmacSt">就緒</p>
+  </div>
+</section>
+
+<!-- ============ KEY LADDER ============ -->
+<section class="panel" id="p-kl" hidden>
+  <div class="card">
+    <h2>輸入 <span>（皆為 128-bit，AES-128-ECB）</span></h2>
+    <div class="f"><label for="klSck">SCK <span class="len"></span></label><textarea id="klSck" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="klSmk">Secret Mask Key <span class="len"></span></label><textarea id="klSmk" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="klVendor">Vendor ID <span class="len"></span></label><textarea id="klVendor" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="klModule">Module ID <span class="len"></span></label><textarea id="klModule" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="klEk3">Ek3（規格書稱 EK2）<span class="len"></span></label><textarea id="klEk3" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="klEk2">Ek2（規格書稱 EK1）<span class="len"></span></label><textarea id="klEk2" class="hx" rows="1"></textarea></div>
+    <div class="f"><label for="klEk1">Ek1（規格書稱 ECW）<span class="len"></span></label><textarea id="klEk1" class="hx" rows="1"></textarea></div>
+    <div class="btns"><button class="b pri" id="klRun">計算</button><button class="b ghost" id="klSample">載入預設值</button></div>
+    <div class="f"><label for="klExp">預期 CW（選填，用來比對）<span class="len"></span></label><textarea id="klExp" class="hx" rows="1"></textarea></div>
+  </div>
+  <div class="card">
+    <h2>結果 <span>（D(k, c) = AES-128-ECB 以 k 解密 c）</span></h2>
+    <div class="f"><label for="klSCKv">SCKv = D(SCK, Vendor ID) <span><span class="len"></span> <button class="cp" data-copy="klSCKv">複製</button></span></label><textarea id="klSCKv" class="hx" rows="1" readonly></textarea></div>
+    <div class="f"><label for="klSeedv">Seedv = D(Secret Mask Key, Vendor ID) <span><span class="len"></span> <button class="cp" data-copy="klSeedv">複製</button></span></label><textarea id="klSeedv" class="hx" rows="1" readonly></textarea></div>
+    <div class="f"><label for="klModkv">Modkv = D(SCKv, Seedv) ⊕ Seedv <span><span class="len"></span> <button class="cp" data-copy="klModkv">複製</button></span></label><textarea id="klModkv" class="hx" rows="1" readonly></textarea></div>
+    <div class="f"><label for="klK3">K3 = D(Modkv, Module ID) <span><span class="len"></span> <button class="cp" data-copy="klK3">複製</button></span></label><textarea id="klK3" class="hx" rows="1" readonly></textarea></div>
+    <div class="f"><label for="klK2">K2 = D(K3, Ek3) <span><span class="len"></span> <button class="cp" data-copy="klK2">複製</button></span></label><textarea id="klK2" class="hx" rows="1" readonly></textarea></div>
+    <div class="f"><label for="klK1">K1 = D(K2, Ek2) <span><span class="len"></span> <button class="cp" data-copy="klK1">複製</button></span></label><textarea id="klK1" class="hx" rows="1" readonly></textarea></div>
+    <div class="f"><label for="klCW">CW = D(K1, Ek1) <span><span class="len"></span> <button class="cp" data-copy="klCW">複製</button></span></label><textarea id="klCW" class="hx" rows="1" readonly></textarea></div>
+    <p class="st" id="klSt">就緒</p>
+  </div>
+  <div class="card span2">
+    <h2>參考圖 <span>（圖檔位於 KeyLadder/ 資料夾）</span></h2>
+    <div class="klimgs">
+      <img src="KeyLadder/KeyLadder.jpg" alt="Key Ladder 架構圖" loading="lazy">
+      <img src="KeyLadder/Root Key Derivation.jpg" alt="Root Key Derivation 流程圖" loading="lazy">
+      <img src="KeyLadder/2BGolden.jpg" alt="2B Golden 參考資料" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<!-- ============ TOOLS ============ -->
+<section class="panel" id="p-tools" hidden>
+  <div class="card">
+    <h2>文字 ⇄ Hex（UTF-8）</h2>
+    <div class="f"><label for="tText">文字</label><textarea id="tText" rows="3">Hello, 世界</textarea></div>
+    <div class="btns"><button class="b" id="tT2H">文字 → Hex</button><button class="b" id="tH2T">Hex → 文字</button></div>
+    <div class="f"><label for="tHex">Hex <span><span class="len"></span> <button class="cp" data-copy="tHex">複製</button></span></label><textarea id="tHex" class="hx" rows="3"></textarea></div>
+    <hr class="sep">
+    <h2>Base64 ⇄ Hex</h2>
+    <div class="f"><label for="tB64">Base64</label><textarea id="tB64" rows="2"></textarea></div>
+    <div class="btns"><button class="b" id="tB2H">Base64 → Hex</button><button class="b" id="tH2B">Hex → Base64</button></div>
+    <p class="st" id="tSt">就緒</p>
+  </div>
+  <div class="card">
+    <h2>隨機位元組</h2>
+    <div class="row">
+      <div class="f"><label for="tRandN">長度（bytes）</label><input id="tRandN" type="number" min="1" max="4096" value="16"></div>
+      <div class="f" style="justify-content:flex-end"><button class="b" id="tRand">產生</button></div>
+    </div>
+    <div class="f"><label for="tRandOut">結果 <span><span class="len"></span> <button class="cp" data-copy="tRandOut">複製</button></span></label><textarea id="tRandOut" class="hx" rows="2" readonly></textarea></div>
+    <hr class="sep">
+    <h2>XOR</h2>
+    <div class="f"><label for="tXa">A <span class="len"></span></label><textarea id="tXa" class="hx" rows="2">00112233445566778899aabbccddeeff</textarea></div>
+    <div class="f"><label for="tXb">B <span class="len"></span></label><textarea id="tXb" class="hx" rows="2">ffffffffffffffffffffffffffffffff</textarea></div>
+    <div class="btns"><button class="b" id="tXor">A ⊕ B</button></div>
+    <div class="f"><label for="tXo">結果（長度取較短者）<span><span class="len"></span> <button class="cp" data-copy="tXo">複製</button></span></label><textarea id="tXo" class="hx" rows="2" readonly></textarea></div>
+  </div>
+</section>
+
+<!-- ============ UPLOAD ============ -->
+<section class="panel" id="p-up" hidden>
+  <div class="card">
+    <h2>上傳檔案給站長</h2>
+    <p class="note" id="upIntro"></p>
+    <label class="drop" id="upDrop" for="upFile">
+      <input type="file" id="upFile" multiple>
+      <span class="t"><strong>點這裡選擇檔案</strong>，或把檔案拖曳進來</span>
+      <span id="upLimit"></span>
+    </label>
+    <div class="f"><label for="upName">你的名字或聯絡方式（選填）</label><input id="upName" type="text" maxlength="100" autocomplete="name"></div>
+    <div class="f"><label for="upNote">說明（選填）</label><textarea id="upNote" rows="2" maxlength="400"></textarea></div>
+    <div class="f" id="upCodeBox" hidden><label for="upCode">上傳密碼</label><input id="upCode" type="password" autocomplete="off"></div>
+    <div class="btns"><button class="b pri" id="upGo">上傳</button><button class="b" id="upClear">清除清單</button></div>
+    <p class="st" id="upSt">尚未選擇檔案</p>
+  </div>
+  <div class="card">
+    <h2>檔案清單 <span>（SHA-256 在你的電腦上計算，伺服器收到後會再核對一次）</span></h2>
+    <div style="overflow-x:auto"><table class="hashes uplist" id="upList"></table></div>
+    <p class="note" id="upEmpty">選擇的檔案會列在這裡。</p>
+  </div>
+</section>
+</div>
+
+<script src="config.js"></script>
+<script>
+// ===== 基礎工具 =====
+const subtle = globalThis.crypto.subtle;
+function cleanHex(s) { return String(s || '').replace(/0x/gi, '').replace(/[\s:,_\-]/g, ''); }
+function hex2buf(s, name = '輸入') {
+  s = cleanHex(s);
+  if (!/^[0-9a-fA-F]*$/.test(s)) throw new Error(`${name}：含有非 16 進位字元`);
+  if (s.length % 2) throw new Error(`${name}：hex 長度必須為偶數（目前 ${s.length} 個字元）`);
+  const u = new Uint8Array(s.length / 2);
+  for (let i = 0; i < u.length; i++) u[i] = parseInt(s.substr(i * 2, 2), 16);
+  return u;
+}
+function buf2hex(b) { return Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, '0')).join(''); }
+function concat(...arr) { const n = arr.reduce((a, b) => a + b.length, 0); const o = new Uint8Array(n); let p = 0; for (const a of arr) { o.set(a, p); p += a.length; } return o; }
+function xorBytes(a, b) { const o = new Uint8Array(Math.min(a.length, b.length)); for (let i = 0; i < o.length; i++) o[i] = a[i] ^ b[i]; return o; }
+function bytesEq(a, b) { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a[i] ^ b[i]; return d === 0; }
+function randBytes(n) { const u = new Uint8Array(n); globalThis.crypto.getRandomValues(u); return u; }
+function b64u2buf(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+function buf2b64u(u) { let s = ''; for (const c of u) s += String.fromCharCode(c); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+
+// BigInt
+const b2n = u => u.length ? BigInt('0x' + buf2hex(u)) : 0n;
+function n2b(n, len) {
+  let h = n.toString(16);
+  if (len === undefined) { if (h.length % 2) h = '0' + h; }
+  else { if (h.length > len * 2) throw new Error('數值超出指定長度'); h = h.padStart(len * 2, '0'); }
+  return hex2buf(h);
+}
+const mod = (a, m) => { const r = a % m; return r < 0n ? r + m : r; };
+function modpow(b, e, m) { let r = 1n; b = mod(b, m); while (e > 0n) { if (e & 1n) r = r * b % m; b = b * b % m; e >>= 1n; } return r; }
+function egcd(a, b) { let x0 = 1n, x1 = 0n; while (b) { const q = a / b; [a, b] = [b, a - q * b]; [x0, x1] = [x1, x0 - q * x1]; } return [a, x0]; }
+function modinv(a, m) { const [g, x] = egcd(mod(a, m), m); if (g !== 1n) throw new Error('無模反元素'); return mod(x, m); }
+function gcd(a, b) { while (b) [a, b] = [b, a % b]; return a; }
+const bitlen = n => n === 0n ? 0 : n.toString(2).length;
+
+// ===== AES（純 JS，支援 128/192/256） =====
+const SBOX = new Uint8Array(256), INV_SBOX = new Uint8Array(256);
+(() => {
+  const rotl8 = (x, s) => ((x << s) | (x >> (8 - s))) & 0xff;
+  let p = 1, q = 1;
+  do {
+    p = (p ^ ((p << 1) & 0xff) ^ (p & 0x80 ? 0x1b : 0)) & 0xff;
+    q ^= q << 1; q ^= q << 2; q ^= q << 4; q &= 0xff; if (q & 0x80) q ^= 0x09;
+    SBOX[p] = (q ^ rotl8(q, 1) ^ rotl8(q, 2) ^ rotl8(q, 3) ^ rotl8(q, 4) ^ 0x63) & 0xff;
+  } while (p !== 1);
+  SBOX[0] = 0x63;
+  for (let i = 0; i < 256; i++) INV_SBOX[SBOX[i]] = i;
+})();
+const xtime = a => ((a << 1) ^ (a & 0x80 ? 0x1b : 0)) & 0xff;
+function gmul8(a, b) { let p = 0; while (b) { if (b & 1) p ^= a; a = xtime(a); b >>= 1; } return p; }
+
+function aesExpand(key) {
+  if (![16, 24, 32].includes(key.length)) throw new Error(`Key 長度須為 16 / 24 / 32 bytes（AES-128/192/256），目前為 ${key.length} bytes`);
+  const Nk = key.length / 4, Nr = Nk + 6, W = [];
+  for (let i = 0; i < Nk; i++) W.push(Array.from(key.slice(4 * i, 4 * i + 4)));
+  let rcon = 1;
+  for (let i = Nk; i < 4 * (Nr + 1); i++) {
+    let t = W[i - 1].slice();
+    if (i % Nk === 0) { t = [SBOX[t[1]] ^ rcon, SBOX[t[2]], SBOX[t[3]], SBOX[t[0]]]; rcon = xtime(rcon); }
+    else if (Nk > 6 && i % Nk === 4) t = t.map(b => SBOX[b]);
+    W.push(W[i - Nk].map((b, j) => b ^ t[j]));
+  }
+  const rk = [];
+  for (let r = 0; r <= Nr; r++) rk.push(W.slice(4 * r, 4 * r + 4).flat());
+  return { rk, Nr };
+}
+function aesEncBlock(ks, inp) {
+  const { rk, Nr } = ks;
+  let s = Array.from(inp, (b, i) => b ^ rk[0][i]);
+  for (let r = 1; r <= Nr; r++) {
+    s = s.map(b => SBOX[b]);
+    s = s.map((_, i) => s[(i % 4) + 4 * (((i >> 2) + (i % 4)) % 4)]);
+    if (r < Nr) {
+      const t = [];
+      for (let c = 0; c < 4; c++) {
+        const [a0, a1, a2, a3] = s.slice(4 * c, 4 * c + 4);
+        t.push(gmul8(a0, 2) ^ gmul8(a1, 3) ^ a2 ^ a3, a0 ^ gmul8(a1, 2) ^ gmul8(a2, 3) ^ a3,
+          a0 ^ a1 ^ gmul8(a2, 2) ^ gmul8(a3, 3), gmul8(a0, 3) ^ a1 ^ a2 ^ gmul8(a3, 2));
+      }
+      s = t;
+    }
+    s = s.map((b, i) => b ^ rk[r][i]);
+  }
+  return Uint8Array.from(s);
+}
+function aesDecBlock(ks, inp) {
+  const { rk, Nr } = ks;
+  let s = Array.from(inp, (b, i) => b ^ rk[Nr][i]);
+  for (let r = Nr - 1; r >= 0; r--) {
+    s = s.map((_, i) => s[(i % 4) + 4 * ((((i >> 2) - (i % 4)) + 4) % 4)]);
+    s = s.map(b => INV_SBOX[b]);
+    s = s.map((b, i) => b ^ rk[r][i]);
+    if (r > 0) {
+      const t = [];
+      for (let c = 0; c < 4; c++) {
+        const [a0, a1, a2, a3] = s.slice(4 * c, 4 * c + 4);
+        t.push(gmul8(a0, 14) ^ gmul8(a1, 11) ^ gmul8(a2, 13) ^ gmul8(a3, 9),
+          gmul8(a0, 9) ^ gmul8(a1, 14) ^ gmul8(a2, 11) ^ gmul8(a3, 13),
+          gmul8(a0, 13) ^ gmul8(a1, 9) ^ gmul8(a2, 14) ^ gmul8(a3, 11),
+          gmul8(a0, 11) ^ gmul8(a1, 13) ^ gmul8(a2, 9) ^ gmul8(a3, 14));
+      }
+      s = t;
+    }
+  }
+  return Uint8Array.from(s);
+}
+function padApply(data, pad) {
+  if (pad === 'pkcs7') { const n = 16 - (data.length % 16); return concat(data, new Uint8Array(n).fill(n)); }
+  if (pad === 'zero') { const n = (16 - (data.length % 16)) % 16; return concat(data, new Uint8Array(n)); }
+  if (data.length % 16) throw new Error(`無填充模式下，資料長度須為 16 bytes 的倍數（目前 ${data.length} bytes）`);
+  return data;
+}
+function padRemove(data, pad) {
+  if (pad !== 'pkcs7') return data;
+  const n = data[data.length - 1];
+  if (!data.length || n < 1 || n > 16 || n > data.length) throw new Error('PKCS#7 填充錯誤（Key / IV 是否正確？）');
+  for (let i = data.length - n; i < data.length; i++) if (data[i] !== n) throw new Error('PKCS#7 填充錯誤（Key / IV 是否正確？）');
+  return data.slice(0, data.length - n);
+}
+function inc128(c) { const o = c.slice(); for (let i = 15; i >= 0; i--) { o[i] = (o[i] + 1) & 0xff; if (o[i]) break; } return o; }
+function inc32(c) { const o = c.slice(); for (let i = 15; i >= 12; i--) { o[i] = (o[i] + 1) & 0xff; if (o[i]) break; } return o; }
+function ctrStream(ks, ctr0, data, inc) {
+  const out = new Uint8Array(data.length); let ctr = ctr0;
+  for (let i = 0; i < data.length; i += 16) {
+    const k = aesEncBlock(ks, ctr);
+    for (let j = 0; j < 16 && i + j < data.length; j++) out[i + j] = data[i + j] ^ k[j];
+    ctr = inc(ctr);
+  }
+  return out;
+}
+const GCM_R = 0xE1n << 120n;
+function gfmul(X, Y) { let Z = 0n, V = Y; for (let i = 127; i >= 0; i--) { if ((X >> BigInt(i)) & 1n) Z ^= V; V = (V & 1n) ? (V >> 1n) ^ GCM_R : V >> 1n; } return Z; }
+function zpad16(x) { const n = (16 - (x.length % 16)) % 16; return concat(x, new Uint8Array(n)); }
+function ghash(Hk, bytes) { let Y = 0n; for (let i = 0; i < bytes.length; i += 16) Y = gfmul(Y ^ b2n(bytes.slice(i, i + 16)), Hk); return Y; }
+
+// CMAC（NIST SP 800-38B / RFC 4493）
+function cmacSubkeys(ks) {
+  const dbl = b => { const o = new Uint8Array(16); for (let i = 0; i < 16; i++) o[i] = ((b[i] << 1) | (i < 15 ? b[i + 1] >> 7 : 0)) & 0xff; if (b[0] & 0x80) o[15] ^= 0x87; return o; };
+  const L = aesEncBlock(ks, new Uint8Array(16)), K1 = dbl(L), K2 = dbl(K1);
+  return { L, K1, K2 };
+}
+function aesCmac(ks, msg) {
+  const { K1, K2 } = cmacSubkeys(ks);
+  const n = Math.max(1, Math.ceil(msg.length / 16)), full = msg.length > 0 && msg.length % 16 === 0;
+  let last = msg.slice((n - 1) * 16);
+  if (full) last = xorBytes(last, K1);
+  else { const p = new Uint8Array(16); p.set(last); p[last.length] = 0x80; last = xorBytes(p, K2); }
+  let X = new Uint8Array(16);
+  for (let i = 0; i < n - 1; i++) X = aesEncBlock(ks, xorBytes(X, msg.slice(i * 16, i * 16 + 16)));
+  return aesEncBlock(ks, xorBytes(X, last));
+}
+
+// mode: ECB | CBC | CTR | GCM | CMAC
+function aesRun({ mode, enc, key, iv, data, pad, aad, tagLen, tag }) {
+  const ks = aesExpand(key);
+  if (mode === 'ECB' || mode === 'CBC') {
+    if (mode === 'CBC' && iv.length !== 16) throw new Error(`CBC 的 IV 須為 16 bytes（目前 ${iv.length} bytes）`);
+    if (enc) {
+      const p = padApply(data, pad), out = new Uint8Array(p.length);
+      let prev = iv;
+      for (let i = 0; i < p.length; i += 16) {
+        let b = p.slice(i, i + 16);
+        if (mode === 'CBC') b = xorBytes(b, prev);
+        const c = aesEncBlock(ks, b); out.set(c, i); prev = c;
+      }
+      return { out };
+    } else {
+      if (data.length % 16) throw new Error(`密文長度須為 16 bytes 的倍數（目前 ${data.length} bytes）`);
+      const out = new Uint8Array(data.length); let prev = iv;
+      for (let i = 0; i < data.length; i += 16) {
+        const c = data.slice(i, i + 16); let b = aesDecBlock(ks, c);
+        if (mode === 'CBC') b = xorBytes(b, prev);
+        out.set(b, i); prev = c;
+      }
+      return { out: padRemove(out, pad) };
+    }
+  }
+  if (mode === 'CTR') {
+    if (iv.length !== 16) throw new Error(`CTR 的初始計數器區塊須為 16 bytes（目前 ${iv.length} bytes）`);
+    return { out: ctrStream(ks, iv, data, inc128) };
+  }
+  if (mode === 'GCM') {
+    if (!iv.length) throw new Error('GCM 的 IV 不可為空（建議 12 bytes）');
+    const Hk = b2n(aesEncBlock(ks, new Uint8Array(16)));
+    let J0;
+    if (iv.length === 12) { J0 = new Uint8Array(16); J0.set(iv); J0[15] = 1; }
+    else J0 = n2b(ghash(Hk, concat(zpad16(iv), n2b(BigInt(iv.length * 8), 16))), 16);
+    const out = ctrStream(ks, inc32(J0), data, inc32);
+    const C = enc ? out : data;
+    const tl = enc ? tagLen : tag.length;
+    if (tl < 4 || tl > 16) throw new Error(`Tag 長度須介於 4–16 bytes（目前 ${tl}）`);
+    const S = ghash(Hk, concat(zpad16(aad), zpad16(C), n2b(BigInt(aad.length * 8), 8), n2b(BigInt(C.length * 8), 8)));
+    const T = xorBytes(aesEncBlock(ks, J0), n2b(S, 16)).slice(0, tl);
+    if (!enc && !bytesEq(T, tag)) throw new Error('驗證失敗：Tag 不符（Key、IV、AAD、密文或 Tag 有誤）');
+    return { out, tag: T };
+  }
+  if (mode === 'CMAC') {
+    const tl = enc ? tagLen : tag.length;
+    if (tl < 1 || tl > 16) throw new Error(`MAC 長度須介於 1–16 bytes（目前 ${tl}）`);
+    const T = aesCmac(ks, data).slice(0, tl);
+    if (!enc && !bytesEq(T, tag)) throw new Error('驗證失敗：CMAC 不符（Key、訊息或 MAC 有誤）');
+    return { out: T, tag: T };
+  }
+  throw new Error('未知模式');
+}
+
+// ===== 雜湊 =====
+function md5(msg) {
+  const K = [], S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 2 ** 32) >>> 0;
+  const ml = msg.length, padLen = ((ml + 8) >> 6) * 64 + 64 - ml;
+  const m = concat(msg, new Uint8Array(padLen)); m[ml] = 0x80;
+  const dv = new DataView(m.buffer);
+  dv.setUint32(m.length - 8, (ml * 8) >>> 0, true); dv.setUint32(m.length - 4, Math.floor(ml / 0x20000000), true);
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  for (let off = 0; off < m.length; off += 64) {
+    const M = []; for (let i = 0; i < 16; i++) M[i] = dv.getUint32(off + 4 * i, true);
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let F, g;
+      if (i < 16) { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+      else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+      F = (F + A + K[i] + M[g]) >>> 0;
+      const s = S[(i >> 4) * 4 + (i % 4)];
+      A = D; D = C; C = B; B = (B + ((F << s) | (F >>> (32 - s)))) >>> 0;
+    }
+    a0 = (a0 + A) >>> 0; b0 = (b0 + B) >>> 0; c0 = (c0 + C) >>> 0; d0 = (d0 + D) >>> 0;
+  }
+  const o = new Uint8Array(16), ov = new DataView(o.buffer);
+  [a0, b0, c0, d0].forEach((v, i) => ov.setUint32(4 * i, v, true));
+  return o;
+}
+const KECCAK_RC = ['0000000000000001', '0000000000008082', '800000000000808A', '8000000080008000', '000000000000808B', '0000000080000001', '8000000080008081', '8000000000008009', '000000000000008A', '0000000000000088', '0000000080008009', '000000008000000A', '000000008000808B', '800000000000008B', '8000000000008089', '8000000000008003', '8000000000008002', '8000000000000080', '000000000000800A', '800000008000000A', '8000000080008081', '8000000000008080', '0000000080000001', '8000000080008008'].map(h => BigInt('0x' + h));
+// 旋轉位移，索引 x + 5y
+const KECCAK_ROT = [0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14];
+const M64 = (1n << 64n) - 1n;
+const rot64 = (v, n) => n ? ((v << BigInt(n)) | (v >> BigInt(64 - n))) & M64 : v;
+function keccakF(A) {
+  for (let r = 0; r < 24; r++) {
+    const C = [0, 1, 2, 3, 4].map(x => A[x] ^ A[x + 5] ^ A[x + 10] ^ A[x + 15] ^ A[x + 20]);
+    const D = C.map((_, x) => C[(x + 4) % 5] ^ rot64(C[(x + 1) % 5], 1));
+    for (let i = 0; i < 25; i++) A[i] ^= D[i % 5];
+    const B = new Array(25);
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) B[y + 5 * ((2 * x + 3 * y) % 5)] = rot64(A[x + 5 * y], KECCAK_ROT[x + 5 * y]);
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) A[x + 5 * y] = B[x + 5 * y] ^ ((~B[(x + 1) % 5 + 5 * y] & M64) & B[(x + 2) % 5 + 5 * y]);
+    A[0] ^= KECCAK_RC[r];
+  }
+}
+function sha3(msg, outLen) {
+  const rate = 200 - 2 * outLen;
+  const padLen = rate - (msg.length % rate);
+  const m = concat(msg, new Uint8Array(padLen));
+  m[msg.length] ^= 0x06; m[m.length - 1] ^= 0x80;
+  const A = new Array(25).fill(0n);
+  const lane = (b, o) => { let v = 0n; for (let i = 7; i >= 0; i--) v = (v << 8n) | BigInt(b[o + i]); return v; };
+  for (let off = 0; off < m.length; off += rate) {
+    for (let i = 0; i < rate / 8; i++) A[i] ^= lane(m, off + 8 * i);
+    keccakF(A);
+  }
+  const out = new Uint8Array(outLen);
+  for (let i = 0; i < outLen; i++) out[i] = Number((A[i >> 3] >> BigInt(8 * (i & 7))) & 0xffn);
+  return out;
+}
+const HASHES = {
+  'MD5': { len: 16, block: 64, fn: async m => md5(m) },
+  'SHA-1': { len: 20, block: 64, fn: async m => new Uint8Array(await subtle.digest('SHA-1', m)) },
+  'SHA-256': { len: 32, block: 64, fn: async m => new Uint8Array(await subtle.digest('SHA-256', m)) },
+  'SHA-384': { len: 48, block: 128, fn: async m => new Uint8Array(await subtle.digest('SHA-384', m)) },
+  'SHA-512': { len: 64, block: 128, fn: async m => new Uint8Array(await subtle.digest('SHA-512', m)) },
+  'SHA3-224': { len: 28, block: 144, fn: async m => sha3(m, 28) },
+  'SHA3-256': { len: 32, block: 136, fn: async m => sha3(m, 32) },
+  'SHA3-384': { len: 48, block: 104, fn: async m => sha3(m, 48) },
+  'SHA3-512': { len: 64, block: 72, fn: async m => sha3(m, 64) },
+};
+async function hashBytes(name, m) { return HASHES[name].fn(m); }
+async function hmac(name, key, msg) {
+  const h = HASHES[name];
+  if (key.length > h.block) key = await h.fn(key);
+  const k = concat(key, new Uint8Array(h.block - key.length));
+  const inner = await h.fn(concat(k.map(b => b ^ 0x36), msg));
+  return h.fn(concat(k.map(b => b ^ 0x5c), inner));
+}
+
+// ===== RSA =====
+const RSA_FIELDS = ['n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi'];
+async function rsaGenerate(bits) {
+  const kp = await subtle.generateKey({ name: 'RSA-OAEP', modulusLength: bits, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['encrypt', 'decrypt']);
+  const j = await subtle.exportKey('jwk', kp.privateKey);
+  const o = {}; for (const f of RSA_FIELDS) o[f] = buf2hex(b64u2buf(j[f])); return o;
+}
+// 由 n, e, d 還原 p, q（Boneh 方法）
+function rsaFactor(n, e, d) {
+  const k = d * e - 1n; let t = k, s = 0n;
+  while (!(t & 1n)) { t >>= 1n; s++; }
+  for (let g = 2n; g < 2000n; g++) {
+    let x = modpow(g, t, n);
+    if (x === 1n || x === n - 1n) continue;
+    for (let i = 0n; i < s; i++) {
+      const y = x * x % n;
+      if (y === 1n) { const p = gcd(x - 1n, n); if (p > 1n && p < n) return [p, n / p]; }
+      if (y === n - 1n) break;
+      x = y;
+    }
+  }
+  throw new Error('無法由 n、e、d 分解出 p、q，請確認私鑰正確');
+}
+// k: { n, e, d, p, q, dp, dq, qi } as BigInt (部分可缺)
+function rsaComplete(k) {
+  if (!k.n || !k.e) throw new Error('需要 n 與 e');
+  if (k.d && (!k.p || !k.q)) [k.p, k.q] = rsaFactor(k.n, k.e, k.d);
+  if (k.d && k.p && k.q) {
+    if (!k.dp) k.dp = k.d % (k.p - 1n);
+    if (!k.dq) k.dq = k.d % (k.q - 1n);
+    if (!k.qi) k.qi = modinv(k.q, k.p);
+  }
+  return k;
+}
+function rsaJwk(k, priv) {
+  const enc = v => buf2b64u(n2b(v));
+  const j = { kty: 'RSA', n: enc(k.n), e: enc(k.e), ext: true };
+  if (priv) { if (!k.d) throw new Error('此操作需要私鑰 d'); for (const f of ['d', 'p', 'q', 'dp', 'dq', 'qi']) j[f] = enc(k[f]); }
+  return j;
+}
+const rsaLen = k => Math.ceil(bitlen(k.n) / 8);
+function rsaRaw(k, m, exp) { const x = b2n(m); if (x >= k.n) throw new Error('輸入數值必須小於 n'); return n2b(modpow(x, exp, k.n), rsaLen(k)); }
+async function rsaEncrypt(k, scheme, m, hash, label) {
+  const L = rsaLen(k);
+  if (scheme === 'raw') return rsaRaw(k, m, k.e);
+  if (scheme === 'pkcs1') {
+    if (m.length > L - 11) throw new Error(`PKCS#1 v1.5 明文最多 ${L - 11} bytes`);
+    const ps = new Uint8Array(L - 3 - m.length);
+    for (let i = 0; i < ps.length; i++) { let b = 0; while (!b) b = randBytes(1)[0]; ps[i] = b; }
+    return rsaRaw(k, concat(Uint8Array.of(0, 2), ps, Uint8Array.of(0), m), k.e);
+  }
+  const key = await subtle.importKey('jwk', rsaJwk(k, false), { name: 'RSA-OAEP', hash }, false, ['encrypt']);
+  const p = { name: 'RSA-OAEP' }; if (label && label.length) p.label = label;
+  return new Uint8Array(await subtle.encrypt(p, key, m));
+}
+async function rsaDecrypt(k, scheme, c, hash, label) {
+  if (!k.d) throw new Error('解密需要私鑰 d');
+  const L = rsaLen(k);
+  if (c.length !== L && scheme !== 'raw') throw new Error(`密文長度須為 ${L} bytes（目前 ${c.length}）`);
+  if (scheme === 'raw') return rsaRaw(k, c, k.d);
+  if (scheme === 'pkcs1') {
+    const em = rsaRaw(k, c, k.d);
+    if (em[0] !== 0 || em[1] !== 2) throw new Error('PKCS#1 v1.5 解碼失敗（標頭不符）');
+    const z = em.indexOf(0, 2);
+    if (z < 10) throw new Error('PKCS#1 v1.5 解碼失敗（填充格式錯誤）');
+    return em.slice(z + 1);
+  }
+  const key = await subtle.importKey('jwk', rsaJwk(k, true), { name: 'RSA-OAEP', hash }, false, ['decrypt']);
+  const p = { name: 'RSA-OAEP' }; if (label && label.length) p.label = label;
+  try { return new Uint8Array(await subtle.decrypt(p, key, c)); }
+  catch { throw new Error('OAEP 解密失敗（金鑰、雜湊或 Label 不符）'); }
+}
+function rsaSignAlg(scheme, hash, salt) {
+  return scheme === 'pss' ? { name: 'RSA-PSS', hash, saltLength: salt } : { name: 'RSASSA-PKCS1-v1_5', hash };
+}
+async function rsaSign(k, scheme, m, hash, salt) {
+  const a = rsaSignAlg(scheme, hash, salt);
+  const key = await subtle.importKey('jwk', rsaJwk(k, true), a, false, ['sign']);
+  return new Uint8Array(await subtle.sign(a, key, m));
+}
+async function rsaVerify(k, scheme, m, sig, hash, salt) {
+  const a = rsaSignAlg(scheme, hash, salt);
+  const key = await subtle.importKey('jwk', rsaJwk(k, false), a, false, ['verify']);
+  return subtle.verify(a, key, sig, m);
+}
+
+// ===== 橢圓曲線 =====
+const hn = h => BigInt('0x' + h);
+const CURVES = {
+  'P-256': { p: hn('ffffffff00000001000000000000000000000000ffffffffffffffffffffffff'), a: -3n, b: hn('5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b'), G: [hn('6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296'), hn('4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5')], n: hn('ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551') },
+  'P-384': { p: (1n << 384n) - (1n << 128n) - (1n << 96n) + (1n << 32n) - 1n, a: -3n, b: hn('b3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef'), G: [hn('aa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7'), hn('3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f')], n: hn('ffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973') },
+  'P-521': { p: (1n << 521n) - 1n, a: -3n, b: hn('0051953eb9618e1c9a1f929a21a0b68540eea2da725b99b315f3b8b489918ef109e156193951ec7e937b1652c0bd3bb1bf073573df883d2c34f1ef451fd46b503f00'), G: [hn('00c6858e06b70404e9cd9e3ecb662395b4429c648139053fb521f828af606b4d3dbaa14b5e77efe75928fe1dc127a2ffa8de3348b3c1856a429bf97e7e31c2e5bd66'), hn('011839296a789a3bc0045c8a5fb42c7d1bd998f54449579b446817afbd17273e662c97ee72995ef42640c550b9013fad0761353c7086a272c24088be94769fd16650')], n: hn('01fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa51868783bf2f966b7fcc0148f709a5d03bb5c9b8899c47aebb6fb71e91386409') },
+  'secp256k1': { p: (1n << 256n) - (1n << 32n) - 977n, a: 0n, b: 7n, G: [hn('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'), hn('483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8')], n: hn('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141') },
+};
+for (const C of Object.values(CURVES)) { C.len = Math.ceil(bitlen(C.p) / 8); C.nlen = Math.ceil(bitlen(C.n) / 8); C.a = mod(C.a, C.p); }
+
+// Jacobian 座標運算
+function jDouble(C, P) {
+  if (!P) return null;
+  const [X, Y, Z] = P, p = C.p;
+  if (Y === 0n) return null;
+  const YY = Y * Y % p, S = 4n * X * YY % p;
+  const ZZ = Z * Z % p;
+  const M = (3n * X * X + C.a * ZZ % p * ZZ) % p;
+  const X3 = mod(M * M - 2n * S, p);
+  const Y3 = mod(M * (S - X3) - 8n * YY * YY, p);
+  return [X3, Y3, 2n * Y * Z % p];
+}
+function jAdd(C, P, Q) {
+  if (!P) return Q; if (!Q) return P;
+  const p = C.p, [X1, Y1, Z1] = P, [X2, Y2, Z2] = Q;
+  const Z1Z1 = Z1 * Z1 % p, Z2Z2 = Z2 * Z2 % p;
+  const U1 = X1 * Z2Z2 % p, U2 = X2 * Z1Z1 % p;
+  const S1 = Y1 * Z2 % p * Z2Z2 % p, S2 = Y2 * Z1 % p * Z1Z1 % p;
+  if (U1 === U2) return S1 === S2 ? jDouble(C, P) : null;
+  const H = mod(U2 - U1, p), R = mod(S2 - S1, p);
+  const HH = H * H % p, HHH = H * HH % p, V = U1 * HH % p;
+  const X3 = mod(R * R - HHH - 2n * V, p);
+  const Y3 = mod(R * (V - X3) - S1 * HHH, p);
+  return [X3, Y3, Z1 * Z2 % p * H % p];
+}
+function toAffine(C, P) { if (!P) return null; const zi = modinv(P[2], C.p), zi2 = zi * zi % C.p; return [P[0] * zi2 % C.p, P[1] * zi2 % C.p * zi % C.p]; }
+function ecMul(C, k, P) {
+  k = mod(k, C.n); if (k === 0n || !P) return null;
+  const J = [P[0], P[1], 1n]; let R = null;
+  for (const bit of k.toString(2)) { R = jDouble(C, R); if (bit === '1') R = jAdd(C, R, J); }
+  return toAffine(C, R);
+}
+function ecAdd(C, P, Q) { return toAffine(C, jAdd(C, P && [P[0], P[1], 1n], Q && [Q[0], Q[1], 1n])); }
+function onCurve(C, P) { const [x, y] = P; return mod(y * y - (x * x * x + C.a * x + C.b), C.p) === 0n; }
+function encodePoint(C, P, compressed) {
+  if (!P) throw new Error('無窮遠點');
+  if (compressed) return concat(Uint8Array.of(P[1] & 1n ? 3 : 2), n2b(P[0], C.len));
+  return concat(Uint8Array.of(4), n2b(P[0], C.len), n2b(P[1], C.len));
+}
+function decodePoint(C, u, name = '公鑰') {
+  let P;
+  if (u[0] === 4 && u.length === 1 + 2 * C.len) P = [b2n(u.slice(1, 1 + C.len)), b2n(u.slice(1 + C.len))];
+  else if (u.length === 2 * C.len) P = [b2n(u.slice(0, C.len)), b2n(u.slice(C.len))];
+  else if ((u[0] === 2 || u[0] === 3) && u.length === 1 + C.len) {
+    const x = b2n(u.slice(1)), y2 = mod(x * x * x + C.a * x + C.b, C.p);
+    let y = modpow(y2, (C.p + 1n) / 4n, C.p);
+    if (y * y % C.p !== y2) throw new Error(`${name}：x 座標不在曲線上`);
+    if (Number(y & 1n) !== (u[0] & 1)) y = C.p - y;
+    P = [x, y];
+  } else throw new Error(`${name}：長度或格式不符（未壓縮 04||X||Y 為 ${1 + 2 * C.len} bytes，壓縮 02/03||X 為 ${1 + C.len} bytes）`);
+  if (P[0] >= C.p || P[1] >= C.p || !onCurve(C, P)) throw new Error(`${name}：點不在曲線上`);
+  return P;
+}
+function ecPriv(C, u, name = '私鑰') {
+  const d = b2n(u); if (d < 1n || d >= C.n) throw new Error(`${name}：須介於 1 與 n−1 之間`); return d;
+}
+function ecRandScalar(C) { return mod(b2n(randBytes(C.nlen + 8)), C.n - 1n) + 1n; }
+function ecGen(C) { const d = ecRandScalar(C); return { d, Q: ecMul(C, d, C.G) }; }
+function ecdh(C, d, Q) { const S = ecMul(C, d, Q); if (!S) throw new Error('共享點為無窮遠點'); return n2b(S[0], C.len); }
+
+function hashToInt(C, h) { let e = b2n(h); const hb = h.length * 8, nb = bitlen(C.n); if (hb > nb) e >>= BigInt(hb - nb); return e; }
+function ecdsaSign(C, d, h, k) {
+  const e = hashToInt(C, h);
+  for (let tries = 0; tries < 64; tries++) {
+    const kk = k ?? ecRandScalar(C);
+    const R = ecMul(C, kk, C.G);
+    const r = mod(R[0], C.n);
+    const s = mod(modinv(kk, C.n) * (e + r * d), C.n);
+    if (r !== 0n && s !== 0n) return { r, s, k: kk };
+    if (k) throw new Error('此 k 產生 r 或 s 為 0，請換一個 k');
+  }
+  throw new Error('簽章失敗');
+}
+function ecdsaVerify(C, Q, h, r, s) {
+  if (r < 1n || r >= C.n || s < 1n || s >= C.n) return false;
+  const e = hashToInt(C, h), w = modinv(s, C.n);
+  const X = ecAdd(C, ecMul(C, e * w % C.n, C.G), ecMul(C, r * w % C.n, Q));
+  return !!X && mod(X[0], C.n) === r;
+}
+function derInt(n) { let b = n2b(n); if (!b.length) b = Uint8Array.of(0); if (b[0] & 0x80) b = concat(Uint8Array.of(0), b); return concat(Uint8Array.of(2), derLen(b.length), b); }
+function derLen(l) { return l < 128 ? Uint8Array.of(l) : l < 256 ? Uint8Array.of(0x81, l) : Uint8Array.of(0x82, l >> 8, l & 0xff); }
+function sigToDer(r, s) { const body = concat(derInt(r), derInt(s)); return concat(Uint8Array.of(0x30), derLen(body.length), body); }
+function parseSig(C, u) {
+  if (u.length === 2 * C.nlen && u[0] !== 0x30) return [b2n(u.slice(0, C.nlen)), b2n(u.slice(C.nlen))];
+  try {
+    let i = 0; const rd = () => u[i++];
+    const len = () => { let l = rd(); if (l & 0x80) { const n = l & 0x7f; l = 0; for (let j = 0; j < n; j++) l = (l << 8) | rd(); } return l; };
+    if (rd() !== 0x30) throw 0; const tl = len(); if (i + tl !== u.length) throw 0;
+    if (rd() !== 2) throw 0; let l = len(); const r = b2n(u.slice(i, i + l)); i += l;
+    if (rd() !== 2) throw 0; l = len(); const s = b2n(u.slice(i, i + l)); i += l;
+    if (i !== u.length) throw 0;
+    return [r, s];
+  } catch {
+    if (u.length === 2 * C.nlen) return [b2n(u.slice(0, C.nlen)), b2n(u.slice(C.nlen))];
+    throw new Error(`簽章格式不符：請輸入 r||s（${2 * C.nlen} bytes）或 DER 編碼`);
+  }
+}
+
+// ===== Key Ladder（移植自 mtk29073 Key Ladder 計算器，全部為 AES-128-ECB 解密） =====
+// SCKv  = D(SCK, VendorID)
+// Seedv = D(SecretMaskKey, VendorID)
+// Modkv = D(SCKv, Seedv) ⊕ Seedv
+// K3 = D(Modkv, ModuleID)；K2 = D(K3, Ek3)；K1 = D(K2, Ek2)；CW = D(K1, Ek1)
+function keyLadder({ sck, smk, vendor, module, ek3, ek2, ek1 }) {
+  const named = { SCK: sck, 'Secret Mask Key': smk, 'Vendor ID': vendor, 'Module ID': module, Ek3: ek3, Ek2: ek2, Ek1: ek1 };
+  for (const [n, v] of Object.entries(named)) if (v.length !== 16) throw new Error(`${n} 須為 16 bytes（128-bit），目前 ${v.length} bytes`);
+  const D = (k, c) => aesDecBlock(aesExpand(k), c);
+  const SCKv = D(sck, vendor);
+  const Seedv = D(smk, vendor);
+  const Modkv = xorBytes(D(SCKv, Seedv), Seedv);
+  const K3 = D(Modkv, module);
+  const K2 = D(K3, ek3);
+  const K1 = D(K2, ek2);
+  const CW = D(K1, ek1);
+  return { SCKv, Seedv, Modkv, K3, K2, K1, CW };
+}
+
+</script>
+<script>
+const $ = id => document.getElementById(id);
+const val = id => $(id).value;
+const hx = (id, name) => hex2buf(val(id), name);
+// 文字框自動長高，內容永遠完整顯示、不需捲動
+function autosize(t) {
+  if (!t.offsetWidth) return;
+  t.style.height = 'auto';
+  t.style.height = (t.scrollHeight + 2) + 'px';
+}
+function autosizeAll() { document.querySelectorAll('textarea').forEach(autosize); }
+document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') autosize(e.target); });
+window.addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(autosizeAll, 100); });
+function setOut(id, v) { const t = $(id); t.value = typeof v === 'string' ? v : buf2hex(v); updLen(t); autosize(t); }
+function status(id, msg, kind) { const e = $(id); e.textContent = msg; e.className = 'st' + (kind ? ' ' + kind : ''); }
+function updLen(el) {
+  const span = el.closest('.f')?.querySelector('.len'); if (!span) return;
+  const h = cleanHex(el.value);
+  span.textContent = !h ? '' : (/^[0-9a-fA-F]*$/.test(h) && h.length % 2 === 0) ? `${h.length / 2} B` : '格式錯誤';
+}
+document.querySelectorAll('textarea.hx').forEach(t => { t.addEventListener('input', () => updLen(t)); });
+function run(stId, fn) {
+  return async () => {
+    try { status(stId, '運算中…'); const r = await fn(); if (r !== undefined) status(stId, r[0], r[1]); }
+    catch (e) { status(stId, e.message || String(e), 'err'); }
+    finally { autosizeAll(); }
+  };
+}
+function compare(outHex, expId) {
+  const exp = cleanHex(val(expId)).toLowerCase();
+  if (!exp) return null;
+  return exp === outHex.toLowerCase();
+}
+function cmpMsg(base, res) { return res === null ? [base, 'ok'] : res ? [base + '，與預期輸出相符 ✓', 'ok'] : [base + '，但與預期輸出不符 ✗', 'err']; }
+
+// 分頁
+const tabs = document.querySelectorAll('#tabs button');
+function showTab(name) {
+  tabs.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === name));
+  document.querySelectorAll('section.panel').forEach(s => s.hidden = s.id !== 'p-' + name);
+  autosizeAll();
+  try { localStorage.setItem('hexlab-tab', name); } catch {}
+}
+tabs.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+{ let t = location.hash.slice(1); if (![...tabs].some(b => b.dataset.tab === t)) { try { t = localStorage.getItem('hexlab-tab'); } catch {} }
+  if (t && [...tabs].some(b => b.dataset.tab === t)) showTab(t); }
+
+// 複製
+document.addEventListener('click', e => {
+  const b = e.target.closest('button.cp'); if (!b) return;
+  const t = $(b.dataset.copy), txt = cleanHex(t.value) === t.value.trim() ? t.value.trim() : t.value;
+  const done = () => { b.textContent = '已複製'; setTimeout(() => b.textContent = '複製', 1200); };
+  navigator.clipboard.writeText(txt).then(done, () => { t.focus(); t.select(); b.textContent = '已選取'; setTimeout(() => b.textContent = '複製', 1200); });
+});
+
+// ===== AES =====
+function aesUi() {
+  const m = val('aesMode'), mac = m === 'CMAC';
+  $('aesPadBox').hidden = !(m === 'ECB' || m === 'CBC');
+  $('aesIvBox').hidden = m === 'ECB' || mac;
+  $('aesAadBox').hidden = m !== 'GCM';
+  $('aesTagBox').hidden = $('aesTagLenBox').hidden = !(m === 'GCM' || mac);
+  $('aesCmacBox').hidden = !mac;
+  if (mac) aesCmacShowKeys();
+  $('aesTagLenLabel').textContent = mac ? 'MAC 長度（bytes）' : 'Tag 長度（bytes）';
+  $('aesTagLabel').textContent = mac ? '待驗證的 MAC（驗證時輸入）' : 'Tag（加密時輸出 / 解密時輸入）';
+  $('aesInLabel').textContent = mac ? '訊息' : '輸入（明文 / 密文）';
+  $('aesEnc').textContent = mac ? '計算 CMAC' : '加密';
+  $('aesDec').textContent = mac ? '驗證 CMAC' : '解密';
+  $('aesIvLabel').textContent = m === 'CBC' ? 'IV（16 bytes）' : m === 'CTR' ? '初始計數器區塊（16 bytes，整個 128 bit 遞增）' : 'IV / Nonce（建議 12 bytes）';
+  requestAnimationFrame(autosizeAll);
+  $('aesNote').textContent = {
+    ECB: 'ECB 每個區塊獨立加密，相同明文區塊會得到相同密文。',
+    CBC: 'CBC：C[i] = AES(P[i] ⊕ C[i−1])，C[0] 前一塊為 IV。',
+    CTR: 'CTR 為串流模式，不需填充；加密與解密運算相同。',
+    GCM: 'GCM：12 bytes IV 時 J0 = IV||00000001；其他長度以 GHASH 推導。輸出為密文，Tag 另列。',
+    CMAC: 'CMAC（NIST SP 800-38B / RFC 4493）：L = AES(K, 0¹²⁸)，由 L 推得子金鑰 K1、K2；最後一塊完整時 ⊕ K1，否則補 80 00… 後 ⊕ K2，再做 CBC-MAC。輸出取前 N bytes。',
+  }[m];
+}
+// CMAC 子金鑰：只要 Key 合法就即時顯示
+function aesCmacShowKeys() {
+  const ids = ['aesCmacL', 'aesCmacK1', 'aesCmacK2'];
+  try {
+    const sk = cmacSubkeys(aesExpand(hex2buf(val('aesKey'), 'Key')));
+    setOut('aesCmacL', sk.L); setOut('aesCmacK1', sk.K1); setOut('aesCmacK2', sk.K2);
+  } catch { ids.forEach(i => setOut(i, '')); }
+  try {
+    const n = hex2buf(val('aesIn')).length, full = n > 0 && n % 16 === 0;
+    $('aesCmacUse').textContent = `目前訊息 ${n} bytes，` + (full ? '最後一塊是完整的 16 bytes，會用 K1 ⊕ 最後一塊。' : `最後一塊${n ? `只有 ${n % 16} bytes` : '是空的'}，會補 80 00… 後用 K2 ⊕ 最後一塊。`);
+  } catch { $('aesCmacUse').textContent = ''; }
+}
+$('aesKey').addEventListener('input', aesCmacShowKeys);
+$('aesIn').addEventListener('input', aesCmacShowKeys);
+$('aesMode').addEventListener('change', aesUi);
+function aesDo(enc) {
+  return run('aesSt', () => {
+    const mode = val('aesMode');
+    const p = { mode, enc, key: hx('aesKey', 'Key'), iv: mode === 'ECB' ? new Uint8Array() : hx('aesIv', 'IV'), data: hx('aesIn', '輸入'), pad: val('aesPad'), aad: hx('aesAad', 'AAD'), tagLen: +val('aesTagLen') || 16 };
+    if ((mode === 'GCM' || mode === 'CMAC') && !enc) p.tag = hx('aesTag', mode === 'CMAC' ? 'MAC' : 'Tag');
+    if (mode === 'CMAC') p.iv = new Uint8Array();
+    const r = aesRun(p);
+    setOut('aesOut', r.out);
+    if (mode === 'GCM' && enc) setOut('aesTag', r.tag);
+    if (mode === 'CMAC') {
+      setOut('aesOut', r.out);
+      aesCmacShowKeys();
+      if (!enc) return [`AES-${p.key.length * 8}-CMAC 驗證通過 ✓`, 'ok'];
+      return cmpMsg(`AES-${p.key.length * 8}-CMAC 計算完成（${r.out.length} bytes）`, compare(buf2hex(r.out), 'aesExp'));
+    }
+    const base = `AES-${p.key.length * 8}-${mode} ${enc ? '加密' : '解密'}完成` + (mode === 'GCM' && !enc ? '，Tag 驗證通過' : '');
+    let res = compare(buf2hex(r.out), 'aesExp');
+    if (res !== null && mode === 'GCM' && enc) res = res || compare(buf2hex(r.out) + buf2hex(r.tag), 'aesExp');
+    return cmpMsg(base, res);
+  });
+}
+$('aesEnc').addEventListener('click', aesDo(true));
+$('aesDec').addEventListener('click', aesDo(false));
+$('aesRand').addEventListener('click', () => {
+  const kl = [16, 24, 32].includes(cleanHex(val('aesKey')).length / 2) ? cleanHex(val('aesKey')).length / 2 : 16;
+  setOut('aesKey', randBytes(kl)); setOut('aesIv', randBytes(val('aesMode') === 'GCM' ? 12 : 16));
+  status('aesSt', `已產生隨機 ${kl * 8}-bit Key 與 IV`);
+});
+const AES_SAMPLES = {
+  ECB: { key: '2b7e151628aed2a6abf7158809cf4f3c', iv: '', pt: '6bc1bee22e409f96e93d7e117393172a', ct: '3ad77bb40d7a3660a89ecaf32466ef97', src: 'NIST SP 800-38A F.1.1' },
+  CBC: { key: '2b7e151628aed2a6abf7158809cf4f3c', iv: '000102030405060708090a0b0c0d0e0f', pt: '6bc1bee22e409f96e93d7e117393172a', ct: '7649abac8119b246cee98e9b12e9197d', src: 'NIST SP 800-38A F.2.1' },
+  CTR: { key: '2b7e151628aed2a6abf7158809cf4f3c', iv: 'f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', pt: '6bc1bee22e409f96e93d7e117393172a', ct: '874d6191b620e3261bef6864990db6ce', src: 'NIST SP 800-38A F.5.1' },
+  CMAC: { key: '2b7e151628aed2a6abf7158809cf4f3c', iv: '', pt: '6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411', ct: 'dfa66747de9ae63030ca32611497c827', mac: 'dfa66747de9ae63030ca32611497c827', src: 'RFC 4493 Example 3（40 bytes 訊息）' },
+  GCM: { key: 'feffe9928665731c6d6a8f9467308308', iv: 'cafebabefacedbaddecaf888', aad: 'feedfacedeadbeeffeedfacedeadbeefabaddad2', pt: 'd9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39', ct: '42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a5aac84aa051ba30b396a0aac973d58e091', tag: '5bc94fbc3221a5db94fae95ae7121a47', src: 'GCM 規格書 Test Case 4' },
+};
+function aesSample() {
+  const s = AES_SAMPLES[val('aesMode')];
+  setOut('aesKey', s.key); setOut('aesIv', s.iv); setOut('aesAad', s.aad || ''); setOut('aesIn', s.pt); setOut('aesExp', s.ct);
+  setOut('aesTag', s.mac || ''); setOut('aesOut', ''); aesCmacShowKeys(); $('aesPad').value = 'none'; $('aesTagLen').value = 16;
+  status('aesSt', `已載入 ${s.src}，按「${$('aesEnc').textContent}」比對結果`);
+}
+$('aesSample').addEventListener('click', aesSample);
+
+// ===== RSA =====
+function rsaKey() {
+  const k = {};
+  for (const f of RSA_FIELDS) { const h = cleanHex(val('rsa_' + f)); if (h) k[f] = b2n(hex2buf(h, f)); }
+  const before = !!(k.p && k.q && k.dp && k.dq && k.qi);
+  rsaComplete(k);
+  if (k.d && !before) for (const f of ['p', 'q', 'dp', 'dq', 'qi']) setOut('rsa_' + f, n2b(k[f]));
+  return k;
+}
+async function rsaGenUi() {
+  status('rsaSt', `正在產生 ${val('rsaBits')}-bit 金鑰…`);
+  const o = await rsaGenerate(+val('rsaBits'));
+  for (const f of RSA_FIELDS) setOut('rsa_' + f, o[f]);
+  return [`已產生 ${val('rsaBits')}-bit RSA 金鑰（e = 0x${o.e}）`, 'ok'];
+}
+$('rsaGen').addEventListener('click', run('rsaSt', rsaGenUi));
+function rsaUi() { $('rsaLabelBox').hidden = val('rsaEncScheme') !== 'oaep'; $('rsaSaltBox').hidden = val('rsaSigScheme') !== 'pss'; }
+$('rsaEncScheme').addEventListener('change', rsaUi); $('rsaSigScheme').addEventListener('change', rsaUi);
+$('rsaEnc').addEventListener('click', run('rsaSt', async () => {
+  const k = rsaKey(), c = await rsaEncrypt(k, val('rsaEncScheme'), hx('rsaIn', '輸入'), val('rsaHash'), hx('rsaLabel', 'Label'));
+  setOut('rsaOut', c); return [`加密完成（${c.length} bytes）` + (val('rsaEncScheme') === 'raw' ? '' : '；含隨機填充，每次結果不同'), 'ok'];
+}));
+$('rsaDec').addEventListener('click', run('rsaSt', async () => {
+  const k = rsaKey(), m = await rsaDecrypt(k, val('rsaEncScheme'), hx('rsaIn', '輸入'), val('rsaHash'), hx('rsaLabel', 'Label'));
+  setOut('rsaOut', m); return [`解密完成（${m.length} bytes）`, 'ok'];
+}));
+const saltLen = () => val('rsaSalt') === '' ? HASHES[val('rsaHash')].len : +val('rsaSalt');
+$('rsaSign').addEventListener('click', run('rsaSigSt', async () => {
+  const s = await rsaSign(rsaKey(), val('rsaSigScheme'), hx('rsaMsg', '訊息'), val('rsaHash'), saltLen());
+  setOut('rsaSig', s); return [`簽章完成（${val('rsaSigScheme') === 'pss' ? 'PSS' : 'PKCS#1 v1.5'}，${val('rsaHash')}）`, 'ok'];
+}));
+$('rsaVerify').addEventListener('click', run('rsaSigSt', async () => {
+  const ok = await rsaVerify(rsaKey(), val('rsaSigScheme'), hx('rsaMsg', '訊息'), hx('rsaSig', '簽章'), val('rsaHash'), saltLen());
+  return ok ? ['簽章有效 ✓', 'ok'] : ['簽章無效 ✗', 'err'];
+}));
+
+// ===== ECC / ECDH =====
+const eccC = () => CURVES[val('eccCurve')];
+function eccFillFormats() {
+  try {
+    const C = eccC(), Q = decodePoint(C, hx('eccQA'), 'Q_A');
+    setOut('eccQAc', encodePoint(C, Q, true)); setOut('eccQAx', n2b(Q[0], C.len)); setOut('eccQAy', n2b(Q[1], C.len));
+  } catch { ['eccQAc', 'eccQAx', 'eccQAy'].forEach(i => setOut(i, '')); }
+}
+function eccGen(side) {
+  const C = eccC(), { d, Q } = ecGen(C);
+  setOut('eccD' + side, n2b(d, C.nlen)); setOut('eccQ' + side, encodePoint(C, Q));
+  if (side === 'A') eccFillFormats();
+}
+function eccPub(side) {
+  const C = eccC(), d = ecPriv(C, hx('eccD' + side, 'd_' + side), 'd_' + side);
+  setOut('eccQ' + side, encodePoint(C, ecMul(C, d, C.G)));
+  if (side === 'A') eccFillFormats();
+  return [`已由 d_${side} 計算 Q_${side} = d_${side} · G`, 'ok'];
+}
+$('eccGenA').addEventListener('click', run('eccSt', () => { eccGen('A'); return [`已產生甲方 ${val('eccCurve')} 金鑰`, 'ok']; }));
+$('eccGenB').addEventListener('click', run('eccSt', () => { eccGen('B'); return [`已產生乙方 ${val('eccCurve')} 金鑰`, 'ok']; }));
+$('eccPubA').addEventListener('click', run('eccSt', () => eccPub('A')));
+$('eccPubB').addEventListener('click', run('eccSt', () => eccPub('B')));
+$('eccQA').addEventListener('input', eccFillFormats);
+$('eccCurve').addEventListener('change', run('eccSt', () => { eccGen('A'); eccGen('B'); setOut('eccSA', ''); setOut('eccSB', ''); return [`已切換至 ${val('eccCurve')} 並產生新金鑰`, 'ok']; }));
+function eccDh() {
+  const C = eccC(); setOut('eccSA', ''); setOut('eccSB', '');
+  const dA = ecPriv(C, hx('eccDA', 'd_A'), 'd_A'), QB = decodePoint(C, hx('eccQB', 'Q_B'), 'Q_B');
+  const sA = ecdh(C, dA, QB); setOut('eccSA', sA);
+  if (!cleanHex(val('eccDB'))) return ['已計算 d_A · Q_B（未填 d_B，略過另一側）', 'ok'];
+  const dB = ecPriv(C, hx('eccDB', 'd_B'), 'd_B'), QA = decodePoint(C, hx('eccQA', 'Q_A'), 'Q_A');
+  const sB = ecdh(C, dB, QA); setOut('eccSB', sB);
+  return bytesEq(sA, sB) ? ['雙方共享密鑰一致 ✓', 'ok'] : ['雙方共享密鑰不一致 ✗（請檢查金鑰是否成對）', 'err'];
+}
+$('eccDh').addEventListener('click', run('eccSt', eccDh));
+
+// ===== ECDSA =====
+const dsaC = () => CURVES[val('dsaCurve')];
+async function dsaHashMsg() {
+  const m = hx('dsaMsg', '訊息'), alg = val('dsaHash');
+  const h = alg === 'none' ? m : await hashBytes(alg, m);
+  if (!h.length) throw new Error('雜湊值不可為空');
+  setOut('dsaH', h); return h;
+}
+function dsaGen() { const C = dsaC(), { d, Q } = ecGen(C); setOut('dsaD', n2b(d, C.nlen)); setOut('dsaQ', encodePoint(C, Q)); }
+$('dsaGen').addEventListener('click', run('dsaSt', () => { dsaGen(); return [`已產生 ${val('dsaCurve')} 金鑰`, 'ok']; }));
+$('dsaCurve').addEventListener('change', run('dsaSt', () => { dsaGen(); ['dsaR', 'dsaS', 'dsaSig', 'dsaDer'].forEach(i => setOut(i, '')); return [`已切換至 ${val('dsaCurve')} 並產生新金鑰`, 'ok']; }));
+$('dsaPub').addEventListener('click', run('dsaSt', () => {
+  const C = dsaC(), d = ecPriv(C, hx('dsaD', 'd'), 'd'); setOut('dsaQ', encodePoint(C, ecMul(C, d, C.G))); return ['已由 d 計算公鑰 Q = d · G', 'ok'];
+}));
+async function dsaSignUi() {
+  const C = dsaC(), d = ecPriv(C, hx('dsaD', 'd'), 'd'), h = await dsaHashMsg();
+  const kh = cleanHex(val('dsaK')); const k = kh ? ecPriv(C, hex2buf(kh, 'k'), 'k') : undefined;
+  const { r, s } = ecdsaSign(C, d, h, k);
+  setOut('dsaR', n2b(r, C.nlen)); setOut('dsaS', n2b(s, C.nlen));
+  setOut('dsaSig', concat(n2b(r, C.nlen), n2b(s, C.nlen))); setOut('dsaDer', sigToDer(r, s));
+  return [`簽章完成（${val('dsaCurve')}，${k ? '指定 k' : '隨機 k'}）`, 'ok'];
+}
+$('dsaSign').addEventListener('click', run('dsaSt', dsaSignUi));
+$('dsaVerify').addEventListener('click', run('dsaSt', async () => {
+  const C = dsaC(), Q = decodePoint(C, hx('dsaQ', '公鑰'), '公鑰'), h = await dsaHashMsg();
+  const [r, s] = parseSig(C, hx('dsaSig', '簽章'));
+  setOut('dsaR', n2b(r, C.nlen)); setOut('dsaS', n2b(s, C.nlen)); setOut('dsaDer', sigToDer(r, s));
+  return ecdsaVerify(C, Q, h, r, s) ? ['簽章有效 ✓', 'ok'] : ['簽章無效 ✗', 'err'];
+}));
+
+// ===== HASH =====
+const HASH_NAMES = Object.keys(HASHES);
+for (const id of ['hashAlg', 'hmacAlg']) for (const n of HASH_NAMES) { const o = document.createElement('option'); o.textContent = n; if (n === 'SHA-256') o.selected = true; $(id).appendChild(o); }
+$('hashRun').addEventListener('click', run('hashSt', async () => {
+  const h = await hashBytes(val('hashAlg'), hx('hashIn', '資料')); setOut('hashOut', h);
+  return cmpMsg(`${val('hashAlg')} 完成（${h.length} bytes）`, compare(buf2hex(h), 'hashExp'));
+}));
+$('hashAll').addEventListener('click', run('hashSt', async () => {
+  const m = hx('hashIn', '資料'), tb = $('hashTable'); tb.innerHTML = '';
+  const exp = cleanHex(val('hashExp')).toLowerCase(); let hit = null;
+  for (const n of HASH_NAMES) {
+    const h = buf2hex(await hashBytes(n, m)); const tr = tb.insertRow();
+    tr.insertCell().textContent = n; tr.insertCell().textContent = h;
+    if (exp && h === exp) { hit = n; tr.style.color = 'var(--ok)'; }
+  }
+  return exp ? (hit ? [`預期輸出與 ${hit} 相符 ✓`, 'ok'] : ['沒有任何演算法與預期輸出相符 ✗', 'err']) : [`已計算 ${HASH_NAMES.length} 種演算法`, 'ok'];
+}));
+$('hashSample').addEventListener('click', () => { setOut('hashIn', '616263'); $('hashAlg').value = 'SHA-256'; setOut('hashExp', 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'); $('hashRun').click(); });
+
+// ===== HMAC =====
+$('hmacRun').addEventListener('click', run('hmacSt', async () => {
+  const mac = await hmac(val('hmacAlg'), hx('hmacKey', 'Key'), hx('hmacIn', '資料')); setOut('hmacOut', mac);
+  return cmpMsg(`HMAC-${val('hmacAlg')} 完成（${mac.length} bytes）`, compare(buf2hex(mac), 'hmacExp'));
+}));
+$('hmacRand').addEventListener('click', () => { setOut('hmacKey', randBytes(HASHES[val('hmacAlg')].len)); status('hmacSt', '已產生隨機 Key'); });
+$('hmacSample').addEventListener('click', () => {
+  $('hmacAlg').value = 'SHA-256'; setOut('hmacKey', '4a656665');
+  setOut('hmacIn', '7768617420646f2079612077616e7420666f72206e6f7468696e673f');
+  setOut('hmacExp', '5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843'); $('hmacRun').click();
+});
+
+// ===== Key Ladder =====
+const KL_IN = { sck: 'klSck', smk: 'klSmk', vendor: 'klVendor', module: 'klModule', ek3: 'klEk3', ek2: 'klEk2', ek1: 'klEk1' };
+const KL_NAME = { sck: 'SCK', smk: 'Secret Mask Key', vendor: 'Vendor ID', module: 'Module ID', ek3: 'Ek3', ek2: 'Ek2', ek1: 'Ek1' };
+// 預設值取自 Profile 2B Operation（2BGolden.jpg）
+const KL_SAMPLE = { sck: '77656C636F6D65746F6D797061727479', smk: 'F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF', vendor: '00000000000000000000000000002A42', module: '000000000000000000000000000000A5', ek3: '202122232425262728292A2B2C2D2E2F', ek2: '101112131415161718191A1B1C1D1E1F', ek1: '4DBEA3E862E9990A1C5A7A9F780C9CC0' };
+const klUpper = u => buf2hex(u).toUpperCase();
+$('klRun').addEventListener('click', run('klSt', () => {
+  const p = {}; for (const [k, id] of Object.entries(KL_IN)) p[k] = hx(id, KL_NAME[k]);
+  const r = keyLadder(p);
+  for (const [k, v] of Object.entries(r)) setOut('kl' + k, klUpper(v));
+  return cmpMsg('Key Ladder 計算完成', compare(buf2hex(r.CW), 'klExp'));
+}));
+$('klSample').addEventListener('click', () => {
+  for (const [k, id] of Object.entries(KL_IN)) setOut(id, KL_SAMPLE[k]);
+  setOut('klExp', '68E1DA5B24AD861F70F9C2433CB59E07'); $('klRun').click();
+});
+
+// ===== 工具 =====
+$('tT2H').addEventListener('click', run('tSt', () => { setOut('tHex', new TextEncoder().encode(val('tText'))); return ['已轉為 UTF-8 hex', 'ok']; }));
+$('tH2T').addEventListener('click', run('tSt', () => { $('tText').value = new TextDecoder('utf-8', { fatal: true }).decode(hx('tHex', 'Hex')); return ['已解碼為文字', 'ok']; }));
+$('tB2H').addEventListener('click', run('tSt', () => {
+  let s = val('tB64').replace(/\s/g, ''); let u;
+  try { u = /[-_]/.test(s) ? b64u2buf(s) : Uint8Array.from(atob(s), c => c.charCodeAt(0)); } catch { throw new Error('Base64 格式錯誤'); }
+  setOut('tHex', u); return ['已轉為 hex', 'ok'];
+}));
+$('tH2B').addEventListener('click', run('tSt', () => { let s = ''; for (const c of hx('tHex', 'Hex')) s += String.fromCharCode(c); $('tB64').value = btoa(s); return ['已轉為 Base64', 'ok']; }));
+$('tRand').addEventListener('click', () => setOut('tRandOut', randBytes(Math.min(4096, Math.max(1, +val('tRandN') || 16)))));
+$('tXor').addEventListener('click', () => { try { setOut('tXo', xorBytes(hx('tXa', 'A'), hx('tXb', 'B'))); } catch (e) { setOut('tXo', ''); $('tXo').value = e.message; } });
+
+// ===== 上傳檔案（後端：Google Apps Script，見 server/Code.gs） =====
+const UP = Object.assign({ endpoint: '', requireCode: false, maxMB: 20 }, window.UPLOAD_CONFIG || {});
+let upFiles = [];
+const fmtSize = n => n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(2)} MB`;
+function upRender() {
+  const tb = $('upList'); tb.innerHTML = '';
+  $('upEmpty').hidden = upFiles.length > 0;
+  for (const it of upFiles) {
+    const tr = tb.insertRow();
+    const a = tr.insertCell();
+    a.textContent = it.file.name;
+    const sm = document.createElement('small'); sm.textContent = `\n${fmtSize(it.file.size)}　${it.skip ? '' : it.hash ? 'SHA-256 ' + it.hash.slice(0, 16) + '…' : '計算 SHA-256 中…'}`;
+    sm.style.whiteSpace = 'pre-wrap'; a.appendChild(sm);
+    const s = tr.insertCell(); s.className = 's ' + (it.kind || ''); s.textContent = it.status;
+  }
+}
+async function upAdd(list) {
+  const lim = UP.maxMB * 1048576;
+  for (const f of list) {
+    const it = { file: f, status: f.size > lim ? `超過 ${UP.maxMB} MB` : f.size === 0 ? '空檔案' : '待上傳', kind: f.size > lim || f.size === 0 ? 'err' : '' };
+    it.skip = !!it.kind; upFiles.push(it); upRender();
+    if (!it.skip) { it.hash = buf2hex(await subtle.digest('SHA-256', await f.arrayBuffer())); upRender(); }
+  }
+  const n = upFiles.filter(i => !i.skip && !i.done).length;
+  status('upSt', n ? `已選擇 ${n} 個檔案，按「上傳」送出` : '沒有可上傳的檔案', n ? '' : 'err');
+}
+function readB64(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = () => rej(new Error('讀取檔案失敗')); r.readAsDataURL(file); });
+}
+async function upSend(it) {
+  const body = JSON.stringify({ name: it.file.name, type: it.file.type, size: it.file.size, sha256: it.hash,
+    uploader: val('upName').trim(), note: val('upNote').trim(), code: val('upCode'), data: await readB64(it.file) });
+  let r;
+  try { r = await fetch(UP.endpoint, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body, redirect: 'follow' }); }
+  catch { throw new Error('連線失敗，請檢查網路或上傳服務網址'); }
+  let j; try { j = await r.json(); } catch { throw new Error('上傳服務回應異常（Apps Script 是否已部署為「所有人」可存取？）'); }
+  if (!j.ok) throw new Error(j.error || '上傳失敗');
+  return j;
+}
+$('upFile').addEventListener('change', e => { upAdd([...e.target.files]); e.target.value = ''; });
+['dragenter', 'dragover'].forEach(ev => $('upDrop').addEventListener(ev, e => { e.preventDefault(); $('upDrop').classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => $('upDrop').addEventListener(ev, () => $('upDrop').classList.remove('over')));
+$('upDrop').addEventListener('drop', e => { e.preventDefault(); upAdd([...e.dataTransfer.files]); });
+$('upClear').addEventListener('click', () => { upFiles = []; upRender(); status('upSt', '尚未選擇檔案'); });
+$('upGo').addEventListener('click', async () => {
+  if (!UP.endpoint) return status('upSt', '站長還沒設定上傳服務，暫時無法上傳', 'err');
+  if (UP.requireCode && !val('upCode')) return status('upSt', '請輸入上傳密碼', 'err');
+  const todo = upFiles.filter(i => !i.skip && !i.done);
+  if (!todo.length) return status('upSt', '沒有待上傳的檔案，請先選擇檔案', 'err');
+  if (todo.some(i => !i.hash)) return status('upSt', '還在計算 SHA-256，請稍候再按一次', 'err');
+  $('upGo').disabled = true; let ok = 0, bad = 0;
+  for (const [i, it] of todo.entries()) {
+    it.status = '上傳中…'; it.kind = ''; upRender(); status('upSt', `正在上傳第 ${i + 1} / ${todo.length} 個檔案…`);
+    try { await upSend(it); it.status = '已送達 ✓'; it.kind = 'ok'; it.done = true; ok++; }
+    catch (e) { it.status = e.message; it.kind = 'err'; bad++; }
+    upRender();
+  }
+  $('upGo').disabled = false;
+  status('upSt', bad ? `完成 ${ok} 個，失敗 ${bad} 個（失敗的檔案可以再按一次上傳重試）` : `${ok} 個檔案已全部送達，謝謝！`, bad ? 'err' : 'ok');
+});
+$('upLimit').textContent = `單檔上限 ${UP.maxMB} MB，可一次選多個`;
+$('upCodeBox').hidden = !UP.requireCode;
+$('upIntro').textContent = UP.endpoint
+  ? '檔案會直接傳送給站長保存，請勿上傳含個人隱私或機密的資料。'
+  : '上傳服務尚未設定（站長需在 config.js 填入 Apps Script 網址），目前無法送出檔案。';
+
+// ===== 初始狀態：載入範例並先算一次 =====
+(async () => {
+  aesUi(); rsaUi();
+  aesSample(); await aesDo(true)();
+  eccGen('A'); eccGen('B'); await run('eccSt', eccDh)();
+  dsaGen(); setOut('dsaMsg', '616263'); await run('dsaSt', dsaSignUi)();
+  $('hashSample').click(); $('hmacSample').click();
+  $('klSample').click();
+  $('tT2H').click(); $('tH2B').click(); $('tRand').click(); $('tXor').click();
+  setOut('rsaIn', '48656c6c6f'); setOut('rsaMsg', '616263');
+  await run('rsaSt', rsaGenUi)();
+  $('rsaEnc').click();
+  $('rsaSign').click();
+  setTimeout(autosizeAll, 300);
+})();
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosizeAll);
+
+</script>
+
+</body>
 </html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<!-- Coding By CodingNepal - codingnepalweb.com -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sidebar Menu for Admin Dashboard | CodingNepal</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Fontawesome CDN Link -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
+  </head>
+  <body>
+    <nav class="sidebar">
+      <a href="#" class="logo">Coding note</a>
+      <div class="menu-content">
+        <ul class="menu-items">
+          <div class="menu-title">Cryptography</div>
+          <li class="item">
+            <div class="submenu-item">
+              <span>AES</span>
+              <i class="fa-solid fa-chevron-right"></i>
+            </div>
+            <ul class="menu-items submenu">
+              <div class="menu-title">
+                <i class="fa-solid fa-chevron-left"></i>
+                AES
+              </div>
+              <li class="item">
+                <a href="#">ECB</a>
+              </li>
+              <li class="item">
+                <a href="#">CBC</a>
+              </li>
+              <li class="item">
+                <a href="#">CTR</a>
+              </li>
+              <li class="item">
+                <a href="#">GCM</a>
+              </li>
+            </ul>
+          </li>
+          <li class="item">
+            <div class="submenu-item">
+              <span>ECDSA</span>
+              <i class="fa-solid fa-chevron-right"></i>
+            </div>
+            <ul class="menu-items submenu">
+              <div class="menu-title">
+                <i class="fa-solid fa-chevron-left"></i>
+                ECDSA
+              </div>
+              <li class="item">
+                <a href="#">ECDSA sign</a>
+              </li>
+              <li class="item">
+                <a href="#">ECDSA verify</a>
+              </li>
+            </ul>
+          </li>
+          <li class="item"></li>
+            <div class="submenu-item">
+              <span>MAC</span>
+              <i class="fa-solid fa-chevron-right"></i>
+            </div>
+            <ul class="menu-items submenu">
+              <div class="menu-title">
+                <i class="fa-solid fa-chevron-left"></i>
+                MAC
+              </div>
+              <li class="item">
+                <a href="#">HMAC</a>
+              </li>
+              <li class="item">
+                <a href="#">GMAC</a>
+              </li>
+            </ul>
+          </li>
+          <li class="item">
+            <a href="#">RSA</a>
+          </li>
+          <li class="item">
+            <a href="KeyLadder/key_ladder1.html">Key ladder</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <nav class="navbar">
+      <i class="fa-solid fa-bars" id="sidebar-close"></i>
+    </nav>
+    <main class="main">
+      <h1>Dashboard Content</h1>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
