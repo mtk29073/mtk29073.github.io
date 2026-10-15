@@ -383,6 +383,28 @@ table.fintab tr.open td { background: var(--well); }
 .vtag { font-size: 0.78rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
 .vtag.v-buy { color: var(--k-up); border-color: var(--k-up); } .vtag.v-sell { color: var(--k-dn); border-color: var(--k-dn); } .vtag.v-hold { color: var(--accent); border-color: var(--accent); }
 hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
+.mkhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.mkhead h2 { margin: 0; font-size: 1.05rem; }
+.mkgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 860px) { .mkgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mkcell { text-align: left; background: var(--well); border: 1px solid transparent; border-radius: 8px; padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; cursor: pointer; color: var(--fg); font: inherit; min-width: 0; }
+.mkcell:hover { border-color: var(--line); } .mkcell.sel { border-color: var(--accent); }
+.mkcell .nm { font-size: 0.84rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mkcell .rg { font-size: 0.7rem; color: var(--muted); justify-self: end; }
+.mkcell .px { font: 700 1.25rem var(--mono); font-variant-numeric: tabular-nums; }
+.mkcell .ch { font: 600 0.8rem var(--mono); justify-self: end; align-self: center; text-align: right; }
+.mkcell svg { grid-column: 1 / -1; width: 100%; height: 36px; display: block; }
+.mkcell .ss { grid-column: 1 / -1; font-size: 0.7rem; color: var(--muted); }
+@media (max-width: 560px) { .mkcell .px { font-size: 1.05rem; grid-column: 1 / -1; } .mkcell .ch { grid-column: 1 / -1; justify-self: start; text-align: left; } .mkcell .ch br { display: none; } }
+.mkcell.err .px { color: var(--muted); font-size: 0.9rem; }
+.mkpick { margin-bottom: 10px; }
+.mkopts { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.mkdetail { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+.mkdhead .segbtns { align-self: center; }
+.mkdhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.mkdhead b { font-size: 1rem; } .mkdhead span { font: 600 0.9rem var(--mono); }
+canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; touch-action: pan-y; }
+.mksrc { margin: 10px 0 0; font-size: 0.75rem; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -808,6 +830,31 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
 <!-- ============ 台股策略回測 ============ -->
 <div class="view" id="v-stock" hidden>
   <header class="vhead"><h1>台股策略回測：2560 戰法 + MACD</h1><p>用 Fugle 免費版抓日 K，回測最近 2 年，並依最新收盤判斷策略目前是買進、賣出、續抱還是觀望。這是規則算出來的訊號，不是投資建議。</p></header>
+  <section class="card mkt" aria-labelledby="mkTitle">
+    <div class="mkhead">
+      <h2 id="mkTitle">大盤指數</h2>
+      <span class="note" id="mkTime">載入中…</span>
+      <span class="grow"></span>
+      <button class="b ghost" id="mkEdit" aria-expanded="false">自訂指數</button>
+      <button class="b ghost" id="mkRefresh">重新整理</button>
+    </div>
+    <div class="mkpick" id="mkPick" hidden>
+      <p class="note">勾選最多 6 個要顯示的指數（存在這個瀏覽器）：</p>
+      <div class="mkopts" id="mkOpts"></div>
+    </div>
+    <div class="mkgrid" id="mkGrid"></div>
+    <div class="mkdetail" id="mkDetail" hidden>
+      <div class="mkdhead">
+        <b id="mkDName"></b><span id="mkDPrice"></span>
+        <span class="grow"></span>
+        <div class="segbtns" id="mkRange"><button data-r="1d" aria-pressed="true">今日走勢</button><button data-r="6m" aria-pressed="false">日K 半年</button><button data-r="1y" aria-pressed="false">日K 一年</button></div>
+        <button class="b ghost" id="mkClose" aria-label="關閉走勢圖">✕</button>
+      </div>
+      <canvas class="mkchart" id="mkCanvas"></canvas>
+      <p class="note" id="mkTip">滑鼠移到圖上看數值。</p>
+    </div>
+    <p class="note mksrc">資料來源：鉅亨網公開行情（不需金鑰，可能有延遲）。開著這個頁面時每 30 秒自動更新。</p>
+  </section>
   <div class="card">
     <div class="row" style="align-items:flex-end">
       <div class="f" style="flex:0 1 160px"><label for="skSym">股票代號</label><input id="skSym" type="text" placeholder="2330" autocomplete="off" inputmode="numeric"></div>
@@ -3636,6 +3683,176 @@ function StockChart(canvas, tip) {
     if (chart) requestAnimationFrame(() => chart.redraw());
   });
   hexAuth.listeners.push(on => { if (!on) { STK.setKey(null); cache.clear(); } });
+})();
+
+// ---------- 大盤指數（鉅亨網公開行情，免金鑰、可跨網域） ----------
+const MKT = (() => {
+  const BASE = 'https://ws.api.cnyes.com/ws/api/v1';
+  const LIST = [
+    { id: 'TWS:TSE01:INDEX', nm: '台灣加權指數', rg: '台股' },
+    { id: 'TWS:OTC01:INDEX', nm: '櫃買指數', rg: '台股' },
+    { id: 'GI:NKY:INDEX', nm: '日經 225', rg: '日股' },
+    { id: 'GI:KOSPI:INDEX', nm: '韓國綜合指數', rg: '韓股' },
+    { id: 'GI:INX:INDEX', nm: 'S&P 500', rg: '美股' },
+    { id: 'GI:IXIC:INDEX', nm: '那斯達克', rg: '美股' },
+    { id: 'GI:DJI:INDEX', nm: '道瓊工業', rg: '美股' },
+    { id: 'GI:SOX:INDEX', nm: '費城半導體', rg: '美股' },
+    { id: 'GI:HSI:INDEX', nm: '恆生指數', rg: '港股' },
+    { id: 'GI:SSEC:INDEX', nm: '上證指數', rg: '陸股' },
+    { id: 'GI:STI:INDEX', nm: '新加坡海峽', rg: '星股' },
+  ];
+  const DEF = ['TWS:TSE01:INDEX', 'GI:NKY:INDEX', 'GI:KOSPI:INDEX', 'GI:INX:INDEX', 'GI:IXIC:INDEX', 'GI:SOX:INDEX'];
+  async function get(path) {
+    let r; try { r = await fetch(BASE + path); } catch { throw new Error('連不到行情來源，請確認網路'); }
+    if (!r.ok) throw new Error('行情來源回應 HTTP ' + r.status);
+    const j = await r.json(); if (j.statusCode !== 200) throw new Error(j.message || '行情來源錯誤'); return j.data;
+  }
+  async function quotes(ids) {
+    const d = await get('/quote/quotes/' + ids.join(','));
+    const m = {};
+    for (const q of d) {
+      const ses = (q['800003'] || [])[0];
+      m[q['0']] = { price: q['6'], chg: q['11'], pct: q['56'], high: q['12'], low: q['13'], open: q['19'], prev: q['21'],
+        time: q['200007'] * 1000, name: q['200009'], open_: ses ? Date.now() / 1000 >= ses[0] && Date.now() / 1000 <= ses[1] : false };
+    }
+    return m;
+  }
+  // 傳回由舊到新的陣列
+  function rows(h) { const o = []; for (let i = h.t.length - 1; i >= 0; i--) o.push({ t: h.t[i] * 1000, open: h.o[i], high: h.h[i], low: h.l[i], close: h.c[i], volume: h.v ? h.v[i] : 0 }); return o; }
+  async function intraday(id, res = 5) { return rows(await get(`/charting/history?resolution=${res}&symbol=${encodeURIComponent(id)}`)); }
+  async function daily(id, days) { const now = Math.floor(Date.now() / 1000); return rows(await get(`/charting/history?resolution=D&symbol=${encodeURIComponent(id)}&from=${now}&to=${now - Math.min(days, 365) * 86400}`)); }
+  return { LIST, DEF, quotes, intraday, daily };
+})();
+
+(() => {
+  const SKEY = 'hexlab-idx';
+  let sel = (store.get(SKEY, null) || MKT.DEF).filter(id => MKT.LIST.some(x => x.id === id)).slice(0, 6);
+  if (!sel.length) sel = MKT.DEF.slice();
+  let Q = {}, spark = {}, timer = null, tick = 0, busy = false, detail = null, range = '1d', dData = null;
+  const meta = id => MKT.LIST.find(x => x.id === id) || { nm: id, rg: '' };
+  const fmt = v => v == null || isNaN(v) ? '—' : Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const hhmm = t => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const ymd = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888';
+  const cls = v => v > 0 ? 'kup' : v < 0 ? 'kdn' : '';
+  const arrow = v => v > 0 ? '▲' : v < 0 ? '▼' : '';
+
+  function sparkSvg(id) {
+    const s = spark[id], q = Q[id];
+    if (!s || s.length < 2) return '<svg viewBox="0 0 100 36" aria-hidden="true"></svg>';
+    const base = q && q.prev != null ? q.prev : s[0].close;
+    let lo = Math.min(base, ...s.map(b => b.close)), hi = Math.max(base, ...s.map(b => b.close)); if (hi === lo) hi = lo + 1;
+    const y = v => (34 - (v - lo) / (hi - lo) * 32).toFixed(1), n = s.length - 1;
+    const pts = s.map((b, i) => (i / n * 100).toFixed(1) + ',' + y(b.close)).join(' ');
+    const up = s[n].close >= base;
+    return `<svg viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="${y(base)}" y2="${y(base)}" stroke="var(--muted)" stroke-dasharray="2 2" stroke-width="0.6" vector-effect="non-scaling-stroke"/><polyline points="${pts}" fill="none" stroke="var(${up ? '--k-up' : '--k-dn'})" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+  function render() {
+    $('mkGrid').innerHTML = sel.map(id => {
+      const m = meta(id), q = Q[id];
+      if (!q) return `<button class="mkcell err" data-id="${id}"><span class="nm">${escHtml(m.nm)}</span><span class="rg">${m.rg}</span><span class="px">${Object.keys(Q).length ? '讀取失敗' : '載入中…'}</span><span class="ch"></span>${sparkSvg(id)}<span class="ss"></span></button>`;
+      return `<button class="mkcell${detail === id ? ' sel' : ''}" data-id="${id}" aria-label="${escHtml(m.nm)} 走勢圖"><span class="nm">${escHtml(m.nm)}</span><span class="rg">${m.rg}</span><span class="px ${cls(q.chg)}">${fmt(q.price)}</span><span class="ch ${cls(q.chg)}">${arrow(q.chg)} ${fmt(Math.abs(q.chg))}<br> （${q.pct > 0 ? '+' : ''}${fmt(q.pct)}%）</span>${sparkSvg(id)}<span class="ss">${q.open_ ? '盤中' : '已收盤'} · ${ymd(q.time).slice(5)} ${hhmm(q.time)}</span></button>`;
+    }).join('');
+    if (detail && Q[detail]) { const q = Q[detail]; $('mkDPrice').innerHTML = `<span class="${cls(q.chg)}">${fmt(q.price)}　${arrow(q.chg)} ${fmt(Math.abs(q.chg))}（${q.pct > 0 ? '+' : ''}${fmt(q.pct)}%）</span>`; }
+  }
+  async function refresh(full) {
+    if (busy) return; busy = true;
+    try {
+      Q = await MKT.quotes(sel);
+      if (full) { const r = await Promise.allSettled(sel.map(id => MKT.intraday(id, 5))); r.forEach((x, i) => { if (x.status === 'fulfilled') spark[sel[i]] = x.value; }); }
+      $('mkTime').textContent = '更新於 ' + hhmm(Date.now()) + '（台灣時間）';
+      render();
+      if (detail && range === '1d' && full) loadDetail(true);
+    } catch (e) { $('mkTime').textContent = e.message; render(); }
+    finally { busy = false; }
+  }
+  const visible = () => !$('v-stock').hidden && !document.hidden;
+  function start() { stop(); refresh(true); timer = setInterval(() => { if (!visible()) return; tick++; refresh(tick % 4 === 0); }, 30000); }
+  function stop() { if (timer) clearInterval(timer); timer = null; }
+
+  // 自訂
+  function renderPick() {
+    $('mkOpts').innerHTML = MKT.LIST.map(x => `<label class="ck"><input type="checkbox" value="${x.id}"${sel.includes(x.id) ? ' checked' : ''}> ${escHtml(x.nm)} <span class="note">${x.rg}</span></label>`).join('');
+  }
+  $('mkEdit').addEventListener('click', () => { const p = $('mkPick'); p.hidden = !p.hidden; $('mkEdit').setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) renderPick(); });
+  $('mkOpts').addEventListener('change', e => {
+    const boxes = [...$('mkOpts').querySelectorAll('input')];
+    const on = boxes.filter(b => b.checked).map(b => b.value);
+    if (on.length > 6) { e.target.checked = false; $('mkTime').textContent = '最多選 6 個指數，請先取消一個'; return; }
+    if (!on.length) { e.target.checked = true; return; }
+    sel = MKT.LIST.map(x => x.id).filter(id => on.includes(id)); store.set(SKEY, sel);
+    if (detail && !sel.includes(detail)) closeDetail();
+    render(); refresh(true);
+  });
+  $('mkRefresh').addEventListener('click', () => refresh(true));
+
+  // 走勢圖
+  $('mkGrid').addEventListener('click', e => { const c = e.target.closest('.mkcell'); if (!c) return; openDetail(c.dataset.id); });
+  function openDetail(id) { detail = id; $('mkDetail').hidden = false; $('mkDName').textContent = meta(id).nm; render(); loadDetail(); }
+  function closeDetail() { detail = null; dData = null; $('mkDetail').hidden = true; render(); }
+  $('mkClose').addEventListener('click', closeDetail);
+  $('mkRange').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; range = b.dataset.r; $('mkRange').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); loadDetail(); });
+  async function loadDetail(silent) {
+    const id = detail, r = range; if (!id) return;
+    if (!silent) $('mkTip').textContent = '載入中…';
+    try {
+      const d = r === '1d' ? await MKT.intraday(id, 1) : await MKT.daily(id, r === '6m' ? 183 : 365);
+      if (id !== detail || r !== range) return;
+      dData = { id, r, bars: d }; hover = -1; draw();
+    } catch (e) { $('mkTip').textContent = e.message; }
+  }
+  const cv = $('mkCanvas'), ctx = cv.getContext('2d'); let hover = -1, geo = null;
+  const sma = (a, n) => a.map((_, i) => i < n - 1 ? null : a.slice(i - n + 1, i + 1).reduce((s, b) => s + b.close, 0) / n);
+  function draw() {
+    if (!dData || $('mkDetail').hidden) return;
+    const rc = cv.getBoundingClientRect(), dp = devicePixelRatio || 1; if (!rc.width) return;
+    cv.width = Math.round(rc.width * dp); cv.height = Math.round(rc.height * dp); ctx.setTransform(dp, 0, 0, dp, 0, 0);
+    const W = rc.width, H = rc.height, padR = 64, padB = 20, pw = W - padR - 6, ph = H - padB - 8;
+    const C = { fg: css('--fg'), mu: css('--muted'), line: css('--line'), up: css('--k-up'), dn: css('--k-dn'), a: css('--accent'), b: css('--k-vs'), c: css('--k-vl') };
+    const bars = dData.bars, n = bars.length, q = Q[dData.id]; ctx.clearRect(0, 0, W, H);
+    if (!n) { $('mkTip').textContent = '沒有資料（可能尚未開盤）'; return; }
+    const daily = dData.r !== '1d', base = !daily && q && q.prev != null ? q.prev : null;
+    const mas = daily ? [[5, C.b], [20, C.a], [60, C.c]].map(([k, c]) => ({ k, c, v: sma(bars, k) })) : [];
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < n; i++) { lo = Math.min(lo, daily ? bars[i].low : bars[i].close); hi = Math.max(hi, daily ? bars[i].high : bars[i].close); }
+    if (base != null) { lo = Math.min(lo, base); hi = Math.max(hi, base); }
+    const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+    const bw = pw / n, x = i => 6 + (i + 0.5) * bw, y = v => 4 + (hi - v) / (hi - lo) * ph;
+    ctx.font = '11px ' + css('--mono'); ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.strokeRect(6.5, 4.5, pw, ph);
+    ctx.fillStyle = C.mu; ctx.textAlign = 'left';
+    for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4; ctx.globalAlpha = .5; ctx.beginPath(); ctx.moveTo(6, y(v)); ctx.lineTo(6 + pw, y(v)); ctx.stroke(); ctx.globalAlpha = 1; ctx.fillText(fmt(v), pw + 10, y(v) + 4); }
+    ctx.textAlign = 'center'; const step = Math.max(1, Math.ceil(n / 6));
+    for (let i = 0; i < n; i += step) ctx.fillText(daily ? ymd(bars[i].t).slice(2) : hhmm(bars[i].t), x(i), H - 5);
+    if (daily) {
+      const cw = Math.max(1, bw * 0.65);
+      for (let i = 0; i < n; i++) { const b = bars[i]; ctx.strokeStyle = ctx.fillStyle = b.close >= b.open ? C.up : C.dn; ctx.beginPath(); ctx.moveTo(x(i), y(b.high)); ctx.lineTo(x(i), y(b.low)); ctx.stroke(); const y1 = y(Math.max(b.open, b.close)), y2 = y(Math.min(b.open, b.close)); ctx.fillRect(x(i) - cw / 2, y1, cw, Math.max(1, y2 - y1)); }
+      for (const m of mas) { ctx.strokeStyle = m.c; ctx.lineWidth = 1.5; ctx.beginPath(); let st = false; m.v.forEach((v, i) => { if (v == null) return; st ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)); st = true; }); ctx.stroke(); }
+      ctx.lineWidth = 1; ctx.textAlign = 'left'; ctx.font = '11px ' + css('--sans'); let lx = 12;
+      for (const m of mas) { ctx.fillStyle = m.c; ctx.fillRect(lx, 12, 10, 3); ctx.fillStyle = C.fg; ctx.fillText('MA' + m.k, lx + 14, 17); lx += 52; }
+    } else {
+      const last = bars[n - 1].close, up = base == null || last >= base, col = up ? C.up : C.dn;
+      if (base != null) { ctx.strokeStyle = C.mu; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(6, y(base)); ctx.lineTo(6 + pw, y(base)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = C.mu; ctx.textAlign = 'left'; ctx.fillText('昨收', 10, y(base) - 4); }
+      ctx.beginPath(); bars.forEach((b, i) => i ? ctx.lineTo(x(i), y(b.close)) : ctx.moveTo(x(i), y(b.close)));
+      ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.stroke(); ctx.lineWidth = 1;
+      ctx.lineTo(x(n - 1), 4 + ph); ctx.lineTo(x(0), 4 + ph); ctx.closePath(); ctx.globalAlpha = .1; ctx.fillStyle = col; ctx.fill(); ctx.globalAlpha = 1;
+    }
+    geo = { bw, n };
+    if (hover >= 0 && hover < n) {
+      const b = bars[hover]; ctx.strokeStyle = C.mu; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(x(hover), 4); ctx.lineTo(x(hover), 4 + ph); ctx.stroke(); ctx.setLineDash([]);
+      if (daily) { const ch = hover ? b.close - bars[hover - 1].close : 0; $('mkTip').innerHTML = `<b>${ymd(b.t)}</b>　開 ${fmt(b.open)}　高 ${fmt(b.high)}　低 ${fmt(b.low)}　收 <b class="${cls(ch)}">${fmt(b.close)}</b>${hover ? `　<span class="${cls(ch)}">${arrow(ch)} ${fmt(Math.abs(ch))}</span>` : ''}　` + mas.map(m => `MA${m.k} ${fmt(m.v[hover])}`).join('　'); }
+      else { const ch = base == null ? 0 : b.close - base; $('mkTip').innerHTML = `<b>${hhmm(b.t)}</b>（台灣時間）　<b class="${cls(ch)}">${fmt(b.close)}</b>${base == null ? '' : `　<span class="${cls(ch)}">${arrow(ch)} ${fmt(Math.abs(ch))}（${(ch / base * 100).toFixed(2)}%）</span>`}`; }
+    } else $('mkTip').textContent = daily ? `日 K，共 ${n} 個交易日。滑鼠移到圖上看數值。` : `最近一個交易時段（${ymd(bars[0].t)}，台灣時間 ${hhmm(bars[0].t)}–${hhmm(bars[n - 1].t)}），每分鐘一點。`;
+  }
+  const idx = e => { const r = cv.getBoundingClientRect(), cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left - 6; return geo ? Math.max(0, Math.min(geo.n - 1, Math.floor(cx / geo.bw))) : -1; };
+  cv.addEventListener('mousemove', e => { hover = idx(e); draw(); });
+  cv.addEventListener('mouseleave', () => { hover = -1; draw(); });
+  cv.addEventListener('touchmove', e => { hover = idx(e); draw(); }, { passive: true });
+  window.addEventListener('resize', () => draw());
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && timer) refresh(true); });
+
+  render();
+  document.addEventListener('viewchange', e => { if (e.detail === 'stock') { start(); requestAnimationFrame(draw); } else stop(); });
+  hexAuth.listeners.push(on => { if (!on) stop(); });
 })();
 
 </script>
