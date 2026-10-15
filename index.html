@@ -28,7 +28,7 @@
   --ok: #5fd39a; --ok-bg: #12301f; --err: #ff8b93; --err-bg: #3a1a1e; color-scheme: dark; }
 
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
 .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 14px; }
 h1 { font-family: var(--mono); font-weight: 600; font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
@@ -57,7 +57,7 @@ textarea { resize: vertical; word-break: break-all; line-height: 1.45; min-heigh
 textarea[readonly] { background: transparent; border-style: dashed; }
 textarea:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .btns { display: flex; flex-wrap: wrap; gap: 8px; }
-button.b { font: 500 0.88rem var(--sans); border-radius: 6px; padding: 7px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+button.b { white-space: nowrap; font: 500 0.88rem var(--sans); border-radius: 6px; padding: 7px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
 button.b:hover { border-color: var(--accent); }
 button.b.pri { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 button.b.pri:hover { filter: brightness(1.08); }
@@ -84,11 +84,327 @@ table.uplist td:first-child { white-space: normal; width: auto; color: var(--fg)
 table.uplist td.s { white-space: nowrap; font-family: var(--sans); width: 1%; }
 table.uplist td.s.ok { color: var(--ok); } table.uplist td.s.err { color: var(--err); }
 table.uplist small { color: var(--muted); font-family: var(--mono); }
+/* ---- MPEG-TS ---- */
+:root { --g-hdr: #dbe4ff; --g-af: #ffe6bd; --g-pes: #d2f1db; --g-psi: #ead9ff; --g-es: #e3e8ee; --g-pl: #e3e8ee; --g-stuff: #efefea; --lit: #fff1a8; --lit-line: #d9a400; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --g-hdr: #26325f; --g-af: #4b3815; --g-pes: #1b4029; --g-psi: #3b2a5e; --g-es: #2b323b; --g-pl: #2b323b; --g-stuff: #2a2a27; --lit: #5b4a08; --lit-line: #f2c230; } }
+:root[data-theme="dark"] { --g-hdr: #26325f; --g-af: #4b3815; --g-pes: #1b4029; --g-psi: #3b2a5e; --g-es: #2b323b; --g-pl: #2b323b; --g-stuff: #2a2a27; --lit: #5b4a08; --lit-line: #f2c230; }
+.g-hdr { --gc: var(--g-hdr); } .g-af { --gc: var(--g-af); } .g-pes { --gc: var(--g-pes); } .g-psi { --gc: var(--g-psi); }
+.g-es { --gc: var(--g-es); } .g-pl { --gc: var(--g-pl); } .g-stuff { --gc: var(--g-stuff); } .g-none { --gc: transparent; }
+section.tspanel { grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); align-items: start; }
+@media (max-width: 980px) { section.tspanel { grid-template-columns: minmax(0, 1fr); } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--gc); border: 1px solid var(--line); flex: none; }
+.tsgrid { display: grid; grid-template-columns: 2.6em repeat(16, minmax(0, 1fr)); gap: 3px; font-family: var(--mono); }
+.tsrow.half { display: none; }
+@media (max-width: 560px) { .tsgrid { grid-template-columns: 2.4em repeat(8, minmax(0, 1fr)); } .tsrow.half { display: block; } }
+.tsrow { font-size: 0.68rem; color: var(--muted); align-self: center; text-align: right; padding-right: 4px; font-variant-numeric: tabular-nums; }
+.tscell { width: 100%; min-width: 0; padding: 5px 0; text-align: center; font: 600 0.82rem var(--mono); text-transform: uppercase; border-radius: 4px;
+  background: var(--gc, var(--well)); border: 1px solid transparent; color: var(--fg); transition: box-shadow .12s, transform .12s; }
+.tscell.empty { background: var(--well); border-color: var(--line); border-style: dashed; }
+.tscell.bad { color: var(--err); border-color: var(--err); }
+.tscell.rel { box-shadow: 0 0 0 2px var(--lit-line); background: var(--lit); }
+.tscell.cur { box-shadow: 0 0 0 2px var(--accent); background: var(--lit); position: relative; z-index: 1; }
+.tscell:focus { outline: none; }
+.bitbox { display: flex; flex-direction: column; gap: 6px; }
+.bits { display: flex; gap: 3px; }
+.seg { background: var(--gc, var(--well)); border-radius: 4px; padding: 5px 4px; text-align: center; min-width: 0; }
+.seg .bv { font: 600 0.95rem var(--mono); letter-spacing: 0.35em; }
+.seg .bn { font-size: 0.68rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 0.78rem var(--mono); padding: 3px 8px; border-radius: 999px; background: var(--well); border: 1px solid var(--line); }
+.chip.badchip { color: var(--err); border-color: var(--err); background: var(--err-bg); }
+.tsright { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); }
+.tstable { overflow: auto; max-height: calc(100vh - 140px); border: 1px solid var(--line); border-radius: 6px; }
+@media (max-width: 980px) { .tsright { position: static; } .tstable { max-height: 70vh; } }
+table.tsf { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+table.tsf th { position: sticky; top: 0; background: var(--panel); text-align: left; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); z-index: 1; }
+table.tsf td { padding: 5px 8px; border-top: 1px solid var(--line); vertical-align: top; }
+table.tsf tr.th td { background: var(--gc); font-weight: 600; font-size: 0.78rem; }
+table.tsf tr.tn td { color: var(--muted); font-family: var(--mono); font-size: 0.76rem; border-top: 0; }
+table.tsf td.c { white-space: nowrap; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+table.tsf td.c small { display: block; font-size: 0.68rem; }
+table.tsf td.n { min-width: 0; }
+table.tsf td.n .nm { font-family: var(--mono); font-weight: 500; word-break: break-word; }
+table.tsf td.n .dot { margin-right: 6px; vertical-align: -1px; }
+table.tsf td.n .ds { display: block; color: var(--muted); font-size: 0.74rem; margin-top: 2px; }
+table.tsf td.v { width: 36%; }
+table.tsf td.v code { font-family: var(--mono); display: block; word-break: break-all; }
+table.tsf td.v b { display: block; font-weight: 600; margin-top: 2px; }
+table.tsf tr.tf { cursor: pointer; transition: background .12s; }
+table.tsf tr.tf.lit td { background: var(--lit); }
+table.tsf tr.tf.lit td:first-child { box-shadow: inset 4px 0 0 var(--lit-line); }
+table.tsf tr.badrow td.v { color: var(--err); }
+@media (prefers-reduced-motion: reduce) { .tscell, table.tsf tr.tf { transition: none; } }
+/* ---- 外框：左側選單 ---- */
+.shell { display: grid; grid-template-columns: 216px minmax(0, 1fr); min-height: 100vh; }
+@media (min-width: 801px) { .shell { background: linear-gradient(90deg, var(--panel) 0 215px, var(--line) 215px 216px, transparent 216px); } .side { border-right: 0; } }
+.side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 18px; padding: 22px 14px; background: var(--panel); border-right: 1px solid var(--line); }
+.brand { font: 600 0.95rem var(--mono); color: var(--accent); padding: 4px 10px 6px; letter-spacing: -0.01em; word-break: break-all; }
+.sidenav { display: flex; flex-direction: column; gap: 2px; }
+.sidenav a, .side-bottom a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 0.93rem; }
+.side a svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.side a:hover { background: var(--well); color: var(--fg); }
+.side a[aria-current="page"] { background: var(--well); color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.side a:focus-visible { outline: 2px solid var(--accent); }
+.devnav { display: none; flex-direction: column; gap: 2px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+body.dev-on .devnav { display: flex; }
+.navlabel { margin: 0 10px 4px; font-size: 0.7rem; letter-spacing: 0.08em; color: var(--muted); }
+.side-bottom { margin-top: auto; border-top: 1px solid var(--line); padding-top: 10px; }
+.main { min-width: 0; padding-inline: 24px; padding-block: 20px 48px; }
+.view { max-width: 1180px; margin: 0 auto; }
+@media (max-width: 800px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; height: auto; flex-direction: row; align-items: center; gap: 4px; padding: 6px 16px; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .brand { display: none; }
+  .sidenav, body.dev-on .devnav { flex-direction: row; }
+  .devnav { margin: 0; padding: 0 0 0 4px; border-top: 0; border-left: 1px dashed var(--line); }
+  .navlabel { display: none; }
+  .side a { white-space: nowrap; padding: 7px 10px; }
+  .side a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--accent); }
+  .side-bottom { margin: 0; border-top: 0; padding: 0; }
+  .main { padding-inline: 16px; }
+}
+.vhead { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.vhead h1 { font-family: var(--sans); font-size: 1.4rem; }
+.vhead p { margin: 0; color: var(--muted); font-size: 0.9rem; max-width: 65ch; }
+/* ---- 作者訊息 ---- */
+.owner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+.owner-block p, .owner-block ul { margin: 0; line-height: 1.7; }
+.owner-block ul { padding-left: 1.2em; }
+.owner-block a { color: var(--accent); word-break: break-all; }
+dl.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; }
+dl.kv dt { color: var(--muted); font-size: 0.85rem; }
+dl.kv dd { margin: 0; word-break: break-word; }
+.todo-mark { color: var(--muted); font-style: italic; font-size: 0.85rem; }
+.owner-hero { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 22px; padding: 22px; }
+.avatar { width: 76px; height: 76px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 600 2rem var(--sans); color: var(--accent-ink); background: var(--accent); }
+.who { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.oname { font: 700 1.6rem var(--sans) !important; color: var(--fg) !important; text-transform: none !important; letter-spacing: 0 !important; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.oname span { font: 500 1rem var(--mono); color: var(--muted); }
+.orole { margin: 0; font-size: 1.02rem; }
+.orole i { font-style: normal; color: var(--muted); margin: 0 6px; }
+.cchips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.cchip { display: inline-flex; align-items: baseline; gap: 8px; padding: 5px 12px; border-radius: 999px; background: var(--well); border: 1px solid var(--line); font-size: 0.88rem; max-width: 100%; overflow-wrap: anywhere; }
+.cchip small { color: var(--muted); font-size: 0.74rem; }
+.cchip a { color: var(--accent); }
+@media (max-width: 560px) { .owner-hero { flex-direction: column; align-items: flex-start; } }
+/* ---- Script 紀錄區 ---- */
+.vlogin { max-width: 420px; }
+.vapp { display: grid; grid-template-columns: minmax(240px, 0.8fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .vapp { grid-template-columns: minmax(0, 1fr); } }
+.vlist { display: flex; flex-direction: column; gap: 4px; max-height: 60vh; overflow: auto; }
+.vitem { text-align: left; display: grid; gap: 1px; padding: 8px 10px; border: 1px solid transparent; border-radius: 6px; background: none; color: var(--fg); cursor: pointer; font: inherit; }
+.vitem:hover { background: var(--well); }
+.vitem.on { background: var(--well); border-color: var(--accent); }
+.vitem b { font-weight: 600; font-size: 0.9rem; }
+.vitem span, .vitem small { color: var(--muted); font-size: 0.75rem; }
+textarea.code { font: 0.86rem/1.5 var(--mono); tab-size: 2; white-space: pre; word-break: normal; overflow-x: auto; min-height: 14em; }
+/* ---- 待辦事項 ---- */
+.todo-card { max-width: 860px; }
+.todo-top { display: flex; gap: 8px; }
+.todo-top input { font-family: var(--sans); font-size: 0.95rem; padding: 9px 11px; }
+.todo-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.todo-meta .grow { flex: 1; }
+.segbtns { align-self: flex-start; display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.segbtns button { font: 500 0.82rem var(--sans); padding: 5px 12px; border: 0; background: none; color: var(--muted); cursor: pointer; }
+.segbtns button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.progress { height: 4px; border-radius: 4px; background: var(--well); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--ok); transition: width .25s; }
+.tlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.tlist .tlist { padding-left: 26px; margin-top: 4px; border-left: 1px dashed var(--line); margin-left: 10px; }
+.trow { display: flex; align-items: center; gap: 6px; padding: 3px 4px; border-radius: 6px; }
+.trow:hover { background: var(--well); }
+.tog { width: 22px; height: 22px; display: grid; place-items: center; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: 4px; flex: none; transition: transform .15s; }
+.ti.open > .trow .tog { transform: rotate(90deg); }
+.trow input[type="checkbox"] { width: 16px; height: 16px; flex: none; accent-color: var(--ok); margin: 0; }
+.ttext { flex: 1; min-width: 0; border: 0 !important; background: transparent !important; font: 0.95rem var(--sans) !important; padding: 4px 2px !important; }
+.ti.done > .trow .ttext { text-decoration: line-through; color: var(--muted); }
+.tcount, .tnote { font: 0.72rem var(--mono); color: var(--muted); background: var(--well); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; flex: none; }
+.tbtn { font: 0.75rem var(--sans); border: 0; background: none; color: var(--muted); cursor: pointer; padding: 3px 6px; border-radius: 4px; opacity: 0; flex: none; }
+.trow:hover .tbtn, .trow:focus-within .tbtn { opacity: 1; }
+.tbtn:hover { color: var(--accent); background: var(--panel); }
+.tbtn.del:hover { color: var(--err); }
+@media (hover: none) { .tbtn { opacity: 1; } }
+@media (max-width: 560px) {
+  .tbtn { display: none; } .trow:focus-within .tbtn { display: inline-block; }
+  .tbody { padding-left: 28px; } .tlist .tlist { padding-left: 10px; margin-left: 4px; }
+}
+.tbody { padding: 2px 0 6px 50px; display: flex; flex-direction: column; gap: 4px; }
+.tnotes { font: 0.85rem var(--sans) !important; color: var(--muted); background: transparent !important; border-style: dashed !important; min-height: 2.2em; }
+.tempty { color: var(--muted); padding: 14px 6px; font-size: 0.9rem; }
+@media (prefers-reduced-motion: reduce) { .tog, .progress i { transition: none; } }
+/* ---- 作者訊息 / 開發選項 ---- */
+.owner-head { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.devbox { max-width: 560px; margin-bottom: 16px; }
+#devBtn[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); border-style: solid; }
+.sel { user-select: all; }
+/* ---- 共用 ---- */
+.hbar { display: grid; grid-template-columns: minmax(4em, 7em) minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 0.85rem; padding: 3px 0; }
+.hbar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar .track { height: 8px; background: var(--well); border-radius: 4px; overflow: hidden; }
+.hbar .track i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.hbar b { font: 500 0.82rem var(--mono); font-variant-numeric: tabular-nums; }
+.hbar small { color: var(--muted); font-size: 0.75rem; min-width: 3.5em; text-align: right; }
+.legend.inline { display: inline-flex; margin-left: 8px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+/* ---- 財務紀錄 ---- */
+.fin-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .fin-grid { grid-template-columns: minmax(0, 1fr); } }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tile { background: var(--well); border-radius: 7px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile span { font-size: 0.78rem; color: var(--muted); }
+.num { font: 600 1.05rem var(--mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.num.pos { color: var(--ok); } .num.neg { color: var(--err); }
+.trend { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; height: 120px; align-items: end; }
+.mcol { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
+.mcol .bars { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 3px; border-bottom: 1px solid var(--line); }
+.mcol .bars i { width: 34%; max-width: 16px; border-radius: 3px 3px 0 0; min-height: 1px; }
+.mcol .bi { background: var(--ok); } .mcol .bo { background: var(--err); }
+.mcol span { font-size: 0.72rem; color: var(--muted); }
+.mcol.cur span { color: var(--fg); font-weight: 600; }
+table.fintab { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+table.fintab th { text-align: left; color: var(--muted); font-weight: 500; font-size: 0.78rem; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.fintab td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.fintab td.c { font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+table.fintab .amt { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.fintab td.amt.in { color: var(--ok); } table.fintab td.amt.out { color: var(--err); }
+table.fintab .tbtn { opacity: 1; }
+.tag { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; background: var(--well); border: 1px solid var(--line); white-space: nowrap; }
+.tag.in { color: var(--ok); }
+/* ---- 我獨自升級 ---- */
+.status { --sys: #2f6bff; border-color: color-mix(in srgb, var(--sys) 45%, var(--line)); background: linear-gradient(180deg, color-mix(in srgb, var(--sys) 9%, var(--panel)), var(--panel)); margin-bottom: 16px; }
+.st-head { font: 700 0.8rem var(--mono); letter-spacing: 0.35em; color: var(--sys); }
+.st-grid { display: grid; grid-template-columns: auto minmax(0, 2fr) auto auto; gap: 12px 28px; align-items: end; }
+.st-grid > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.st-grid span { font-size: 0.75rem; color: var(--muted); }
+.st-grid b { font: 600 1.25rem var(--mono); }
+.st-grid .lv em { font-style: normal; font-size: 1.8rem; color: var(--sys); }
+.st-grid small { color: var(--muted); font-size: 0.75rem; }
+.xpbar { height: 10px; border-radius: 5px; background: var(--well); overflow: hidden; border: 1px solid var(--line); }
+.xpbar i { display: block; height: 100%; background: var(--sys); transition: width .3s; }
+@media (max-width: 640px) { .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .st-xp { grid-column: 1 / -1; } }
+.lv-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .lv-grid { grid-template-columns: minmax(0, 1fr); } }
+.daynav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.daynav b { font-family: var(--mono); min-width: 10em; text-align: center; }
+.daynav .grow { flex: 1; }
+.clear-msg { margin: 0; text-align: center; font: 600 0.9rem var(--mono); color: var(--ok); background: var(--ok-bg); border-radius: 6px; padding: 8px; }
+ul.quests { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.quest { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.quest.ok { border-color: var(--ok); background: var(--ok-bg); }
+.qcheck { width: 28px; height: 28px; border-radius: 6px; border: 2px solid var(--line); background: var(--panel); color: var(--ok); font-weight: 700; cursor: pointer; flex: none; }
+.quest.ok .qcheck { border-color: var(--ok); }
+.qmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.qhead { display: flex; justify-content: space-between; gap: 8px; font-size: 0.9rem; }
+.qhead span { font: 0.8rem var(--mono); color: var(--muted); white-space: nowrap; }
+.qbar { height: 6px; border-radius: 3px; background: var(--well); overflow: hidden; }
+.qbar i { display: block; height: 100%; background: var(--ok); }
+.quest input.qv { width: 5.5em; flex: none; text-align: right; }
+.quest input.qn { flex: 2; } .quest input.qt { width: 5em; flex: none; } .quest input.qu { width: 5em; flex: none; }
+.quest .tbtn { opacity: 1; }
+.heat { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.hcell { aspect-ratio: 1; max-width: 100%; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; padding: 0;
+  background: color-mix(in srgb, var(--ok) calc(var(--p) * 100%), var(--well)); }
+.hcell[aria-current="date"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* ---- 日文學習 ---- */
+.jplevels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.jplevels button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font: 700 1.2rem var(--mono); cursor: pointer; }
+.jplevels button small { font: 500 0.72rem var(--mono); color: var(--muted); }
+.jplevels button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.jplevels button[aria-pressed="true"] small { color: var(--accent-ink); opacity: .85; }
+.jptitle { font: 700 1.3rem var(--mono) !important; color: var(--fg) !important; letter-spacing: 0 !important; text-transform: none !important; }
+details.jsec > summary { font-weight: 600; font-size: 1rem; cursor: pointer; padding: 6px 0; border-bottom: 1px solid var(--line); }
+details.jsec > summary small, .jgroup summary small { color: var(--muted); font-weight: 400; font-family: var(--mono); font-size: 0.78rem; margin-left: 6px; }
+details.jsec[open] > div { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.jgroup { border: 1px solid var(--line); border-radius: 7px; }
+.jgroup summary { cursor: pointer; padding: 8px 12px; font-weight: 500; display: flex; justify-content: space-between; }
+table.jtab { width: 100%; border-collapse: collapse; }
+table.jtab td { padding: 6px 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+table.jtab td:first-child { width: 1%; }
+table.jtab input, .jgram input { width: 16px; height: 16px; margin: 0; accent-color: var(--ok); }
+.jw { font-size: 1.15rem; font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", var(--sans); white-space: nowrap; }
+.jr { color: var(--accent); font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", var(--sans); white-space: nowrap; }
+.jm { color: var(--fg); }
+tr.got .jw { color: var(--ok); }
+.jgram { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 7px; padding: 8px 12px; }
+.jgram input { margin-top: 5px; flex: none; }
+.jgram details { flex: 1; min-width: 0; }
+.jgram summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.jgram summary b { font-size: 1.05rem; font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", var(--sans); }
+.jgram summary span { color: var(--muted); font-size: 0.88rem; }
+.jgram.got summary b { color: var(--ok); }
+.jex { margin-top: 8px; padding: 8px 12px; background: var(--well); border-radius: 6px; }
+.jex p { margin: 0; } .jex p[lang] { font-size: 1.02rem; } .jex .tr { color: var(--muted); font-size: 0.86rem; margin-top: 3px; }
+.quiz .hid { color: transparent !important; background: var(--well); border-radius: 4px; cursor: pointer; user-select: none; }
+.quiz .hid.show { color: inherit !important; background: transparent; }
+#jpQuiz[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
+@media (max-width: 560px) { .jplevels { gap: 4px; } .jplevels button { font-size: 1rem; padding: 10px 2px; } }
+/* ---- 台股策略回測 ---- */
+:root { --k-up: #d12f3a; --k-dn: #16884a; --k-vs: #e08a00; --k-vl: #7a4fd6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --k-up: #ff5c66; --k-dn: #35c27a; --k-vs: #ffb340; --k-vl: #b391ff; } }
+:root[data-theme="dark"] { --k-up: #ff5c66; --k-dn: #35c27a; --k-vs: #ffb340; --k-vl: #b391ff; }
+.kup { color: var(--k-up); } .kdn { color: var(--k-dn); }
+.chip.okchip { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
+.skparams summary { cursor: pointer; font-weight: 500; font-size: 0.88rem; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 10px 0; align-items: end; }
+.ck { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+.ck input { width: auto; }
+.sk-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 16px; margin-bottom: 16px; align-items: stretch; }
+@media (max-width: 860px) { .sk-top { grid-template-columns: minmax(0, 1fr); } }
+.sk-quote { position: relative; }
+.skname { font: 700 1.3rem var(--sans) !important; color: var(--fg) !important; text-transform: none !important; letter-spacing: 0 !important; }
+.skprice { display: flex; flex-direction: column; gap: 4px; }
+.skprice b { font: 700 2.2rem var(--mono); font-variant-numeric: tabular-nums; }
+.skprice span { font: 600 0.95rem var(--mono); }
+.skprice small { color: var(--muted); font-size: 0.78rem; }
+.mock-tag { align-self: flex-start; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: var(--err-bg); color: var(--err); border: 1px solid var(--err); }
+.verdict { border-width: 2px; }
+.exits { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin-bottom: 8px; }
+.verdict .vlabel { display: block; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.06em; }
+.verdict > b { display: block; font-size: 1.5rem; }
+.verdict > p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+.verdict.v-buy { border-color: var(--k-up); } .verdict.v-buy > b { color: var(--k-up); }
+.verdict.v-sell { border-color: var(--k-dn); } .verdict.v-sell > b { color: var(--k-dn); }
+.verdict.v-hold > b { color: var(--accent); } .verdict.v-wait > b { color: var(--fg); }
+ul.checks { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; }
+ul.checks li { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border-radius: 6px; background: var(--well); font-size: 0.84rem; }
+ul.checks .mk { font-weight: 700; width: 1.2em; flex: none; }
+ul.checks li.ok .mk { color: var(--ok); } ul.checks li.no .mk { color: var(--err); }
+ul.checks b { font-weight: 500; } ul.checks em { font-style: normal; color: var(--muted); margin-left: 6px; font-size: 0.78rem; }
+ul.checks small { display: block; color: var(--muted); font-family: var(--mono); font-size: 0.74rem; margin-top: 2px; }
+.tiles.six { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 16px; }
+.tiles.six .tile { background: var(--panel); border: 1px solid var(--line); }
+.tile small { color: var(--muted); font-size: 0.72rem; }
+canvas.kchart { width: 100%; height: 520px; display: block; cursor: crosshair; touch-action: pan-y; }
+@media (max-width: 560px) { canvas.kchart { height: 420px; } }
+table.fintab td.why { font-size: 0.78rem; color: var(--muted); }
+table.fintab tr.open td { background: var(--well); }
+#skBatchRows tr[data-sym] { cursor: pointer; } #skBatchRows tr[data-sym]:hover td { background: var(--well); }
+.vtag { font-size: 0.78rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.vtag.v-buy { color: var(--k-up); border-color: var(--k-up); } .vtag.v-sell { color: var(--k-dn); border-color: var(--k-dn); } .vtag.v-hold { color: var(--accent); border-color: var(--accent); }
 hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
-<div class="wrap">
+<div class="shell">
+<aside class="side">
+  <div class="brand">mtk29073.github.io</div>
+  <div class="sidenav" role="navigation" aria-label="主選單">
+    <a href="#crypto" data-view="crypto"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>加密測試台</span></a>
+    <a href="#scripts" data-view="scripts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg><span>Script 紀錄區</span></a>
+    <a href="#todo" data-view="todo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l2 2 3-3M4 13l2 2 3-3M12 6h8M12 13h8M12 20h8M5 20h.01"/></svg><span>待辦事項</span></a>
+    <div class="devnav" aria-label="開發選項">
+      <p class="navlabel">開發選項</p>
+      <a href="#stock" data-view="stock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-5 4 3 8-8M15 7h5v5"/></svg><span>台股策略回測</span></a>
+      <a href="#fin" data-view="fin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg><span>財務紀錄</span></a>
+      <a href="#level" data-view="level"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>我獨自升級</span></a>
+      <a href="#jp" data-view="jp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>日文學習</span></a>
+    </div>
+  </div>
+  <div class="side-bottom"><a href="#owner" data-view="owner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>作者訊息</span></a></div>
+</aside>
+<main class="main">
+<div class="view" id="v-crypto">
 <header>
   <h1><b>0x</b> 加密測試台</h1>
   <p>所有輸入與輸出皆為 16 進位（可含空白、冒號、0x 前綴）。運算全部在瀏覽器本機完成。</p>
@@ -102,6 +418,7 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
   <button role="tab" data-tab="hash">SHA / Hash</button>
   <button role="tab" data-tab="hmac">HMAC</button>
   <button role="tab" data-tab="kl">Key Ladder</button>
+  <button role="tab" data-tab="ts">MPEG-TS 解析</button>
   <button role="tab" data-tab="tools">轉換工具</button>
   <button role="tab" data-tab="up">上傳檔案</button>
 </nav>
@@ -321,11 +638,45 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
     <p class="st" id="klSt">就緒</p>
   </div>
   <div class="card span2">
-    <h2>參考圖 <span>（圖檔位於 KeyLadder/ 資料夾）</span></h2>
+    <h2>參考圖 <span>（圖檔位於 KeyLadder/，需與網頁放在同一層資料夾）</span></h2>
     <div class="klimgs">
       <img src="KeyLadder/KeyLadder.jpg" alt="Key Ladder 架構圖" loading="lazy">
       <img src="KeyLadder/Root Key Derivation.jpg" alt="Root Key Derivation 流程圖" loading="lazy">
       <img src="KeyLadder/2BGolden.jpg" alt="2B Golden 參考資料" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<!-- ============ MPEG-TS ============ -->
+<section class="panel tspanel" id="p-ts" hidden>
+  <div class="card span2">
+    <h2>MPEG-2 TS 封包解析 <span>（ISO/IEC 13818-1，188 bytes，每格 8 bits，以 16 進位填寫）</span></h2>
+    <div class="row">
+      <div class="f" style="flex:3 1 320px"><label for="tsPaste">貼上整包 hex（可含空白；超過 188 bytes 時會從第一個 47 開始）</label><textarea id="tsPaste" class="hx" rows="2" placeholder="47 40 00 10 00 00 B0 0D ..."></textarea></div>
+    </div>
+    <div class="btns">
+      <button class="b pri" id="tsLoad">填入格子</button>
+      <button class="b" id="tsFillFF">空格補 FF</button>
+      <button class="b" id="tsClear">清空</button>
+      <button class="b" id="tsCopy">複製 188 bytes</button>
+      <span class="note" style="align-self:center">範例：</span><span class="btns" id="tsSamples"></span>
+    </div>
+    <div class="legend" id="tsLegend"></div>
+  </div>
+  <div class="card">
+    <h2>188 個格子 <span>（點格子或直接輸入，右邊對應的欄位會發亮；方向鍵可移動）</span></h2>
+    <div class="tsgrid" id="tsGrid"></div>
+    <div class="bitbox">
+      <div class="note" id="tsBitTitle"></div>
+      <div class="bits" id="tsBits"></div>
+    </div>
+    <p class="st" id="tsNotes"></p>
+  </div>
+  <div class="card tsright">
+    <h2>解析結果 <span>（滑過欄位，左邊對應的格子會發亮）</span></h2>
+    <div class="chips" id="tsSummary"></div>
+    <div class="tstable" id="tsTableBox">
+      <table class="tsf"><thead><tr><th>格子</th><th>欄位 / 說明</th><th>bits</th><th>值 / 解讀</th></tr></thead><tbody id="tsFields"></tbody></table>
     </div>
   </div>
 </section>
@@ -381,6 +732,230 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
     <p class="note" id="upEmpty">選擇的檔案會列在這裡。</p>
   </div>
 </section>
+</div>
+
+<!-- ============ 作者訊息 ============ -->
+<div class="view" id="v-owner" hidden>
+  <header class="vhead owner-head">
+    <div><h1 id="ownerName">作者訊息</h1><p class="note" id="ownerSrc"></p></div>
+    <button class="b ghost" id="devBtn" aria-pressed="false">開發選項</button>
+  </header>
+  <div class="card devbox" id="devBox" hidden>
+    <h2>開發選項</h2>
+    <div id="devForm" class="row" style="align-items:flex-end">
+      <div class="f" style="flex:1 1 200px"><label for="devPass">密碼</label><input id="devPass" type="password" autocomplete="current-password"></div>
+      <button class="b pri" id="devGo">開啟</button>
+    </div>
+    <div id="devOn" hidden class="row" style="align-items:center"><span class="note" style="flex:1">已開啟：左側多了台股策略回測、財務紀錄、我獨自升級、日文學習。重新整理網頁後會自動關閉。</span><button class="b" id="devOff">關閉開發選項</button></div>
+    <p class="st" id="devSt">開啟後左側會多出三個項目</p>
+  </div>
+  <div class="owner-grid" id="ownerBody"></div>
+</div>
+
+<!-- ============ Script 紀錄區 ============ -->
+<div class="view" id="v-scripts" hidden>
+  <header class="vhead"><h1>Script 紀錄區</h1><p>內容用你的密碼加密（PBKDF2 + AES-GCM）後保存在這個瀏覽器；密碼本身不會存在網頁裡。</p></header>
+  <div class="card vlogin" id="vLogin">
+    <h2>需要密碼</h2>
+    <div class="f"><label for="vPass">密碼</label><input id="vPass" type="password" autocomplete="current-password"></div>
+    <div class="btns"><button class="b pri" id="vLoginBtn">解鎖</button></div>
+    <p class="st" id="vLoginSt">輸入密碼後才能查看與編輯 script</p>
+  </div>
+  <div class="vapp" id="vApp" hidden>
+    <div class="card vside">
+      <div class="btns"><button class="b pri" id="vNew">新增</button><button class="b" id="vExport">匯出加密檔</button><button class="b" id="vImportToggle">匯入</button><button class="b ghost" id="vLogout">登出</button></div>
+      <div class="f"><label for="vSearch">搜尋 <span class="len" id="vCount"></span></label><input id="vSearch" type="search" placeholder="標題、標籤或程式碼內容"></div>
+      <div class="vlist" id="vList"></div>
+    </div>
+    <div class="card vmain">
+      <p class="note" id="vEmpty">左邊選一筆 script，或按「新增」。</p>
+      <div id="vEditor" hidden class="f" style="gap:12px">
+        <div class="row">
+          <div class="f" style="flex:3 1 240px"><label for="vTitle">標題</label><input id="vTitle" type="text" placeholder="例如：批次改檔名"></div>
+          <div class="f" style="flex:1 1 120px"><label for="vLang">語言</label><select id="vLang"><option>bash</option><option>python</option><option>javascript</option><option>powershell</option><option>batch</option><option>sql</option><option>c</option><option>other</option></select></div>
+        </div>
+        <div class="f"><label for="vTags">標籤（逗號分隔）</label><input id="vTags" type="text" placeholder="例如：工作, 自動化"></div>
+        <div class="f"><label for="vCode">程式碼 <span class="note">Tab 縮排、Ctrl+S 儲存</span></label><textarea id="vCode" class="code" rows="12" spellcheck="false"></textarea></div>
+        <p class="note" id="vMeta"></p>
+        <div class="btns"><button class="b pri" id="vSave">儲存</button><button class="b" id="vCopy">複製程式碼</button><button class="b ghost" id="vDel">刪除</button></div>
+      </div>
+      <div class="f" id="vIOBox" hidden>
+        <label for="vIO">加密檔內容（scripts.enc.json）：匯出後可放到 GitHub 網站根目錄，其他電腦用同一組密碼登入就會自動載入；匯入時把內容貼在這裡</label>
+        <textarea id="vIO" rows="4" spellcheck="false"></textarea>
+        <div class="btns"><button class="b" id="vImport">匯入這段內容</button></div>
+      </div>
+      <p class="st" id="vSt">就緒</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 待辦事項 ============ -->
+<div class="view" id="v-todo" hidden>
+  <header class="vhead"><h1>待辦事項</h1><p>點箭頭展開備註和子項目；在項目上按 Enter 新增下一項。資料保存在這個瀏覽器。</p></header>
+  <div class="card todo-card">
+    <div class="todo-top"><input id="todoNew" type="text" placeholder="新增待辦事項，按 Enter"><button class="b pri" id="todoAdd">新增</button></div>
+    <div class="todo-meta">
+      <div class="segbtns" id="todoFilter"><button data-f="all">全部</button><button data-f="open">未完成</button><button data-f="done">已完成</button></div>
+      <span class="note" id="todoStat"></span>
+      <span class="grow"></span>
+      <button class="b ghost" id="todoExpand">全部展開 / 收合</button>
+      <button class="b ghost" id="todoClear">清除已完成</button>
+    </div>
+    <div class="progress"><i id="todoBar"></i></div>
+    <ul class="tlist root" id="todoList"></ul>
+  </div>
+</div>
+<!-- ============ 台股策略回測 ============ -->
+<div class="view" id="v-stock" hidden>
+  <header class="vhead"><h1>台股策略回測：2560 戰法 + MACD</h1><p>用 Fugle 免費版抓日 K，回測最近 2 年，並依最新收盤判斷策略目前是買進、賣出、續抱還是觀望。這是規則算出來的訊號，不是投資建議。</p></header>
+  <div class="card">
+    <div class="row" style="align-items:flex-end">
+      <div class="f" style="flex:0 1 160px"><label for="skSym">股票代號</label><input id="skSym" type="text" placeholder="2330" autocomplete="off" inputmode="numeric"></div>
+      <div class="btns"><button class="b pri" id="skRun">回測</button><button class="b ghost" id="skMock">用模擬資料預覽</button></div>
+      <span class="grow"></span>
+      <div class="f" style="flex:1 1 260px"><label for="skKey">Fugle API 金鑰 <span class="chip" id="skKeyState">尚未設定</span></label>
+        <div class="row" style="flex-wrap:nowrap"><input id="skKey" type="password" placeholder="貼上金鑰後按儲存" autocomplete="off"><button class="b" id="skKeySave">儲存</button><button class="b ghost" id="skKeyClear">移除</button></div></div>
+    </div>
+    <p class="st" id="skSt">輸入股票代號後按「回測」。還沒有金鑰的話，可以先用模擬資料看看功能。</p>
+    <details class="skparams"><summary>策略參數（改了會立即重算）</summary>
+      <div class="pgrid">
+        <div class="f"><label for="skMa">股價均線（日）</label><input id="skMa" type="number" min="5" value="25"></div>
+        <div class="f"><label for="skVs">短均量（日）</label><input id="skVs" type="number" min="2" value="5"></div>
+        <div class="f"><label for="skVl">長均量（日）</label><input id="skVl" type="number" min="10" value="60"></div>
+        <div class="f"><label for="skLook">量能交叉回看（日）</label><input id="skLook" type="number" min="1" value="5"></div>
+        <div class="f"><label for="skNear">距均線上限（%）</label><input id="skNear" type="number" min="0" step="0.5" value="3"></div>
+        <div class="f"><label for="skStop">停損（%）</label><input id="skStop" type="number" min="1" step="0.5" value="8"></div>
+        <div class="f"><label for="skDisc">手續費折數</label><input id="skDisc" type="number" min="1" max="10" step="0.1" value="10"></div>
+        <label class="ck"><input id="skZero" type="checkbox"> MACD 要在零軸以上</label>
+      </div>
+      <div class="exits"><span class="note">出場條件（任一成立就出場）：</span>
+        <label class="ck"><input id="skExMa" type="checkbox" checked> 收盤跌破均線</label>
+        <label class="ck"><input id="skExVol" type="checkbox" checked> 均量死亡交叉</label>
+        <label class="ck"><input id="skExMacd" type="checkbox" checked> MACD 死亡交叉</label>
+        <label class="ck"><input id="skExStop" type="checkbox" checked> 停損</label>
+      </div>
+      <div class="btns"><button class="b ghost" id="skReset">恢復預設</button></div>
+      <p class="note">交易成本：手續費 0.1425%（可打折）× 2 + 證交稅 0.3%。訊號以收盤判斷，下一個交易日開盤成交。</p>
+    </details>
+  </div>
+
+  <div id="skResult" hidden>
+    <div class="sk-top">
+      <div class="card sk-quote"><span class="mock-tag" id="skMockTag" hidden>模擬資料，非真實行情</span><h2 id="skName" class="skname"></h2><div class="skprice" id="skPrice"></div></div>
+      <div class="card verdict" id="skVerdict"><span class="vlabel">策略目前判斷</span><b id="skVTitle"></b><p id="skVSub"></p><ul class="checks" id="skChecks"></ul></div>
+    </div>
+    <div class="tiles six" id="skStats"></div>
+    <div class="card">
+      <div class="row" style="align-items:center"><h2 style="flex:1">K 線、成交量、MACD <span>（虛線右邊是回測區間）</span></h2><button class="b ghost" id="skAll">顯示整個回測區間</button></div>
+      <canvas id="skCanvas" class="kchart"></canvas>
+      <p class="note" id="skTip"></p>
+    </div>
+    <div class="card">
+      <h2>交易明細</h2>
+      <div style="overflow-x:auto"><table class="fintab"><thead><tr><th>進場日</th><th>進場價</th><th>出場日</th><th>出場價</th><th class="amt">報酬（含成本）</th><th>持有天數</th><th>出場原因</th></tr></thead><tbody id="skTrades"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>批次回測自選股</h2>
+    <div class="row" style="align-items:flex-end"><div class="f" style="flex:1 1 300px"><label for="skList">股票代號（逗號或空白分隔）</label><input id="skList" type="text" value="2330 2317 2454 2308 2382"></div><button class="b pri" id="skBatch">開始批次回測</button></div>
+    <p class="st" id="skBatchSt">Fugle 免費版每分鐘 60 次，每檔需要 3 次，系統會自動放慢速度。</p>
+    <div style="overflow-x:auto"><table class="fintab"><thead><tr><th>代號</th><th>目前判斷</th><th>勝率</th><th>交易數</th><th class="amt">策略報酬</th><th class="amt">買進持有</th><th>最大回撤</th></tr></thead><tbody id="skBatchRows"></tbody></table></div>
+  </div>
+  <p class="note">回測使用過去資料，不代表未來表現；也沒有考慮滑價、漲跌停買不到等狀況。實際買賣請自行判斷。</p>
+</div>
+
+<!-- ============ 財務紀錄 ============ -->
+<div class="view" id="v-fin" hidden>
+  <header class="vhead"><h1>財務紀錄</h1><p>以開發選項的密碼加密後保存在這個瀏覽器。</p></header>
+  <div class="fin-grid">
+    <div class="card fin-add">
+      <h2>新增一筆</h2>
+      <div class="segbtns" id="finKind"><button data-k="out" aria-pressed="true">支出</button><button data-k="in">收入</button></div>
+      <div class="row">
+        <div class="f"><label for="finDate">日期</label><input id="finDate" type="date"></div>
+        <div class="f"><label for="finAmt">金額（NT$）</label><input id="finAmt" type="number" min="0" step="1" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="row">
+        <div class="f"><label for="finCat">分類</label><input id="finCat" list="finCatList" autocomplete="off"><datalist id="finCatList"></datalist></div>
+        <div class="f"><label for="finNote">備註</label><input id="finNote" type="text" placeholder="例如：午餐"></div>
+      </div>
+      <div class="btns"><button class="b pri" id="finAdd">記錄</button><button class="b ghost" id="finCsv">複製全部為 CSV</button></div>
+      <p class="st" id="finSt">輸入金額後按 Enter 也能記錄</p>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center"><h2 style="flex:1">月份總覽</h2><input id="finMonth" type="month" style="width:auto"></div>
+      <div class="tiles">
+        <div class="tile"><span>收入</span><b class="num pos" id="finIn">—</b></div>
+        <div class="tile"><span>支出</span><b class="num neg" id="finOut">—</b></div>
+        <div class="tile"><span>結餘</span><b class="num" id="finBal">—</b></div>
+      </div>
+      <h2>近 6 個月 <span class="legend inline"><span><i class="dot" style="--gc:var(--ok)"></i>收入</span><span><i class="dot" style="--gc:var(--err)"></i>支出</span></span></h2>
+      <div class="trend" id="finTrend"></div>
+      <h2>本月支出分類</h2>
+      <div id="finCats"></div>
+    </div>
+    <div class="card span2">
+      <h2>本月明細 <span id="finCount"></span></h2>
+      <div style="overflow-x:auto"><table class="fintab"><thead><tr><th>日期</th><th>分類</th><th>備註</th><th class="amt">金額</th><th></th></tr></thead><tbody id="finList"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 我獨自升級 ============ -->
+<div class="view" id="v-level" hidden>
+  <header class="vhead"><h1>我獨自升級</h1><p>每天完成自己設定的任務來累積經驗值。每項任務 +10 XP，當天全部完成再 +30 XP。</p></header>
+  <div class="card status">
+    <div class="st-head">STATUS</div>
+    <div class="st-grid">
+      <div><span>等級</span><b class="lv">Lv <em id="lvLevel">1</em></b><small id="lvRank">E 級</small></div>
+      <div class="st-xp"><span>經驗值 <small id="lvTotal"></small></span><div class="xpbar"><i id="lvXpBar"></i></div><small id="lvXp"></small></div>
+      <div><span>連續全勤</span><b id="lvStreak">0 天</b></div>
+      <div><span>今日完成</span><b id="lvToday">0%</b></div>
+    </div>
+  </div>
+  <div class="lv-grid">
+    <div class="card">
+      <div class="daynav"><button class="b" id="lvPrev" aria-label="前一天">‹</button><b id="lvDate"></b><button class="b" id="lvNext" aria-label="後一天">›</button><button class="b ghost" id="lvTodayBtn">回到今天</button><span class="grow"></span><button class="b ghost" id="lvEdit">編輯任務</button></div>
+      <div class="progress"><i id="lvDayBar"></i></div>
+      <p class="clear-msg" id="lvAllDone" hidden>【每日任務完成】獎勵 +30 XP</p>
+      <ul class="quests" id="lvQuests"></ul>
+      <div class="row" id="lvAddRow" hidden style="align-items:flex-end">
+        <div class="f" style="flex:2 1 160px"><label for="lvNewName">新任務</label><input id="lvNewName" type="text" placeholder="例如：背單字"></div>
+        <div class="f" style="flex:1 1 80px"><label for="lvNewTarget">目標</label><input id="lvNewTarget" type="number" min="1" value="1"></div>
+        <div class="f" style="flex:1 1 80px"><label for="lvNewUnit">單位</label><input id="lvNewUnit" type="text" placeholder="次"></div>
+        <button class="b pri" id="lvAdd">新增</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>最近 30 天 <span>（點格子看那一天）</span></h2>
+      <div class="heat" id="lvHeat"></div>
+      <h2>各任務達成率 <span>（長條為 30 天）</span></h2>
+      <div id="lvStats"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 日文學習 ============ -->
+<div class="view" id="v-jp" hidden>
+  <header class="vhead"><h1>日文學習書</h1><p>選擇等級，展開單字與文法。勾選代表已學會，進度會保存在這個瀏覽器。</p></header>
+  <div class="jplevels" id="jpLevels">
+    <button data-lv="N5">N5<small></small></button><button data-lv="N4">N4<small></small></button><button data-lv="N3">N3<small></small></button><button data-lv="N2">N2<small></small></button><button data-lv="N1">N1<small></small></button>
+  </div>
+  <div class="card">
+    <div class="row" style="align-items:flex-start">
+      <div style="flex:2 1 280px"><h2 id="jpTitle" class="jptitle"></h2><p class="note" id="jpDesc"></p></div>
+      <div class="f" style="flex:1 1 200px"><label for="jpSearch">搜尋 <span class="len" id="jpProg"></span></label><input id="jpSearch" type="search" placeholder="漢字、假名或中文"></div>
+    </div>
+    <div class="progress"><i id="jpBar"></i></div>
+    <div class="btns"><button class="b ghost" id="jpExpand">全部展開 / 收合</button><button class="b ghost" id="jpQuiz" aria-pressed="false">測驗模式（遮住讀音與意思）</button></div>
+    <details class="jsec" open><summary>單字 <small id="jpVocabN"></small></summary><div id="jpVocab"></div></details>
+    <details class="jsec" open><summary>文法 <small id="jpGramN"></small></summary><div id="jpGrammar"></div></details>
+    <p class="note">JLPT 官方自 2010 年起不公布單字與文法清單，這裡的分級參考常見教材整理，僅供學習參考。等級說明摘自 jlpt.jp。</p>
+  </div>
+</div>
+
+</main>
 </div>
 
 <script src="config.js"></script>
@@ -884,6 +1459,504 @@ function keyLadder({ sck, smk, vendor, module, ek3, ek2, ek1 }) {
 
 </script>
 <script>
+// ===== MPEG-2 Transport Stream（ISO/IEC 13818-1）188-byte 封包解析 =====
+// 輸入：長度 188 的陣列，每格為 0–255 或 null（未填）
+// 輸出：欄位清單，每個欄位帶有絕對 bit 位置，方便對應到格子
+const TSP = (() => {
+  const hx = (v, digits) => '0x' + v.toString(16).toUpperCase().padStart(digits, '0');
+  const bin = (v, len) => v.toString(2).padStart(len, '0');
+
+  const PID_NAMES = {
+    0x0000: 'PAT（Program Association Table）', 0x0001: 'CAT（Conditional Access Table）',
+    0x0002: 'TSDT（Transport Stream Description Table）', 0x0003: 'IPMP Control Information Table',
+    0x0010: 'DVB：NIT / ST', 0x0011: 'DVB：SDT / BAT / ST', 0x0012: 'DVB：EIT / ST / CIT', 0x0013: 'DVB：RST / ST',
+    0x0014: 'DVB：TDT / TOT / ST', 0x0015: 'DVB：網路同步', 0x0016: 'DVB：RNT', 0x001C: 'DVB：inband signalling',
+    0x001D: 'DVB：measurement', 0x001E: 'DVB：DIT', 0x001F: 'DVB：SIT',
+    0x1FFB: 'ATSC：MGT（PSIP base PID）', 0x1FFF: 'Null packet（填充用空封包）',
+  };
+  function pidName(pid) {
+    if (PID_NAMES[pid]) return PID_NAMES[pid];
+    if (pid >= 0x0004 && pid <= 0x000F) return '保留（reserved）';
+    if (pid >= 0x0017 && pid <= 0x001B) return 'DVB 保留';
+    return '可指派給 PMT 或基本串流（實際用途要看 PAT / PMT）';
+  }
+  const STREAM_TYPES = {
+    0x00: '保留', 0x01: 'MPEG-1 Video（11172-2）', 0x02: 'MPEG-2 Video（13818-2）', 0x03: 'MPEG-1 Audio（11172-3）',
+    0x04: 'MPEG-2 Audio（13818-3）', 0x05: 'Private sections', 0x06: 'PES private data（如 DVB 字幕、AC-3）',
+    0x07: 'MHEG', 0x08: 'DSM-CC', 0x09: 'H.222.1', 0x0A: 'DSM-CC type A', 0x0B: 'DSM-CC type B', 0x0C: 'DSM-CC type C',
+    0x0D: 'DSM-CC type D', 0x0E: '13818-1 auxiliary', 0x0F: 'AAC（ADTS）', 0x10: 'MPEG-4 Visual', 0x11: 'AAC（LATM / LOAS）',
+    0x12: 'MPEG-4 SL in PES', 0x13: 'MPEG-4 SL in sections', 0x14: 'DSM-CC SDP', 0x15: 'Metadata in PES', 0x16: 'Metadata in sections',
+    0x17: 'Metadata in DSM-CC data carousel', 0x18: 'Metadata in DSM-CC object carousel', 0x19: 'Metadata in DSM-CC SDP',
+    0x1A: 'IPMP stream', 0x1B: 'H.264 / AVC', 0x1C: 'MPEG-4 Audio（raw）', 0x1D: 'MPEG-4 Text', 0x1E: 'MPEG-4 Auxiliary video',
+    0x1F: 'SVC（H.264 Annex G）', 0x20: 'MVC（H.264 Annex H）', 0x21: 'JPEG 2000', 0x24: 'H.265 / HEVC', 0x42: 'AVS（中國視訊標準）',
+    0x7F: 'IPMP', 0x80: 'DigiCipher II video / LPCM（BD）', 0x81: 'AC-3（ATSC）', 0x82: 'DTS', 0x83: 'Dolby TrueHD',
+    0x84: 'E-AC-3（Blu-ray）', 0x86: 'SCTE-35 cue', 0x87: 'E-AC-3（ATSC）', 0x90: 'Blu-ray PGS 字幕', 0xEA: 'VC-1',
+  };
+  const streamTypeName = t => STREAM_TYPES[t] || (t >= 0x80 ? 'User private' : '13818-1 保留');
+  const TABLE_IDS = { 0x00: 'PAT', 0x01: 'CAT', 0x02: 'PMT', 0x03: 'TSDT', 0x04: '14496 scene description', 0x05: '14496 object description',
+    0x06: 'Metadata', 0x07: 'IPMP', 0x40: 'DVB NIT（actual）', 0x41: 'DVB NIT（other）', 0x42: 'DVB SDT（actual）', 0x46: 'DVB SDT（other）',
+    0x4A: 'DVB BAT', 0x4E: 'DVB EIT（actual, p/f）', 0x4F: 'DVB EIT（other, p/f）', 0x70: 'DVB TDT', 0x73: 'DVB TOT', 0xC7: 'ATSC MGT',
+    0xC8: 'ATSC TVCT', 0xFC: 'SCTE-35 splice_info', 0xFF: '禁用（stuffing）' };
+  function tableName(t) {
+    if (TABLE_IDS[t]) return TABLE_IDS[t];
+    if (t >= 0x08 && t <= 0x39) return '13818-1 保留'; if (t >= 0x3A && t <= 0x3F) return 'DSM-CC';
+    if (t >= 0x50 && t <= 0x6F) return 'DVB EIT schedule'; if (t >= 0x40 && t <= 0x7F) return 'DVB';
+    if (t >= 0x80 && t <= 0x8F) return 'CA（ECM / EMM）'; return 'User private';
+  }
+  function streamIdName(id) {
+    const m = { 0xBC: 'program_stream_map', 0xBD: 'private_stream_1（AC-3、字幕等）', 0xBE: 'padding_stream', 0xBF: 'private_stream_2',
+      0xF0: 'ECM_stream', 0xF1: 'EMM_stream', 0xF2: 'DSMCC_stream', 0xF3: '13522_stream（MHEG）', 0xF4: 'H.222.1 type A', 0xF5: 'H.222.1 type B',
+      0xF6: 'H.222.1 type C', 0xF7: 'H.222.1 type D', 0xF8: 'H.222.1 type E', 0xF9: 'ancillary_stream', 0xFA: 'SL-packetized stream',
+      0xFB: 'FlexMux stream', 0xFC: 'metadata stream', 0xFD: 'extended_stream_id', 0xFE: 'reserved', 0xFF: 'program_stream_directory' };
+    if (m[id]) return m[id];
+    if (id >= 0xC0 && id <= 0xDF) return `MPEG 音訊串流 #${id & 0x1F}`;
+    if (id >= 0xE0 && id <= 0xEF) return `視訊串流 #${id & 0x0F}`;
+    return '無效（stream_id 須 ≥ 0xBC）';
+  }
+  // 依 13818-1 Table 2-21：這些 stream_id 沒有 optional PES header
+  const noOptHeader = id => [0xBC, 0xBE, 0xBF, 0xF0, 0xF1, 0xFF, 0xF2, 0xF8].includes(id);
+  const DESCRIPTORS = { 0x02: 'video_stream', 0x03: 'audio_stream', 0x04: 'hierarchy', 0x05: 'registration', 0x06: 'data_stream_alignment',
+    0x07: 'target_background_grid', 0x08: 'video_window', 0x09: 'CA', 0x0A: 'ISO_639_language', 0x0B: 'system_clock',
+    0x0C: 'multiplex_buffer_utilization', 0x0D: 'copyright', 0x0E: 'maximum_bitrate', 0x0F: 'private_data_indicator', 0x10: 'smoothing_buffer',
+    0x11: 'STD', 0x12: 'IBP', 0x1C: 'MPEG-4_audio', 0x26: 'metadata', 0x28: 'AVC_video', 0x2A: 'AVC_timing_and_HRD', 0x2B: 'MPEG-2_AAC_audio',
+    0x38: 'HEVC_video', 0x48: 'DVB service', 0x4D: 'DVB short_event', 0x52: 'DVB stream_identifier', 0x56: 'DVB teletext', 0x59: 'DVB subtitling',
+    0x6A: 'DVB AC-3', 0x7A: 'DVB enhanced_AC-3', 0x7B: 'DVB DTS', 0x7C: 'DVB AAC', 0x81: 'ATSC AC-3_audio', 0x86: 'ATSC caption_service' };
+  const H264_NAL = { 1: '非 IDR slice', 2: 'slice data A', 3: 'slice data B', 4: 'slice data C', 5: 'IDR slice（關鍵幀）', 6: 'SEI', 7: 'SPS',
+    8: 'PPS', 9: 'AUD（Access Unit Delimiter）', 10: 'end of sequence', 11: 'end of stream', 12: 'filler data' };
+  const AAC_RATES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+
+  // CRC-32/MPEG-2：多項式 0x04C11DB7、初值 0xFFFFFFFF、不反射、不做最後 XOR
+  function crc32mpeg(bytes) {
+    let c = 0xFFFFFFFF;
+    for (const b of bytes) { c ^= b << 24; for (let i = 0; i < 8; i++) c = (c & 0x80000000) ? ((c << 1) ^ 0x04C11DB7) : (c << 1); c >>>= 0; }
+    return c >>> 0;
+  }
+
+  class Incomplete extends Error {}
+
+  function parse(bytes) {
+    const fields = [], notes = [];
+    const summary = {};
+    const filled = i => i < bytes.length && bytes[i] !== null && bytes[i] !== undefined;
+    function read(pos, len) {
+      let v = 0;
+      for (let i = 0; i < len; i++) {
+        const bp = pos + i, byte = bp >> 3;
+        if (!filled(byte)) throw new Incomplete(byte);
+        v = v * 2 + ((bytes[byte] >> (7 - (bp & 7))) & 1);
+      }
+      return v;
+    }
+    let p = 0, group = 'hdr', depth = 0;
+    const head = (title, g = group) => fields.push({ heading: title, group: g, depth });
+    // 讀一個欄位：name、bit 長度、靜態說明、動態解讀函式
+    function F(name, len, desc, meaning, opt = {}) {
+      const v = read(p, len);
+      const m = meaning ? meaning(v) : null;
+      const r = typeof m === 'object' && m !== null ? m : { text: m };
+      fields.push({ name, pos: p, len, value: v, group: opt.group || group, depth, desc, meaning: r.text, bad: !!r.bad,
+        show: opt.show ? opt.show(v) : (len <= 4 ? `${bin(v, len)}b` : `${hx(v, Math.ceil(len / 4))}（${v}）`) });
+      p += len;
+      return v;
+    }
+    // 整段 bytes（不逐位解讀）
+    function blob(name, nBytes, desc, meaning, opt = {}) {
+      if (nBytes <= 0) return;
+      const start = p >> 3, end = Math.min(start + nBytes, 188);
+      let have = start; while (have < end && filled(have)) have++;
+      const arr = []; for (let i = start; i < have; i++) arr.push(bytes[i]);
+      fields.push({ name, pos: p, len: (end - start) * 8, value: null, group: opt.group || group, depth, desc,
+        meaning: typeof meaning === 'function' ? meaning(arr) : meaning, bad: false,
+        show: arr.length ? (arr.length > 8 ? arr.slice(0, 8).map(b => hx(b, 2).slice(2)).join(' ') + ` …（${end - start} bytes）` : arr.map(b => hx(b, 2).slice(2)).join(' ')) : '—' });
+      p = end * 8;
+      if (have < end) throw new Incomplete(have);
+    }
+    const marker = v => v === 1 ? '正確' : { text: 'marker_bit 應為 1', bad: true };
+
+    try {
+      // ---------- TS header（4 bytes） ----------
+      head('TS Header（第 1–4 格，固定 4 bytes）', 'hdr');
+      const sync = F('sync_byte', 8, '同步字元，每個 TS 封包都以 0x47 開頭，解碼器靠它對齊封包。',
+        v => v === 0x47 ? '正確（0x47，ASCII "G"）' : { text: '錯誤：sync_byte 必須是 0x47', bad: true });
+      F('transport_error_indicator', 1, '傳輸錯誤標示。1 = 這個封包有無法修正的錯誤（通常由解調器設定）。', v => v ? '有錯誤' : '無錯誤');
+      const pusi = F('payload_unit_start_indicator', 1, '1 = 這個封包的 payload 是 PES 封包或 PSI section 的開頭。',
+        v => v ? 'payload 從新的 PES / section 開始' : '延續前一個封包的資料');
+      F('transport_priority', 1, '1 = 優先權高於相同 PID 的其他封包。', v => v ? '高優先' : '一般');
+      const pid = F('PID', 13, 'Packet Identifier，用來區分這個封包屬於哪一路資料（PAT、PMT、影像、聲音……）。', v => pidName(v));
+      const tsc = F('transport_scrambling_control', 2, '加擾控制。00 = 未加擾；其他值由加擾系統定義（DVB-CSA：10 偶數金鑰、11 奇數金鑰）。',
+        v => ['未加擾（not scrambled）', '保留 / user defined', '以偶數金鑰（even key）加擾', '以奇數金鑰（odd key）加擾'][v]);
+      const afc = F('adaptation_field_control', 2, '01 = 只有 payload；10 = 只有 adaptation field；11 = adaptation field 後面接 payload；00 保留。',
+        v => [{ text: '保留（不應出現）', bad: true }, '只有 payload', '只有 adaptation field，沒有 payload', 'adaptation field + payload'][v]);
+      const cc = F('continuity_counter', 4, '每個 PID 各自計數，有 payload 時每包 +1，到 15 後回到 0；只有 adaptation field 時不遞增。', v => `第 ${v} 號（0–15 循環）`);
+      Object.assign(summary, { sync, pid, pidName: pidName(pid), pusi, tsc, afc, cc });
+
+      // ---------- Adaptation field ----------
+      let payloadStart = 4;
+      if (afc & 2) {
+        group = 'af';
+        head('Adaptation Field（從第 5 格開始）', 'af');
+        const afLen = F('adaptation_field_length', 8, '這個 byte 之後 adaptation field 還有幾個 bytes。AFC=11 時為 0–182；AFC=10 時必須是 183。', v => {
+          if (afc === 2 && v !== 183) return { text: `AFC=10 時應為 183，目前 ${v}`, bad: true };
+          if (afc === 3 && v > 182) return { text: `AFC=11 時應 ≤ 182，目前 ${v}`, bad: true };
+          return `後面還有 ${v} bytes（到第 ${5 + v} 格）` + (v === 0 ? '，0 代表只插入 1 個 stuffing byte' : '');
+        });
+        const afEnd = 5 + afLen; // 第一個不屬於 AF 的 byte index
+        payloadStart = Math.min(afEnd, 188);
+        summary.afLen = afLen;
+        if (afLen > 0) {
+          depth = 1;
+          F('discontinuity_indicator', 1, '1 = 時間基準或 continuity_counter 在這個封包不連續（例如切換節目）。', v => v ? '不連續' : '連續');
+          F('random_access_indicator', 1, '1 = 從這個封包開始可以隨機存取（通常是 I-frame / IDR 的開頭）。', v => v ? '可隨機存取（關鍵幀起點）' : '—');
+          F('elementary_stream_priority_indicator', 1, '1 = 這個封包的 ES 資料比相同 PID 的其他封包優先。', v => v ? '高優先' : '一般');
+          const pcrF = F('PCR_flag', 1, '1 = 後面有 PCR（program clock reference）。', v => v ? '有 PCR' : '無');
+          const opcrF = F('OPCR_flag', 1, '1 = 後面有 OPCR（original PCR）。', v => v ? '有 OPCR' : '無');
+          const spF = F('splicing_point_flag', 1, '1 = 後面有 splice_countdown（串流接合點）。', v => v ? '有 splice_countdown' : '無');
+          const tpdF = F('transport_private_data_flag', 1, '1 = 後面有 transport private data。', v => v ? '有私有資料' : '無');
+          const extF = F('adaptation_field_extension_flag', 1, '1 = 後面有 adaptation field extension。', v => v ? '有 extension' : '無');
+          const clock = (name, label) => {
+            head(`${name}（6 bytes = 33 + 6 + 9 bits）`, 'af');
+            depth = 2;
+            const base = F(`${name.toLowerCase()}_base`, 33, `${label} base，以 90 kHz 為單位。`, v => `${v}（${(v / 90000).toFixed(6)} 秒）`);
+            F('reserved', 6, '保留位元，通常全為 1。', null);
+            const ext = F(`${name.toLowerCase()}_extension`, 9, `${label} extension，以 27 MHz 為單位，範圍 0–299。`, v => v < 300 ? `${v}` : { text: '應小於 300', bad: true });
+            const full = base * 300 + ext;
+            fields.push({ note: true, group: 'af', depth: 2, text: `${name} = base × 300 + extension = ${full}（27 MHz）＝ ${(full / 27e6).toFixed(9)} 秒` });
+            depth = 1;
+            return full;
+          };
+          if (pcrF) summary.pcr = clock('PCR', 'program clock reference');
+          if (opcrF) clock('OPCR', 'original program clock reference');
+          if (spF) F('splice_countdown', 8, '有號整數（2 補數）。正值 = 還有幾個同 PID 封包到達接合點；0 = 這包就是接合點。', v => `${v > 127 ? v - 256 : v}`);
+          if (tpdF) {
+            const n = F('transport_private_data_length', 8, '後面私有資料的 byte 數。', v => `${v} bytes`);
+            blob('private_data_byte', n, '使用者私有資料，內容由應用自行定義。');
+          }
+          if (extF) {
+            head('Adaptation Field Extension', 'af');
+            depth = 2;
+            const extLen = F('adaptation_field_extension_length', 8, '這個 byte 之後 extension 還有幾個 bytes。', v => `${v} bytes`);
+            const extEnd = (p >> 3) + extLen;
+            const ltw = F('ltw_flag', 1, '1 = 有 legal time window 欄位。', v => v ? '有' : '無');
+            const pw = F('piecewise_rate_flag', 1, '1 = 有 piecewise_rate 欄位。', v => v ? '有' : '無');
+            const ss = F('seamless_splice_flag', 1, '1 = 有 splice_type 與 DTS_next_AU。', v => v ? '有' : '無');
+            F('reserved', 5, '保留位元。', null);
+            if (ltw) { F('ltw_valid_flag', 1, '1 = ltw_offset 有效。', v => v ? '有效' : '無效'); F('ltw_offset', 15, 'legal time window offset，單位為 (300/fs) 秒。', null); }
+            if (pw) { F('reserved', 2, '保留。', null); F('piecewise_rate', 22, '分段速率，單位 50 bytes/s。', v => `${v * 50} bytes/s`); }
+            if (ss) {
+              F('splice_type', 4, '接合類型，搭配 splice_countdown 使用。', null);
+              const a = F('DTS_next_AU[32..30]', 3, '下一個 access unit 的 DTS（高 3 bits）。', null); F('marker_bit', 1, '固定為 1。', marker);
+              const b = F('DTS_next_AU[29..15]', 15, 'DTS_next_AU 中間 15 bits。', null); F('marker_bit', 1, '固定為 1。', marker);
+              const c = F('DTS_next_AU[14..0]', 15, 'DTS_next_AU 低 15 bits。', null); F('marker_bit', 1, '固定為 1。', marker);
+              const dts = a * 2 ** 30 + b * 2 ** 15 + c;
+              fields.push({ note: true, group: 'af', depth: 2, text: `DTS_next_AU = ${dts}（${(dts / 90000).toFixed(6)} 秒）` });
+            }
+            const rest = extEnd - (p >> 3);
+            if (rest > 0) blob('reserved', rest, 'extension 剩下的保留位元組。');
+            depth = 1;
+          }
+          const stuff = afEnd - (p >> 3);
+          if (stuff > 0) blob('stuffing_byte', stuff, '填充位元組，固定 0xFF，用來把封包補滿 188 bytes。', arr => arr.every(b => b === 0xFF) ? `${stuff} bytes 填充` : '注意：stuffing 應為 0xFF');
+          if (stuff < 0) notes.push('adaptation_field_length 太短，裝不下 flags 指示的欄位。');
+        }
+        depth = 0;
+        p = payloadStart * 8;
+      }
+
+      // ---------- Payload ----------
+      if (!(afc & 1) || payloadStart >= 188) { summary.kind = '無 payload'; return done(); }
+      group = 'pl';
+      const remain = 188 - payloadStart;
+      if (pid === 0x1FFF) {
+        summary.kind = 'Null packet';
+        head(`Payload（第 ${payloadStart + 1}–188 格）：Null packet`, 'stuff');
+        blob('null_data', remain, 'Null packet 只用來填補頻寬，內容沒有意義（常見為 0xFF）。', null, { group: 'stuff' });
+        return done();
+      }
+      if (tsc !== 0) {
+        summary.kind = '加擾的 payload';
+        head(`Payload（第 ${payloadStart + 1}–188 格）：已加擾`, 'pl');
+        blob('scrambled_payload', remain, 'transport_scrambling_control ≠ 00，payload 已加密，需解擾後才能解析。');
+        return done();
+      }
+      if (!pusi) {
+        summary.kind = '延續資料';
+        head(`Payload（第 ${payloadStart + 1}–188 格）`, 'pl');
+        blob('payload_continuation', remain, 'payload_unit_start_indicator = 0：這是上一個 PES 封包或 PSI section 的後續資料，要和前面的封包接起來才能解讀。');
+        return done();
+      }
+      // PUSI=1：判斷 PES 或 PSI
+      const isPES = filled(payloadStart) && filled(payloadStart + 1) && filled(payloadStart + 2) &&
+        bytes[payloadStart] === 0 && bytes[payloadStart + 1] === 0 && bytes[payloadStart + 2] === 1;
+      if (isPES) parsePES(payloadStart); else parsePSI(payloadStart);
+      return done();
+    } catch (e) {
+      if (!(e instanceof Incomplete)) throw e;
+      summary.incompleteAt = e.message;
+      notes.push(`第 ${Number(e.message) + 1} 格還沒填，後面的欄位暫停解析。`);
+      return done();
+    }
+
+    function parsePES(start) {
+      group = 'pes'; depth = 0;
+      summary.kind = 'PES';
+      head(`PES Header（從第 ${start + 1} 格開始）`, 'pes');
+      F('packet_start_code_prefix', 24, '固定為 0x000001，表示後面是一個 PES 封包。', v => v === 1 ? '正確（0x000001）' : { text: '應為 0x000001', bad: true });
+      const sid = F('stream_id', 8, '串流種類：0xC0–0xDF 音訊、0xE0–0xEF 視訊、0xBD private_stream_1……', v => streamIdName(v));
+      const plen = F('PES_packet_length', 16, '這個欄位之後 PES 封包還有幾個 bytes。0 = 長度不限（只允許視訊）。', v => v ? `${v} bytes` : '0（長度未指定，常見於視訊）');
+      summary.streamId = sid;
+      let esStart = p >> 3;
+      if (!noOptHeader(sid)) {
+        head('Optional PES Header', 'pes');
+        depth = 1;
+        F("'10'", 2, '固定為 10。', v => v === 2 ? '正確' : { text: '應為 10', bad: true });
+        F('PES_scrambling_control', 2, '00 = PES payload 未加擾。', v => ['未加擾', 'user defined', 'user defined', 'user defined'][v]);
+        F('PES_priority', 1, '1 = 此 PES payload 優先權較高。', v => v ? '高' : '一般');
+        F('data_alignment_indicator', 1, '1 = header 後面緊接著視訊 start code 或音訊 sync word。', v => v ? '對齊（緊接 start code / sync word）' : '未指定');
+        F('copyright', 1, '1 = 受版權保護。', v => v ? '有版權' : '未指定');
+        F('original_or_copy', 1, '1 = 原始內容；0 = 複製品。', v => v ? '原始' : '複製');
+        const ptsdts = F('PTS_DTS_flags', 2, '10 = 只有 PTS；11 = PTS 和 DTS 都有；00 = 都沒有；01 禁用。',
+          v => ['沒有 PTS / DTS', { text: '禁用的值（01）', bad: true }, '只有 PTS', 'PTS + DTS'][v]);
+        const escrF = F('ESCR_flag', 1, '1 = 有 ESCR 欄位。', v => v ? '有' : '無');
+        const esrF = F('ES_rate_flag', 1, '1 = 有 ES_rate 欄位。', v => v ? '有' : '無');
+        const dsmF = F('DSM_trick_mode_flag', 1, '1 = 有 trick mode 欄位（快轉、慢動作等）。', v => v ? '有' : '無');
+        const acpF = F('additional_copy_info_flag', 1, '1 = 有 additional_copy_info 欄位。', v => v ? '有' : '無');
+        const crcF = F('PES_CRC_flag', 1, '1 = 有 previous_PES_packet_CRC 欄位。', v => v ? '有' : '無');
+        const extF = F('PES_extension_flag', 1, '1 = 有 PES extension。', v => v ? '有' : '無');
+        const hlen = F('PES_header_data_length', 8, '這個 byte 之後 optional 欄位 + stuffing 共幾個 bytes。', v => `${v} bytes（ES 從第 ${(p >> 3) + v + 2} 格開始）`);
+        const hdrEnd = (p >> 3) + hlen;
+        esStart = hdrEnd;
+        const ts33 = (name, prefixWant) => {
+          head(`${name}（5 bytes = 4 + 3 + 1 + 15 + 1 + 15 + 1 bits）`, 'pes');
+          depth = 2;
+          F('prefix', 4, `固定為 ${bin(prefixWant, 4)}。`, v => v === prefixWant ? '正確' : { text: `應為 ${bin(prefixWant, 4)}`, bad: true });
+          const a = F(`${name}[32..30]`, 3, `${name} 高 3 bits。`, null); F('marker_bit', 1, '固定為 1。', marker);
+          const b = F(`${name}[29..15]`, 15, `${name} 中間 15 bits。`, null); F('marker_bit', 1, '固定為 1。', marker);
+          const c = F(`${name}[14..0]`, 15, `${name} 低 15 bits。`, null); F('marker_bit', 1, '固定為 1。', marker);
+          const v = a * 2 ** 30 + b * 2 ** 15 + c;
+          fields.push({ note: true, group: 'pes', depth: 2, text: `${name} = ${v}（90 kHz）＝ ${(v / 90000).toFixed(6)} 秒` });
+          depth = 1;
+          return v;
+        };
+        if (ptsdts === 2) summary.pts = ts33('PTS', 0b0010);
+        if (ptsdts === 3) { summary.pts = ts33('PTS', 0b0011); summary.dts = ts33('DTS', 0b0001); }
+        if (escrF) {
+          head('ESCR（6 bytes）', 'pes'); depth = 2;
+          F('reserved', 2, '保留。', null);
+          const a = F('ESCR_base[32..30]', 3, 'ESCR base 高 3 bits。', null); F('marker_bit', 1, '固定為 1。', marker);
+          const b = F('ESCR_base[29..15]', 15, 'ESCR base 中間 15 bits。', null); F('marker_bit', 1, '固定為 1。', marker);
+          const c = F('ESCR_base[14..0]', 15, 'ESCR base 低 15 bits。', null); F('marker_bit', 1, '固定為 1。', marker);
+          const ext = F('ESCR_extension', 9, 'ESCR extension（27 MHz）。', null); F('marker_bit', 1, '固定為 1。', marker);
+          const v = (a * 2 ** 30 + b * 2 ** 15 + c) * 300 + ext;
+          fields.push({ note: true, group: 'pes', depth: 2, text: `ESCR = ${v}（27 MHz）＝ ${(v / 27e6).toFixed(9)} 秒` });
+          depth = 1;
+        }
+        if (esrF) { F('marker_bit', 1, '固定為 1。', marker); F('ES_rate', 22, '基本串流速率，單位 50 bytes/s。', v => `${v * 50} bytes/s`); F('marker_bit', 1, '固定為 1。', marker); }
+        if (dsmF) {
+          const ctl = F('trick_mode_control', 3, '000 快轉、001 慢動作、010 凍結畫面、011 快速倒轉、100 慢速倒轉。',
+            v => ['fast forward', 'slow motion', 'freeze frame', 'fast reverse', 'slow reverse', '保留', '保留', '保留'][v]);
+          F(ctl === 2 ? 'field_id + reserved' : ctl === 0 || ctl === 3 ? 'field_id + intra_slice_refresh + frequency_truncation' : 'rep_cntrl / reserved', 5, 'trick mode 的細部參數。', null);
+        }
+        if (acpF) { F('marker_bit', 1, '固定為 1。', marker); F('additional_copy_info', 7, '著作權相關的私有資料。', null); }
+        if (crcF) F('previous_PES_packet_CRC', 16, '前一個 PES 封包資料的 CRC-16，用於偵錯。', null);
+        if (extF) {
+          head('PES Extension', 'pes'); depth = 2;
+          const privF = F('PES_private_data_flag', 1, '1 = 有 16 bytes 的 PES private data。', v => v ? '有' : '無');
+          const packF = F('pack_header_field_flag', 1, '1 = 有 pack header（program stream 用）。', v => v ? '有' : '無');
+          const seqF = F('program_packet_sequence_counter_flag', 1, '1 = 有 program packet sequence counter。', v => v ? '有' : '無');
+          const pstdF = F('P-STD_buffer_flag', 1, '1 = 有 P-STD buffer 欄位。', v => v ? '有' : '無');
+          F('reserved', 3, '保留。', null);
+          const ext2 = F('PES_extension_flag_2', 1, '1 = 有 PES extension 2。', v => v ? '有' : '無');
+          if (privF) blob('PES_private_data', 16, '128 bits 私有資料。');
+          if (packF) { const n = F('pack_field_length', 8, 'pack header 的長度。', v => `${v} bytes`); blob('pack_header', n, 'Program stream pack header。'); }
+          if (seqF) {
+            F('marker_bit', 1, '固定為 1。', marker); F('program_packet_sequence_counter', 7, '封包序號計數器。', null);
+            F('marker_bit', 1, '固定為 1。', marker); F('MPEG1_MPEG2_identifier', 1, '1 = 原本是 MPEG-1 system stream；0 = MPEG-2 program stream。', v => v ? 'MPEG-1' : 'MPEG-2');
+            F('original_stuff_length', 6, '原始 header 中的 stuffing 長度。', null);
+          }
+          if (pstdF) { F("'01'", 2, '固定為 01。', v => v === 1 ? '正確' : { text: '應為 01', bad: true }); F('P-STD_buffer_scale', 1, '0 = 單位 128 bytes；1 = 單位 1024 bytes。', v => v ? '1024 bytes' : '128 bytes'); F('P-STD_buffer_size', 13, 'P-STD 緩衝區大小。', null); }
+          if (ext2) { F('marker_bit', 1, '固定為 1。', marker); const n = F('PES_extension_field_length', 7, 'extension 2 長度。', v => `${v} bytes`); blob('PES_extension_field_data', n, 'stream_id_extension 等資料。'); }
+          depth = 1;
+        }
+        const stuff = hdrEnd - (p >> 3);
+        if (stuff > 0) blob('stuffing_byte', stuff, 'PES header 的填充（0xFF）。');
+        if (stuff < 0) notes.push('PES_header_data_length 太短，裝不下 flags 指示的欄位。');
+        depth = 0;
+      }
+      p = esStart * 8;
+      if (esStart >= 188) return;
+      group = 'es';
+      head(`PES Packet Data（ES 資料，第 ${esStart + 1}–188 格）`, 'es');
+      parseES(sid, esStart);
+    }
+
+    function parseES(sid, start) {
+      const b = i => filled(i) ? bytes[i] : -1;
+      depth = 1;
+      if (sid >= 0xE0 && sid <= 0xEF && b(start) === 0 && b(start + 1) === 0 && (b(start + 2) === 1 || (b(start + 2) === 0 && b(start + 3) === 1))) {
+        const sc4 = b(start + 2) === 0;
+        F('NAL start code', sc4 ? 32 : 24, 'H.264 / H.265 Annex B 起始碼（00 00 01 或 00 00 00 01）。', () => '找到 NAL 起始碼');
+        head('NAL header（以 H.264 解讀；若 PMT 標示為 H.265 則以 2 bytes 解讀）', 'es');
+        depth = 2;
+        F('forbidden_zero_bit', 1, '必須為 0。', v => v ? { text: '應為 0', bad: true } : '正確');
+        F('nal_ref_idc', 2, '參考重要性，0 = 不被其他畫面參考。', null);
+        F('nal_unit_type', 5, 'NAL 單元類型：1 非 IDR、5 IDR、6 SEI、7 SPS、8 PPS、9 AUD。', v => H264_NAL[v] || '其他 / 保留');
+        depth = 1;
+      } else if (b(start) === 0xFF && b(start + 1) >= 0 && (b(start + 1) & 0xF0) === 0xF0) {
+        head('ADTS header（AAC，7 bytes；protection_absent=0 時多 2 bytes CRC）', 'es');
+        depth = 2;
+        F('syncword', 12, '固定為 0xFFF。', v => v === 0xFFF ? '正確' : { text: '應為 0xFFF', bad: true });
+        F('ID', 1, '0 = MPEG-4；1 = MPEG-2。', v => v ? 'MPEG-2 AAC' : 'MPEG-4 AAC');
+        F('layer', 2, '固定為 00。', v => v ? { text: '應為 00', bad: true } : '正確');
+        const pa = F('protection_absent', 1, '1 = 沒有 CRC。', v => v ? '無 CRC' : '有 CRC');
+        F('profile', 2, '0 Main、1 LC、2 SSR。', v => ['Main', 'LC（Low Complexity）', 'SSR', '保留'][v]);
+        F('sampling_frequency_index', 4, '取樣率索引。', v => AAC_RATES[v] ? `${AAC_RATES[v]} Hz` : '保留');
+        F('private_bit', 1, '私有位元。', null);
+        F('channel_configuration', 3, '聲道設定。', v => ['在 AOT 指定', '1 聲道', '2 聲道（立體聲）', '3 聲道', '4 聲道', '5 聲道', '5.1 聲道', '7.1 聲道'][v]);
+        F('original_copy', 1, '原始 / 複製。', null); F('home', 1, '家用。', null);
+        F('copyright_identification_bit', 1, '版權識別位元。', null); F('copyright_identification_start', 1, '版權識別起始。', null);
+        F('aac_frame_length', 13, '含 ADTS header 的整個 frame 長度。', v => `${v} bytes`);
+        F('adts_buffer_fullness', 11, '0x7FF = 可變位元率。', v => v === 0x7FF ? 'VBR' : `${v}`);
+        F('number_of_raw_data_blocks_in_frame', 2, 'frame 中 raw data block 數減 1。', v => `${v + 1} 個`);
+        if (!pa) F('crc_check', 16, 'ADTS CRC。', null);
+        depth = 1;
+      }
+      const rest = 188 - (p >> 3);
+      if (rest > 0) blob('ES data', rest, '基本串流（ES）資料，例如 H.264 NAL 單元或 AAC frame 內容，可能延續到後面的封包。', null, { group: 'es' });
+    }
+
+    function parsePSI(start) {
+      group = 'psi'; depth = 0;
+      head(`Payload（第 ${start + 1} 格開始）：PSI section`, 'psi');
+      const ptr = F('pointer_field', 8, 'PUSI=1 且 payload 是 PSI 時才有。表示新 section 從 pointer_field 之後第幾個 byte 開始。', v => v ? `跳過 ${v} bytes 後才是新 section` : '新 section 緊接在後');
+      if (ptr) blob('前一個 section 的尾端', ptr, '屬於上一個封包開始的 section。');
+      let first = true;
+      while ((p >> 3) < 188) {
+        const s = p >> 3;
+        if (!filled(s)) throw new Incomplete(s);
+        if (bytes[s] === 0xFF) { blob('stuffing_byte', 188 - s, 'section 結束後的填充，固定 0xFF。', arr => arr.every(x => x === 0xFF) ? `${188 - s} bytes 填充` : '注意：填充應為 0xFF', { group: 'stuff' }); break; }
+        parseSection(s, first); first = false;
+      }
+    }
+
+    function parseSection(s, first) {
+      depth = 0; group = 'psi';
+      const tidPeek = bytes[s];
+      head(`${tableName(tidPeek)} section（第 ${s + 1} 格開始）`, 'psi');
+      depth = 1;
+      const tid = F('table_id', 8, '表格種類：0x00 PAT、0x01 CAT、0x02 PMT……', v => tableName(v));
+      if (first) summary.kind = tableName(tid);
+      const ssi = F('section_syntax_indicator', 1, 'PAT / PMT / CAT 固定為 1，表示後面有 5 bytes 的長格式 header。', v => (tid <= 2 && !v) ? { text: 'PAT/PMT/CAT 應為 1', bad: true } : (v ? '長格式' : '短格式'));
+      F("'0' / private_indicator", 1, 'PAT / PMT 固定為 0。', v => (tid <= 2 && v) ? { text: '應為 0', bad: true } : '');
+      F('reserved', 2, '保留，通常為 11。', null);
+      const slen = F('section_length', 12, '這個欄位之後的 section 長度（含 CRC_32）。前 2 bits 必須為 00，PAT/PMT 最大 1021。',
+        v => (v >> 10) ? { text: '前 2 bits 應為 00', bad: true } : `${v} bytes（section 到第 ${(p >> 3) + v} 格結束）`);
+      const end = (p >> 3) + slen;
+      if (end > 188) notes.push(`這個 section 長 ${slen} bytes，超出本封包，後半段在下一個同 PID 的封包裡。`);
+      const crcPos = end - 4;
+      if (ssi) {
+        F(tid === 0 ? 'transport_stream_id' : tid === 2 ? 'program_number' : 'table_id_extension', 16,
+          tid === 0 ? '傳輸串流識別碼，由營運商自訂。' : tid === 2 ? '這個 PMT 描述的節目編號（對應 PAT 裡的 program_number）。' : '依表格不同而有不同意義。', null);
+        F('reserved', 2, '保留。', null);
+        F('version_number', 5, '表格版本 0–31，內容改變時 +1。', v => `版本 ${v}`);
+        F('current_next_indicator', 1, '1 = 目前有效；0 = 下一版預告。', v => v ? '目前適用' : '下一版（尚未生效）');
+        F('section_number', 8, '這是第幾個 section（從 0 開始）。', null);
+        F('last_section_number', 8, '最後一個 section 的編號。', null);
+      }
+      if (ssi && tid === 0) {
+        let i = 0;
+        while ((p >> 3) < Math.min(crcPos, 188)) {
+          head(`Program #${i}（4 bytes）`, 'psi'); depth = 2;
+          const pn = F('program_number', 16, '節目編號。0 代表後面的 PID 是 NIT。', v => v ? `節目 ${v}` : 'Network（NIT）');
+          F('reserved', 3, '保留，通常為 111。', null);
+          F(pn ? 'program_map_PID' : 'network_PID', 13, pn ? '這個節目的 PMT 放在哪個 PID。' : 'NIT 放在哪個 PID。', v => `PID ${hx(v, 4)}`);
+          (summary.programs = summary.programs || []).push(pn);
+          depth = 1; i++;
+        }
+      } else if (ssi && tid === 2) {
+        F('reserved', 3, '保留。', null);
+        F('PCR_PID', 13, '這個節目的 PCR 在哪個 PID 的封包裡（0x1FFF = 沒有 PCR）。', v => v === 0x1FFF ? '沒有 PCR' : `PID ${hx(v, 4)}`);
+        F('reserved', 4, '保留。', null);
+        const pil = F('program_info_length', 12, '後面節目層 descriptor 的總長度，前 2 bits 為 00。', v => `${v} bytes`);
+        descriptors(pil);
+        let i = 0;
+        while ((p >> 3) < Math.min(crcPos, 188)) {
+          const st = filled(p >> 3) ? bytes[p >> 3] : 0;
+          head(`Elementary stream #${i}：${streamTypeName(st)}`, 'psi'); depth = 2;
+          F('stream_type', 8, '基本串流的編碼格式，例如 0x1B = H.264、0x24 = H.265、0x0F = AAC。', v => streamTypeName(v));
+          F('reserved', 3, '保留。', null);
+          F('elementary_PID', 13, '這路串流的封包 PID。', v => `PID ${hx(v, 4)}`);
+          F('reserved', 4, '保留。', null);
+          const el = F('ES_info_length', 12, '後面 ES descriptor 的總長度。', v => `${v} bytes`);
+          descriptors(el);
+          (summary.streams = summary.streams || []).push(st);
+          depth = 1; i++;
+        }
+      } else {
+        const n = Math.min(crcPos, 188) - (p >> 3);
+        if (n > 0) blob('section data', n, '這種表格的內容本工具不逐欄解析。');
+      }
+      depth = 1;
+      if (end <= 188) {
+        const arr = bytes.slice(s, end - 4);
+        const want = arr.every(x => x !== null && x !== undefined) ? crc32mpeg(arr) : null;
+        F('CRC_32', 32, 'CRC-32/MPEG-2（多項式 0x04C11DB7，初值 0xFFFFFFFF），計算範圍從 table_id 到 CRC 前一個 byte。',
+          v => want === null ? '' : v === want ? '正確 ✓' : { text: `錯誤 ✗，應為 ${hx(want, 8)}`, bad: true }, { show: v => hx(v, 8) });
+      }
+      p = Math.min(end, 188) * 8;
+    }
+
+    function descriptors(total) {
+      const stop = (p >> 3) + total;
+      while ((p >> 3) + 2 <= stop && (p >> 3) < 188) {
+        const tag = filled(p >> 3) ? bytes[p >> 3] : 0;
+        head(`descriptor：${DESCRIPTORS[tag] || '其他'}`, 'psi');
+        const d0 = depth; depth = d0 + 1;
+        F('descriptor_tag', 8, 'descriptor 種類。', v => DESCRIPTORS[v] || (v >= 0x40 ? 'DVB / 私有' : '保留'));
+        const len = F('descriptor_length', 8, 'descriptor 內容長度。', v => `${v} bytes`);
+        if (tag === 0x0A && len >= 4) { blob('ISO_639_language_code', 3, '語言代碼（3 個 ASCII 字元）。', a => a.map(c => String.fromCharCode(c)).join('')); F('audio_type', 8, '0 未定義、1 clean effects、2 聽障、3 視障解說。', null); if (len > 4) blob('more', len - 4, '其他語言。'); }
+        else if (tag === 0x05 && len >= 4) { blob('format_identifier', 4, '註冊的格式代碼。', a => a.map(c => String.fromCharCode(c)).join('')); if (len > 4) blob('additional_identification_info', len - 4, ''); }
+        else blob('descriptor_data', len, 'descriptor 內容。');
+        depth = d0;
+      }
+      p = Math.min(stop, 188) * 8;
+    }
+
+    function done() {
+      // 每個欄位涵蓋的格子範圍（0-based）
+      for (const f of fields) if (f.pos !== undefined) { f.b0 = f.pos >> 3; f.b1 = (f.pos + f.len - 1) >> 3; }
+      return { fields, notes, summary };
+    }
+  }
+
+  // ---------- 範例封包 ----------
+  function withCrc(arr, sectionStart) { const c = crc32mpeg(arr.slice(sectionStart)); return arr.concat([c >>> 24, (c >>> 16) & 255, (c >>> 8) & 255, c & 255]); }
+  const pad = (arr, v = 0xFF) => arr.concat(new Array(188 - arr.length).fill(v));
+  function pts5(prefix, v) {
+    return [(prefix << 4) | (Math.floor(v / 2 ** 30) & 7) << 1 | 1, (Math.floor(v / 2 ** 22) & 0xFF), ((Math.floor(v / 2 ** 15) & 0x7F) << 1) | 1, (Math.floor(v / 2 ** 7) & 0xFF), ((v & 0x7F) << 1) | 1];
+  }
+  function pcr6(base, ext) {
+    return [Math.floor(base / 2 ** 25) & 255, Math.floor(base / 2 ** 17) & 255, Math.floor(base / 2 ** 9) & 255, Math.floor(base / 2) & 255, ((base & 1) << 7) | 0x7E | (ext >> 8), ext & 255];
+  }
+  const SAMPLES = {
+    pat: { label: 'PAT', bytes: pad(withCrc([0x47, 0x40, 0x00, 0x10, 0x00, 0x00, 0xB0, 0x0D, 0x00, 0x01, 0xC1, 0x00, 0x00, 0x00, 0x01, 0xF0, 0x00], 5)) },
+    pmt: { label: 'PMT', bytes: pad(withCrc([0x47, 0x50, 0x00, 0x10, 0x00, 0x02, 0xB0, 0x1D, 0x00, 0x01, 0xC1, 0x00, 0x00, 0xE1, 0x00, 0xF0, 0x00,
+      0x1B, 0xE1, 0x00, 0xF0, 0x00, 0x0F, 0xE1, 0x01, 0xF0, 0x06, 0x0A, 0x04, 0x63, 0x68, 0x69, 0x00], 5)) },
+    video: { label: '視訊 PES（含 PCR）', bytes: (() => {
+      const pes = [0x00, 0x00, 0x01, 0xE0, 0x00, 0x00, 0x80, 0xC0, 0x0A, ...pts5(3, 133500), ...pts5(1, 126000), 0x00, 0x00, 0x00, 0x01, 0x09, 0xF0, 0x00, 0x00, 0x00, 0x01, 0x67, 0x64, 0x00, 0x28];
+      const head = [0x47, 0x41, 0x00, 0x30, 0x07, 0x50, ...pcr6(126000, 0)];
+      const a = head.concat(pes); while (a.length < 188) a.push((a.length * 37) & 0xFF); return a;
+    })() },
+    audio: { label: '音訊 PES（AAC ADTS）', bytes: (() => {
+      const a = [0x47, 0x41, 0x01, 0x11, 0x00, 0x00, 0x01, 0xC0, 0x01, 0x10, 0x80, 0x80, 0x05, ...pts5(2, 129000), 0xFF, 0xF1, 0x50, 0x80, 0x20, 0x1F, 0xFC];
+      while (a.length < 188) a.push((a.length * 53 + 11) & 0xFF); return a;
+    })() },
+    nul: { label: 'Null packet', bytes: pad([0x47, 0x1F, 0xFF, 0x10]) },
+  };
+  return { parse, crc32mpeg, SAMPLES, pidName, streamTypeName };
+})();
+
+</script>
+<script>
 const $ = id => document.getElementById(id);
 const val = id => $(id).value;
 const hx = (id, name) => hex2buf(val(id), name);
@@ -1265,6 +2338,1305 @@ $('upIntro').textContent = UP.endpoint
 })();
 
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosizeAll);
+
+</script>
+<script>
+// ===== MPEG-TS 解析分頁 =====
+(() => {
+  const N = 188;
+  const data = new Array(N).fill(null);
+  const grid = $('tsGrid'), tbody = $('tsFields');
+  const cells = [];
+  const GROUP_LABEL = { hdr: 'TS header', af: 'Adaptation field', pes: 'PES header', psi: 'PSI（PAT / PMT）', es: 'ES 資料', pl: 'Payload', stuff: '填充 / Null' };
+  let parsed = { fields: [], notes: [], summary: {} };
+  let cellFields = [];      // 每格 → 涵蓋它的欄位 index 清單
+  let current = 0;          // 目前選取的格子
+
+  // 建立 188 個格子
+  for (let i = 0; i < N; i++) {
+    if (i % 8 === 0) { const lab = document.createElement('div'); lab.className = 'tsrow' + (i % 16 ? ' half' : ''); lab.textContent = i + 1; grid.appendChild(lab); }
+    const inp = document.createElement('input');
+    inp.className = 'tscell'; inp.maxLength = 2; inp.spellcheck = false; inp.autocomplete = 'off';
+    inp.setAttribute('inputmode', 'text'); inp.setAttribute('aria-label', `第 ${i + 1} 格`); inp.dataset.i = i;
+    inp.title = `第 ${i + 1} 格（offset 0x${i.toString(16).toUpperCase().padStart(2, '0')}）`;
+    grid.appendChild(inp); cells.push(inp);
+  }
+
+  function setByte(i, v) { data[i] = v; cells[i].value = v === null ? '' : v.toString(16).toUpperCase().padStart(2, '0'); }
+  function loadHex(str, from = 0) {
+    const h = String(str).replace(/0x/gi, '').replace(/[^0-9a-fA-F]/g, '');
+    let i = from;
+    for (let k = 0; k + 1 < h.length && i < N; k += 2, i++) setByte(i, parseInt(h.substr(k, 2), 16));
+    return i;
+  }
+
+  function render() {
+    parsed = TSP.parse(data);
+    cellFields = Array.from({ length: N }, () => []);
+    parsed.fields.forEach((f, k) => { if (f.b0 !== undefined) for (let b = f.b0; b <= Math.min(f.b1, N - 1); b++) cellFields[b].push(k); });
+    // 格子顏色：取第一個涵蓋的欄位群組
+    cells.forEach((c, i) => {
+      const k = cellFields[i][0];
+      c.className = 'tscell' + (k !== undefined ? ' g-' + parsed.fields[k].group : '') + (data[i] === null ? ' empty' : '') +
+        (cellFields[i].some(j => parsed.fields[j].bad) ? ' bad' : '');
+    });
+    // 欄位表
+    const rows = [];
+    parsed.fields.forEach((f, k) => {
+      if (f.heading) { rows.push(`<tr class="th g-${f.group}"><td colspan="4" style="padding-left:${8 + f.depth * 14}px">${esc(f.heading)}</td></tr>`); return; }
+      if (f.note) { rows.push(`<tr class="tn"><td></td><td colspan="3" style="padding-left:${8 + f.depth * 14}px">${esc(f.text)}</td></tr>`); return; }
+      const where = f.b0 === f.b1 ? `${f.b0 + 1}` : `${f.b0 + 1}–${f.b1 + 1}`;
+      const bitInfo = f.len % 8 === 0 && f.pos % 8 === 0 ? '' : `<small>bit ${7 - (f.pos & 7)}${f.len > 1 ? '…' : ''}</small>`;
+      rows.push(`<tr class="tf${f.bad ? ' badrow' : ''}" data-k="${k}" data-b0="${f.b0}" data-b1="${f.b1}">` +
+        `<td class="c">${where}${bitInfo}</td>` +
+        `<td class="n" style="padding-left:${8 + f.depth * 14}px"><div class="nm"><span class="dot g-${f.group}"></span>${esc(f.name)}</div><span class="ds">${esc(f.desc || '')}</span></td>` +
+        `<td class="c">${f.len}</td>` +
+        `<td class="v"><code>${esc(f.show)}</code>${f.meaning ? `<b>${esc(f.meaning)}</b>` : ''}</td></tr>`);
+    });
+    tbody.innerHTML = rows.join('');
+    // 摘要
+    const s = parsed.summary, chips = [];
+    if (s.pid !== undefined) chips.push(`PID 0x${s.pid.toString(16).toUpperCase().padStart(4, '0')}`);
+    if (s.kind) chips.push(s.kind);
+    if (s.streamId !== undefined) chips.push(`stream_id 0x${s.streamId.toString(16).toUpperCase()}`);
+    if (s.cc !== undefined) chips.push(`CC ${s.cc}`);
+    if (s.pcr !== undefined) chips.push(`PCR ${(s.pcr / 27e6).toFixed(6)} s`);
+    if (s.pts !== undefined) chips.push(`PTS ${(s.pts / 90000).toFixed(6)} s`);
+    if (s.dts !== undefined) chips.push(`DTS ${(s.dts / 90000).toFixed(6)} s`);
+    if (s.streams) chips.push(`${s.streams.length} 路串流`);
+    const bads = parsed.fields.filter(f => f.bad).length;
+    $('tsSummary').innerHTML = chips.map(c => `<span class="chip">${esc(c)}</span>`).join('') +
+      (bads ? `<span class="chip badchip">${bads} 個欄位有問題</span>` : '');
+    const filled = data.filter(v => v !== null).length;
+    $('tsNotes').textContent = [`已填 ${filled} / 188 格。`, ...parsed.notes].join(' ');
+    $('tsNotes').className = 'st' + (parsed.notes.length ? '' : filled === N ? ' ok' : '');
+    light(current, false);
+  }
+
+  function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  // ---- 發亮：選取格子 → 對應欄位發亮；滑過欄位 → 對應格子發亮 ----
+  function clearLit() {
+    tbody.querySelectorAll('tr.lit').forEach(r => r.classList.remove('lit'));
+    cells.forEach(c => c.classList.remove('rel', 'cur'));
+  }
+  function light(i, scroll = true) {
+    current = i; clearLit();
+    cells[i].classList.add('cur');
+    const ks = cellFields[i] || [];
+    let first = null;
+    for (const k of ks) {
+      const row = tbody.querySelector(`tr[data-k="${k}"]`); if (!row) continue;
+      row.classList.add('lit'); first = first || row;
+      const f = parsed.fields[k]; for (let b = f.b0; b <= Math.min(f.b1, N - 1); b++) if (b !== i) cells[b].classList.add('rel');
+    }
+    if (scroll && first) {
+      const box = $('tsTableBox'), r = first.getBoundingClientRect(), br = box.getBoundingClientRect();
+      if (r.top < br.top + 30 || r.bottom > br.bottom) box.scrollTop += r.top - br.top - 60;
+    }
+    bitView(i);
+  }
+  function bitView(i) {
+    const v = data[i];
+    $('tsBitTitle').textContent = `第 ${i + 1} 格（offset 0x${i.toString(16).toUpperCase().padStart(2, '0')}）= ${v === null ? '未填' : '0x' + v.toString(16).toUpperCase().padStart(2, '0')}`;
+    const segs = [];
+    for (let bit = 0; bit < 8; bit++) {
+      const abs = i * 8 + bit;
+      const k = (cellFields[i] || []).find(j => { const f = parsed.fields[j]; return abs >= f.pos && abs < f.pos + f.len; });
+      const last = segs[segs.length - 1];
+      if (last && last.k === k) last.n++; else segs.push({ k, n: 1, start: bit });
+    }
+    $('tsBits').innerHTML = segs.map(sg => {
+      const f = sg.k !== undefined ? parsed.fields[sg.k] : null;
+      const bits = []; for (let b = sg.start; b < sg.start + sg.n; b++) bits.push(v === null ? '·' : (v >> (7 - b)) & 1);
+      return `<div class="seg g-${f ? f.group : 'none'}" style="flex:${sg.n}"><div class="bv">${bits.join('')}</div><div class="bn">${f ? esc(f.name) : '—'}</div></div>`;
+    }).join('');
+  }
+
+  // ---- 輸入行為 ----
+  grid.addEventListener('focusin', e => { if (e.target.dataset.i !== undefined) { light(+e.target.dataset.i); e.target.select(); } });
+  grid.addEventListener('mouseover', e => { if (e.target.dataset.i !== undefined && document.activeElement?.parentNode !== grid) light(+e.target.dataset.i, false); });
+  grid.addEventListener('input', e => {
+    const t = e.target, i = +t.dataset.i;
+    const clean = t.value.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
+    if (clean.length > 2) { const end = loadHex(clean, i); render(); cells[Math.min(end, N - 1)].focus(); return; }
+    t.value = clean;
+    data[i] = clean.length ? parseInt(clean, 16) : null;
+    render();
+    if (clean.length === 2 && i < N - 1) cells[i + 1].focus(); else light(i);
+  });
+  grid.addEventListener('paste', e => {
+    const t = e.target; if (t.dataset.i === undefined) return;
+    const txt = (e.clipboardData || window.clipboardData).getData('text');
+    const h = txt.replace(/0x/gi, '').replace(/[^0-9a-fA-F]/g, '');
+    if (h.length > 2) { e.preventDefault(); const end = loadHex(h, +t.dataset.i); render(); cells[Math.min(end, N - 1)].focus(); }
+  });
+  grid.addEventListener('keydown', e => {
+    const t = e.target, i = +t.dataset.i; if (t.dataset.i === undefined) return;
+    const go = j => { if (j >= 0 && j < N) { e.preventDefault(); cells[j].focus(); } };
+    if (e.key === 'ArrowRight' && t.selectionStart === t.value.length) go(i + 1);
+    else if (e.key === 'ArrowLeft' && t.selectionStart === 0) go(i - 1);
+    else if (e.key === 'ArrowDown') go(i + 16);
+    else if (e.key === 'ArrowUp') go(i - 16);
+    else if (e.key === 'Backspace' && t.value === '' && i > 0) { e.preventDefault(); cells[i - 1].focus(); }
+    else if (e.key === 'Enter') go(i + 1);
+  });
+  tbody.addEventListener('mouseover', e => {
+    const row = e.target.closest('tr.tf'); if (!row) return;
+    tbody.querySelectorAll('tr.lit').forEach(r => r.classList.remove('lit'));
+    cells.forEach(c => c.classList.remove('rel'));
+    row.classList.add('lit');
+    for (let b = +row.dataset.b0; b <= Math.min(+row.dataset.b1, N - 1); b++) cells[b].classList.add('rel');
+  });
+  tbody.addEventListener('mouseleave', () => light(current, false));
+  tbody.addEventListener('click', e => { const row = e.target.closest('tr.tf'); if (row) cells[+row.dataset.b0].focus(); });
+
+  // ---- 工具列 ----
+  const sampleBox = $('tsSamples');
+  for (const [key, s] of Object.entries(TSP.SAMPLES)) {
+    const b = document.createElement('button'); b.className = 'b ghost'; b.textContent = s.label;
+    b.addEventListener('click', () => { s.bytes.forEach((v, i) => setByte(i, v)); render(); light(0, false); $('tsTableBox').scrollTop = 0; });
+    sampleBox.appendChild(b);
+  }
+  $('tsLoad').addEventListener('click', () => {
+    const h = val('tsPaste').replace(/0x/gi, '').replace(/[^0-9a-fA-F]/g, '');
+    if (!h.length) return;
+    let start = 0;
+    // 若貼上的資料比 188 bytes 長，自動找第一個 0x47 對齊
+    if (h.length / 2 > N) { for (let k = 0; k + 1 < h.length; k += 2) if (h.substr(k, 2).toUpperCase() === '47') { start = k; break; } }
+    data.fill(null); cells.forEach(c => c.value = '');
+    loadHex(h.slice(start)); render(); light(0, false);
+  });
+  $('tsClear').addEventListener('click', () => { data.fill(null); cells.forEach(c => c.value = ''); render(); cells[0].focus(); });
+  $('tsFillFF').addEventListener('click', () => { for (let i = 0; i < N; i++) if (data[i] === null) setByte(i, 0xFF); render(); });
+  $('tsCopy').addEventListener('click', e => {
+    const txt = data.map(v => v === null ? '..' : v.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+    const b = e.currentTarget;
+    navigator.clipboard.writeText(txt).then(() => { b.textContent = '已複製'; setTimeout(() => b.textContent = '複製 188 bytes', 1200); },
+      () => { $('tsPaste').value = txt; $('tsPaste').select(); b.textContent = '已放到上方文字框'; setTimeout(() => b.textContent = '複製 188 bytes', 1500); });
+  });
+  $('tsLegend').innerHTML = Object.entries(GROUP_LABEL).map(([g, l]) => `<span><i class="dot g-${g}"></i>${l}</span>`).join('');
+
+  TSP.SAMPLES.video.bytes.forEach((v, i) => setByte(i, v));
+  render(); light(3, false);
+})();
+
+</script>
+<script>
+const OWNER_INFO_EMBED = "# ============================================================\n#  作者訊息 owner_info.txt\n#  網頁左側「作者訊息」會讀取這個檔案並自動排版。\n#\n#  寫法：\n#    [區塊名稱]          一個標題區塊，例如 [基本資料]\n#    欄位: 內容          一行一個欄位（冒號用半形 : 或全形 ： 都可以）\n#    - 項目              清單項目\n#    其他文字            一般段落（空一行會分段）\n#    # 開頭              註解，不會顯示在網頁上\n#\n#  欄位留空會在網頁上顯示「尚未填寫」。\n#  網址（http/https 開頭）會自動變成連結。\n#  改完後重新整理網頁即可；放到 GitHub 上時，上傳這個檔案就會更新。\n# ============================================================\n\n[基本資料]\n姓名: 劉冠廷\n暱稱: D@arren\n公司: Mediatek\n職稱: IC工程師\n專長:\n\n[聯絡方式]\nEmail: kuanting.leo@mediatek.com\nLinkedIn: [kuan-ting-liu](https://www.linkedin.com/in/kuan-ting-liu-92293023a/)\n\n[自我介紹]\n\n[經歷]\n\n[專案]\n- 0x 加密測試台：AES、RSA、ECC、ECDSA、Hash、HMAC、Key Ladder、MPEG-TS 解析，所有運算都在瀏覽器本機完成。\n";
+</script>
+<script>
+// ===== 左側選單：切換「加密測試台 / 作者訊息 / Script 紀錄區 / 待辦事項」 =====
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+};
+const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtTime = s => { try { return new Date(s).toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return s; } };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+// 共用密碼驗證：同一組密碼解鎖 Script 紀錄區與開發選項（網頁裡只有驗證用的密文，沒有密碼本身）
+const hexAuth = (() => {
+  const V = { salt: 'f0c2930ecdd23f8ee5644d38e5bb7c8a', iv: '3ed7dd5e915f1030f1ea3981', ct: '925c0cd3902fd759df3100bdc279f88915fe7819a53147dc134946a5f08fdf1d5b99161800d26a', iter: 250000 };
+  const enc = new TextEncoder();
+  const api = {
+    key: null, dev: false, listeners: [],
+    async tryPassword(pw) {
+      const base = await subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+      const k = await subtle.deriveKey({ name: 'PBKDF2', salt: hex2buf(V.salt), iterations: V.iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      try {
+        const t = new TextDecoder().decode(await subtle.decrypt({ name: 'AES-GCM', iv: hex2buf(V.iv) }, k, hex2buf(V.ct)));
+        if (t !== 'hex-crypto-lab:vault:v1') return null;
+      } catch { return null; }
+      api.key = k; return k;
+    },
+    async seal(obj) {
+      const iv = randBytes(12);
+      const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, api.key, enc.encode(JSON.stringify(obj))));
+      return { v: 1, iv: buf2hex(iv), ct: buf2hex(ct), updated: new Date().toISOString() };
+    },
+    async open(box) { return JSON.parse(new TextDecoder().decode(await subtle.decrypt({ name: 'AES-GCM', iv: hex2buf(box.iv) }, api.key, hex2buf(box.ct)))); },
+    setDev(on) { api.dev = on; document.body.classList.toggle('dev-on', on); api.listeners.forEach(f => f(on)); },
+  };
+  return api;
+})();
+
+const showView = (() => {
+  const VIEWS = ['crypto', 'scripts', 'todo', 'owner', 'stock', 'fin', 'level', 'jp'];
+  const DEV_VIEWS = ['stock', 'fin', 'level', 'jp'];
+  const links = document.querySelectorAll('.side [data-view]');
+  function showView(v) {
+    if (!VIEWS.includes(v)) v = 'crypto';
+    if (DEV_VIEWS.includes(v) && !hexAuth.dev) v = 'owner';
+    links.forEach(a => a.setAttribute('aria-current', a.dataset.view === v ? 'page' : 'false'));
+    document.querySelectorAll('.view').forEach(s => s.hidden = s.id !== 'v-' + v);
+    store.set('hexlab-view', v);
+    document.dispatchEvent(new CustomEvent('viewchange', { detail: v }));
+    if (typeof autosizeAll === 'function') requestAnimationFrame(autosizeAll);
+    window.scrollTo(0, 0);
+  }
+  links.forEach(a => a.addEventListener('click', e => { e.preventDefault(); showView(a.dataset.view); }));
+  const h = location.hash.slice(1);
+  const start = VIEWS.includes(h) ? h : store.get('hexlab-view', 'crypto');
+  showView(DEV_VIEWS.includes(start) ? 'crypto' : start);
+  return showView;
+})();
+
+// ===== 作者訊息：讀取 owner_info.txt 並排版 =====
+(() => {
+  function render(txt, source) {
+    const blocks = []; let cur = null;
+    const push = () => { if (cur) blocks.push(cur); };
+    for (const raw of txt.replace(/\r/g, '').split('\n')) {
+      const line = raw.trim();
+      if (line.startsWith('#')) continue;
+      const sec = line.match(/^\[(.+)\]$/);
+      if (sec) { push(); cur = { title: sec[1].trim(), items: [] }; continue; }
+      if (!cur) cur = { title: '', items: [] };
+      if (!line) { cur.items.push({ t: 'gap' }); continue; }
+      const li = line.match(/^[-*・]\s*(.*)$/);
+      if (li) { cur.items.push({ t: 'li', v: li[1] }); continue; }
+      const kv = line.match(/^([^:：]{1,24})[:：]\s*(.*)$/);
+      if (kv && !/^https?$/i.test(kv[1].trim())) { cur.items.push({ t: 'kv', k: kv[1].trim(), v: kv[2].trim() }); continue; }
+      cur.items.push({ t: 'p', v: line });
+    }
+    push();
+    const filled = v => v && !/^（.*）$/.test(v);
+    const link = (u, t) => `<a href="${escHtml(u)}" target="_blank" rel="noopener">${escHtml(t)}</a>`;
+    const fmt = (v, k = '') => {
+      if (!filled(v)) return '<span class="todo-mark">尚未填寫</span>';
+      // LinkedIn / GitHub 只寫帳號時自動補成連結，顯示文字就是帳號
+      if (/^linkedin$/i.test(k) && /^[\w-]+$/.test(v)) return link(`https://www.linkedin.com/in/${v}`, v);
+      if (/^github$/i.test(k) && /^[\w-]+$/.test(v)) return link(`https://github.com/${v}`, v);
+      if (/^e-?mail$/i.test(k) && /^[^\s@]+@[^\s@]+$/.test(v)) return `<span class="sel">${escHtml(v)}</span>`;
+      // [顯示文字](網址) 與裸網址
+      const parts = []; let rest = v, m;
+      const re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|https?:\/\/[^\s<>"）)]+/g; let last = 0;
+      while ((m = re.exec(v))) { parts.push(escHtml(v.slice(last, m.index))); parts.push(m[1] ? link(m[2], m[1]) : link(m[0], m[0])); last = re.lastIndex; }
+      parts.push(escHtml(v.slice(last)));
+      return parts.join('');
+    };
+    // 空白欄位與空白區塊不顯示（在 txt 裡保留，填了才出現）
+    const real = it => it.t === 'gap' || filled(it.v);
+    blocks.forEach(b => b.items = b.items.filter(real));
+    const has = b => b.items.some(i => i.t !== 'gap');
+    const kv = (b, re) => (b?.items.find(i => i.t === 'kv' && re.test(i.k)) || {}).v;
+    // 個人卡：取「基本資料」與「聯絡方式」
+    const basic = blocks.find(b => /基本|profile|basic/i.test(b.title));
+    const contact = blocks.find(b => /聯絡|contact/i.test(b.title));
+    let hero = '';
+    if (basic && has(basic)) {
+      const name = kv(basic, /姓名|name/i), nick = kv(basic, /暱稱|nick/i), title = kv(basic, /職稱|title/i), org = kv(basic, /公司|學校|company/i);
+      const used = /姓名|name|暱稱|nick|職稱|title|公司|學校|company/i;
+      const extra = basic.items.filter(i => i.t === 'kv' && !used.test(i.k));
+      const links = contact ? contact.items.filter(i => i.t === 'kv').map(i => `<span class="cchip"><small>${escHtml(i.k)}</small>${fmt(i.v, i.k)}</span>`).join('') : '';
+      const initial = (name || nick || '?').trim().charAt(0);
+      hero = `<section class="card owner-hero">
+        <div class="avatar" aria-hidden="true">${escHtml(initial)}</div>
+        <div class="who">
+          <h2 class="oname">${escHtml(name || nick || '')}${name && nick ? `<span>${escHtml(nick)}</span>` : ''}</h2>
+          ${title || org ? `<p class="orole">${escHtml(title || '')}${title && org ? '<i>@</i>' : ''}${escHtml(org || '')}</p>` : ''}
+          ${extra.length ? `<dl class="kv">${extra.map(i => `<dt>${escHtml(i.k)}</dt><dd>${fmt(i.v, i.k)}</dd>`).join('')}</dl>` : ''}
+          ${links ? `<div class="cchips">${links}</div>` : ''}
+        </div></section>`;
+    }
+    const rest = blocks.filter(b => b !== basic && !(hero && b === contact) && has(b));
+    const html = hero + rest.map(b => {
+      let body = '', list = [], para = [], dl = [];
+      const flush = () => {
+        if (dl.length) body += `<dl class="kv">${dl.join('')}</dl>`;
+        if (list.length) body += `<ul>${list.join('')}</ul>`;
+        if (para.length) body += `<p>${para.join('<br>')}</p>`;
+        dl = []; list = []; para = [];
+      };
+      for (const it of b.items) {
+        if (it.t === 'gap') { flush(); continue; }
+        if (it.t === 'kv') { if (list.length || para.length) flush(); dl.push(`<dt>${escHtml(it.k)}</dt><dd>${fmt(it.v, it.k)}</dd>`); }
+        if (it.t === 'li') { if (dl.length || para.length) flush(); list.push(`<li>${fmt(it.v)}</li>`); }
+        if (it.t === 'p') { if (dl.length || list.length) flush(); para.push(fmt(it.v)); }
+      }
+      flush();
+      return `<section class="card owner-block">${b.title ? `<h2>${escHtml(b.title)}</h2>` : ''}${body}</section>`;
+    }).join('');
+    $('ownerBody').innerHTML = html || '<p class="note">owner_info.txt 還沒有填寫內容。</p>';
+    $('ownerName').textContent = '作者訊息';
+    $('ownerSrc').textContent = source;
+  }
+  render(typeof OWNER_INFO_EMBED === 'string' ? OWNER_INFO_EMBED : '', '內容來自建置時的 owner_info.txt');
+  fetch('owner_info.txt', { cache: 'no-store' }).then(r => r.ok ? r.text() : Promise.reject()).then(t => render(t, '內容即時讀取自 owner_info.txt')).catch(() => {});
+})();
+
+// ===== Script 紀錄區：密碼衍生金鑰（PBKDF2）+ AES-GCM 加密，密碼本身不存在程式碼裡 =====
+(() => {
+  const KEY = 'hexlab-vault';
+  let items = [], sel = null, dirty = false, unlocked = false;
+  const seal = o => hexAuth.seal(o), open = b => hexAuth.open(b);
+
+  async function login() {
+    const pw = val('vPass');
+    if (!pw) return status('vLoginSt', '請輸入密碼', 'err');
+    $('vLoginBtn').disabled = true; status('vLoginSt', '驗證中…');
+    try {
+      if (!(await hexAuth.tryPassword(pw))) { status('vLoginSt', '密碼錯誤', 'err'); return; }
+      $('vPass').value = '';
+      await enter();
+    } finally { $('vLoginBtn').disabled = false; }
+  }
+  async function enter() {
+    {
+      const box = store.get(KEY, null);
+      items = [];
+      if (box) items = await open(box);
+      else {
+        try { const r = await fetch('scripts.enc.json', { cache: 'no-store' }); if (r.ok) { items = await open(await r.json()); await save(); } } catch {}
+      }
+      $('vLogin').hidden = true; $('vApp').hidden = false; unlocked = true;
+      sel = items[0]?.id || null; renderList(); renderEditor();
+      status('vSt', `已解鎖，共 ${items.length} 筆 script`, 'ok');
+    }
+  }
+  // 開發選項已用同一組密碼解鎖時，進入這頁就直接打開
+  document.addEventListener('viewchange', e => { if (e.detail === 'scripts' && hexAuth.key && !unlocked) enter(); });
+  async function save() { store.set(KEY, await seal(items)); dirty = false; }
+  function logout() { unlocked = false; if (!hexAuth.dev) hexAuth.key = null; items = []; sel = null; $('vApp').hidden = true; $('vLogin').hidden = false; $('vList').innerHTML = ''; status('vLoginSt', '已登出，資料仍以加密方式保存在這個瀏覽器'); $('vPass').focus(); }
+
+  function renderList() {
+    const q = val('vSearch').trim().toLowerCase();
+    const list = items.filter(s => !q || (s.title + ' ' + s.tags + ' ' + s.code).toLowerCase().includes(q))
+      .sort((a, b) => b.updated.localeCompare(a.updated));
+    $('vList').innerHTML = list.length ? list.map(s => `<button class="vitem${s.id === sel ? ' on' : ''}" data-id="${s.id}">
+        <b>${escHtml(s.title || '（未命名）')}</b><span>${escHtml(s.lang)}${s.tags ? ' · ' + escHtml(s.tags) : ''}</span><small>${fmtTime(s.updated)}</small></button>`).join('')
+      : `<p class="note">${items.length ? '沒有符合搜尋的 script。' : '還沒有 script，按「新增」建立第一筆。'}</p>`;
+    $('vCount').textContent = `${items.length} 筆`;
+  }
+  function renderEditor() {
+    const s = items.find(x => x.id === sel);
+    $('vEditor').hidden = !s; $('vEmpty').hidden = !!s;
+    if (!s) return;
+    $('vTitle').value = s.title; $('vLang').value = s.lang; $('vTags').value = s.tags; $('vCode').value = s.code;
+    $('vMeta').textContent = `建立 ${fmtTime(s.created)}　·　更新 ${fmtTime(s.updated)}`;
+    if (typeof autosize === 'function') requestAnimationFrame(() => autosize($('vCode')));
+  }
+  function collect() {
+    const s = items.find(x => x.id === sel); if (!s) return null;
+    s.title = val('vTitle').trim(); s.lang = val('vLang'); s.tags = val('vTags').trim(); s.code = val('vCode'); s.updated = new Date().toISOString();
+    return s;
+  }
+
+  $('vLoginBtn').addEventListener('click', login);
+  $('vPass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  $('vLogout').addEventListener('click', async () => { if (dirty && collect()) await save(); logout(); });
+  $('vSearch').addEventListener('input', renderList);
+  $('vList').addEventListener('click', async e => {
+    const b = e.target.closest('.vitem'); if (!b) return;
+    if (dirty && collect()) await save();
+    sel = b.dataset.id; renderList(); renderEditor();
+  });
+  $('vNew').addEventListener('click', async () => {
+    if (dirty && collect()) await save();
+    const now = new Date().toISOString();
+    const s = { id: uid(), title: '', lang: 'bash', tags: '', code: '', created: now, updated: now };
+    items.push(s); sel = s.id; await save(); renderList(); renderEditor(); $('vTitle').focus();
+    status('vSt', '已新增一筆，填好後按「儲存」', 'ok');
+  });
+  ['vTitle', 'vLang', 'vTags', 'vCode'].forEach(id => $(id).addEventListener('input', () => { dirty = true; status('vSt', '有未儲存的變更'); }));
+  $('vSave').addEventListener('click', async () => { if (!collect()) return; await save(); renderList(); renderEditor(); status('vSt', '已加密儲存', 'ok'); });
+  $('vCode').addEventListener('keydown', e => {
+    if (e.key === 'Tab') { e.preventDefault(); const t = e.target, a = t.selectionStart; t.setRangeText('  ', a, t.selectionEnd, 'end'); dirty = true; }
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); $('vSave').click(); }
+  });
+  // 刪除需要按兩次確認（artifact 內不能用 confirm()）
+  let delArm = null;
+  $('vDel').addEventListener('click', async () => {
+    if (delArm !== sel) { delArm = sel; $('vDel').textContent = '再按一次確認刪除'; setTimeout(() => { delArm = null; $('vDel').textContent = '刪除'; }, 3000); return; }
+    items = items.filter(x => x.id !== sel); sel = items[0]?.id || null; delArm = null; $('vDel').textContent = '刪除';
+    await save(); renderList(); renderEditor(); status('vSt', '已刪除', 'ok');
+  });
+  $('vCopy').addEventListener('click', () => {
+    navigator.clipboard.writeText(val('vCode')).then(() => status('vSt', '已複製程式碼', 'ok'), () => { $('vCode').select(); status('vSt', '已選取程式碼，請按 Ctrl+C'); });
+  });
+  // 匯出 / 匯入加密檔（scripts.enc.json）：內容仍是加密的，可以放到 GitHub 讓其他電腦用同一組密碼讀取
+  $('vExport').addEventListener('click', async () => {
+    if (dirty && collect()) await save();
+    const txt = JSON.stringify(await seal(items), null, 1);
+    $('vIO').value = txt; $('vIOBox').hidden = false;
+    try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = 'scripts.enc.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); } catch {}
+    status('vSt', '已產生加密檔 scripts.enc.json（也放在下方文字框，可複製）', 'ok');
+  });
+  $('vImportToggle').addEventListener('click', () => { $('vIOBox').hidden = !$('vIOBox').hidden; $('vIO').value = ''; $('vIO').focus(); });
+  $('vImport').addEventListener('click', async () => {
+    try {
+      const got = await open(JSON.parse(val('vIO')));
+      if (!Array.isArray(got)) throw 0;
+      const have = new Map(items.map(s => [s.id, s]));
+      let add = 0, upd = 0;
+      for (const s of got) { const h = have.get(s.id); if (!h) { items.push(s); add++; } else if (s.updated > h.updated) { Object.assign(h, s); upd++; } }
+      await save(); renderList(); renderEditor(); $('vIOBox').hidden = true;
+      status('vSt', `匯入完成：新增 ${add} 筆、更新 ${upd} 筆`, 'ok');
+    } catch { status('vSt', '匯入失敗：內容不是有效的加密檔，或不是用同一組密碼加密的', 'err'); }
+  });
+})();
+
+// ===== 待辦事項（toggle list，可展開備註與子項目） =====
+(() => {
+  const KEY = 'hexlab-todos';
+  let todos = store.get(KEY, null);
+  if (!todos) todos = [
+    { id: uid(), text: '填寫 owner_info.txt 的作者資料', done: false, open: true, notes: '填好後告訴 Claude，再幫忙整理到作者訊息頁。', children: [] },
+    { id: uid(), text: '啟用檔案上傳功能', done: false, open: false, notes: '照 DEPLOY.md 部署 Google Apps Script，把網址填進 config.js。',
+      children: [{ id: uid(), text: '部署 server/Code.gs', done: false, open: false, notes: '', children: [] }, { id: uid(), text: '在 config.js 填入 endpoint', done: false, open: false, notes: '', children: [] }] },
+    { id: uid(), text: '把新版網頁更新到 GitHub', done: false, open: false, notes: '', children: [] },
+  ];
+  let filter = 'all';
+  const save = () => { store.set(KEY, todos); };
+  const find = (id, list = todos, parent = null) => { for (const t of list) { if (t.id === id) return { t, list, parent }; const r = find(id, t.children, t); if (r) return r; } return null; };
+  const count = (list) => list.reduce((a, t) => { const c = count(t.children); return { all: a.all + 1 + c.all, done: a.done + (t.done ? 1 : 0) + c.done }; }, { all: 0, done: 0 });
+  const visible = t => filter === 'all' || (filter === 'done' ? (t.done || t.children.some(visible)) : (!t.done || t.children.some(visible)));
+
+  function item(t, depth) {
+    if (!visible(t)) return '';
+    const kids = t.children.filter(visible), c = count(t.children);
+    const hasBody = t.notes || t.children.length;
+    return `<li class="ti${t.done ? ' done' : ''}${t.open ? ' open' : ''}" data-id="${t.id}">
+      <div class="trow">
+        <button class="tog" data-act="toggle" aria-label="${t.open ? '收合' : '展開'}" aria-expanded="${t.open}"><svg viewBox="0 0 16 16" width="12" height="12"><path d="M5 3l6 5-6 5z" fill="currentColor"/></svg></button>
+        <input type="checkbox" data-act="check" ${t.done ? 'checked' : ''} aria-label="完成">
+        <input class="ttext" data-act="text" value="${escHtml(t.text)}" placeholder="待辦事項" aria-label="待辦內容">
+        ${t.children.length ? `<span class="tcount">${c.done}/${c.all}</span>` : ''}${!t.open && t.notes ? '<span class="tnote" title="有備註">備註</span>' : ''}
+        <button class="tbtn" data-act="addsub" title="新增子項目">＋子項</button>
+        <button class="tbtn del" data-act="del" title="刪除">刪除</button>
+      </div>
+      ${t.open ? `<div class="tbody">
+        <textarea class="tnotes" data-act="notes" rows="1" placeholder="備註（可多行）">${escHtml(t.notes)}</textarea>
+        ${kids.length ? `<ul class="tlist">${kids.map(k => item(k, depth + 1)).join('')}</ul>` : ''}
+      </div>` : ''}
+    </li>`;
+  }
+  function render(focusId) {
+    const shown = todos.filter(visible);
+    $('todoList').innerHTML = shown.length ? shown.map(t => item(t, 0)).join('') : `<li class="tempty">${todos.length ? '這個篩選條件下沒有項目。' : '目前沒有待辦事項，在上方輸入後按 Enter 新增。'}</li>`;
+    const c = count(todos);
+    $('todoStat').textContent = `完成 ${c.done} / ${c.all}`;
+    $('todoBar').style.width = c.all ? `${(c.done / c.all) * 100}%` : '0%';
+    document.querySelectorAll('#todoFilter button').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === filter));
+    if (typeof autosize === 'function') document.querySelectorAll('.tnotes').forEach(autosize);
+    if (focusId) { const el = document.querySelector(`.ti[data-id="${focusId}"] .ttext`); if (el) el.focus(); }
+  }
+  function add(text, parentId) {
+    const t = { id: uid(), text, done: false, open: false, notes: '', children: [] };
+    if (parentId) { const p = find(parentId); p.t.children.push(t); p.t.open = true; } else todos.push(t);
+    save(); return t;
+  }
+  $('todoNew').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.value.trim()) { add(e.target.value.trim()); e.target.value = ''; if (filter === 'done') filter = 'all'; render(); } });
+  $('todoAdd').addEventListener('click', () => { const v = val('todoNew').trim(); if (!v) return $('todoNew').focus(); add(v); $('todoNew').value = ''; render(); });
+  const list = $('todoList');
+  list.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const li = el.closest('.ti'), r = find(li.dataset.id); if (!r) return;
+    const act = el.dataset.act;
+    if (act === 'toggle') { r.t.open = !r.t.open; save(); render(); }
+    if (act === 'addsub') { const n = add('', r.t.id); render(n.id); }
+    if (act === 'del') {
+      if (li.dataset.arm !== '1' && (r.t.children.length || r.t.notes || r.t.text)) { li.dataset.arm = '1'; el.textContent = '確認？'; setTimeout(() => { if (el.isConnected) { el.textContent = '刪除'; delete li.dataset.arm; } }, 2500); return; }
+      r.list.splice(r.list.indexOf(r.t), 1); save(); render();
+    }
+  });
+  list.addEventListener('change', e => {
+    if (e.target.dataset.act !== 'check') return;
+    const r = find(e.target.closest('.ti').dataset.id);
+    const setAll = (t, v) => { t.done = v; t.children.forEach(k => setAll(k, v)); };
+    setAll(r.t, e.target.checked); save(); render();
+  });
+  list.addEventListener('input', e => {
+    const act = e.target.dataset.act; if (act !== 'text' && act !== 'notes') return;
+    const r = find(e.target.closest('.ti').dataset.id);
+    if (act === 'text') r.t.text = e.target.value; else { r.t.notes = e.target.value; if (typeof autosize === 'function') autosize(e.target); }
+    save();
+  });
+  list.addEventListener('keydown', e => {
+    if (e.target.dataset.act !== 'text') return;
+    const li = e.target.closest('.ti'), r = find(li.dataset.id);
+    if (e.key === 'Enter') { e.preventDefault(); const t = { id: uid(), text: '', done: false, open: false, notes: '', children: [] }; r.list.splice(r.list.indexOf(r.t) + 1, 0, t); save(); render(t.id); }
+    if (e.key === 'Backspace' && e.target.value === '' && !r.t.children.length) { e.preventDefault(); r.list.splice(r.list.indexOf(r.t), 1); save(); render(); }
+  });
+  $('todoFilter').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; render(); });
+  $('todoClear').addEventListener('click', () => {
+    const prune = l => l.filter(t => !t.done).map(t => (t.children = prune(t.children), t));
+    todos = prune(todos); save(); render();
+  });
+  $('todoExpand').addEventListener('click', () => { const any = JSON.stringify(todos).includes('"open":false'); const setO = l => l.forEach(t => { t.open = any; setO(t.children); }); setO(todos); save(); render(); });
+  render();
+})();
+
+</script>
+<script>
+// ===== 日文學習書資料（JLPT N5–N1） =====
+// JLPT 官方自 2010 年起不公布單字與文法清單；以下分級參考常見教材與學習網站的整理，屬於參考分級。
+// 單字：[漢字/寫法, 讀音, 中文]；文法：[句型, 中文說明, 例句, 例句翻譯]
+const JP_DATA = {
+  N5: {
+    desc: '能理解一定程度的基礎日語：看得懂平假名、片假名與基本漢字寫成的句子，能從慢速的日常短對話中聽出需要的資訊。',
+    vocab: [
+      { name: '人物・家族', items: [['私', 'わたし', '我'], ['人', 'ひと', '人'], ['友達', 'ともだち', '朋友'], ['先生', 'せんせい', '老師'], ['学生', 'がくせい', '學生'], ['父', 'ちち', '（自己的）父親'], ['母', 'はは', '（自己的）母親'], ['兄', 'あに', '（自己的）哥哥'], ['姉', 'あね', '（自己的）姊姊'], ['弟', 'おとうと', '弟弟'], ['妹', 'いもうと', '妹妹'], ['子供', 'こども', '小孩']] },
+      { name: '時間', items: [['今日', 'きょう', '今天'], ['明日', 'あした', '明天'], ['昨日', 'きのう', '昨天'], ['朝', 'あさ', '早上'], ['昼', 'ひる', '中午、白天'], ['晩', 'ばん', '晚上'], ['今', 'いま', '現在'], ['毎日', 'まいにち', '每天'], ['来週', 'らいしゅう', '下週'], ['時間', 'じかん', '時間']] },
+      { name: '場所・物品', items: [['学校', 'がっこう', '學校'], ['駅', 'えき', '車站'], ['家', 'いえ', '家、房子'], ['部屋', 'へや', '房間'], ['店', 'みせ', '店'], ['本', 'ほん', '書'], ['水', 'みず', '水'], ['電車', 'でんしゃ', '電車'], ['車', 'くるま', '車子'], ['天気', 'てんき', '天氣']] },
+      { name: '動詞', items: [['行く', 'いく', '去'], ['来る', 'くる', '來'], ['帰る', 'かえる', '回去、回家'], ['食べる', 'たべる', '吃'], ['飲む', 'のむ', '喝'], ['見る', 'みる', '看'], ['聞く', 'きく', '聽、問'], ['読む', 'よむ', '讀'], ['書く', 'かく', '寫'], ['話す', 'はなす', '說話'], ['買う', 'かう', '買'], ['起きる', 'おきる', '起床'], ['寝る', 'ねる', '睡覺'], ['分かる', 'わかる', '明白、懂']] },
+      { name: '形容詞', items: [['大きい', 'おおきい', '大的'], ['小さい', 'ちいさい', '小的'], ['新しい', 'あたらしい', '新的'], ['古い', 'ふるい', '舊的'], ['高い', 'たかい', '高的、貴的'], ['安い', 'やすい', '便宜的'], ['暑い', 'あつい', '（天氣）熱'], ['寒い', 'さむい', '（天氣）冷'], ['好き', 'すき', '喜歡'], ['元気', 'げんき', '有精神、健康']] },
+    ],
+    grammar: [
+      ['～は～です', '…是…（判斷句）', '私は学生です。', '我是學生。'],
+      ['～か', '放在句尾表示疑問', 'これは本ですか。', '這是書嗎？'],
+      ['～の', '…的（所屬、修飾）', 'これは私の傘です。', '這是我的傘。'],
+      ['～も', '…也', '私も行きます。', '我也去。'],
+      ['～を', '標示動作的對象', '水を飲みます。', '喝水。'],
+      ['～に（時間・目的地）', '在（某時間點）／到（某地）', '七時に起きます。', '七點起床。'],
+      ['～で（場所・手段）', '在（某地做某事）／用（某手段）', 'バスで学校へ行きます。', '搭公車去學校。'],
+      ['～へ', '往（方向）', '日本へ行きます。', '去日本。'],
+      ['～があります／～がいます', '有（物品用 ある，人與動物用 いる）', '机の上に本があります。', '桌上有書。'],
+      ['～ませんか', '要不要一起…？（邀約）', '一緒に映画を見ませんか。', '要不要一起看電影？'],
+      ['～ましょう', '一起…吧', '少し休みましょう。', '稍微休息一下吧。'],
+      ['～たい', '想要做…', '日本へ行きたいです。', '我想去日本。'],
+      ['～てください', '請（對方）做…', 'ここに名前を書いてください。', '請在這裡寫名字。'],
+      ['～ている', '正在…／狀態持續', '今、雨が降っています。', '現在正在下雨。'],
+      ['～てもいいです', '可以…（許可）', '写真を撮ってもいいですか。', '可以拍照嗎？'],
+      ['～てはいけません', '不可以…（禁止）', 'ここでたばこを吸ってはいけません。', '這裡不可以抽菸。'],
+      ['～から（原因）', '因為…', '時間がありませんから、タクシーで行きます。', '因為沒時間，所以搭計程車去。'],
+      ['～が（逆接）', '…，但是…', 'この店は安いですが、おいしいです。', '這家店很便宜，但很好吃。'],
+      ['～より～のほうが', '比起…，…比較…', 'バスより電車のほうが速いです。', '電車比公車快。'],
+      ['～まえに', '在…之前', '寝るまえに、歯を磨きます。', '睡前刷牙。'],
+      ['～てから', '做完…之後再…', '宿題をしてから、遊びます。', '寫完作業再玩。'],
+      ['～でしょう', '…吧（推測）', '明日は雨でしょう。', '明天會下雨吧。'],
+    ],
+  },
+  N4: {
+    desc: '能理解基礎日語：看得懂用基本單字與漢字寫成的日常話題文章；對話速度稍慢時大致能聽懂日常會話。',
+    vocab: [
+      { name: '生活・行程', items: [['準備', 'じゅんび', '準備'], ['予定', 'よてい', '預定、計畫'], ['経験', 'けいけん', '經驗'], ['趣味', 'しゅみ', '興趣'], ['約束', 'やくそく', '約定'], ['用事', 'ようじ', '（要辦的）事情'], ['都合', 'つごう', '方便與否、情況'], ['会議', 'かいぎ', '會議'], ['連絡', 'れんらく', '聯絡'], ['説明', 'せつめい', '說明']] },
+      { name: '動詞', items: [['集める', 'あつめる', '收集'], ['決める', 'きめる', '決定'], ['届ける', 'とどける', '送到、遞交'], ['調べる', 'しらべる', '調查、查'], ['続ける', 'つづける', '繼續'], ['間に合う', 'まにあう', '來得及'], ['慣れる', 'なれる', '習慣'], ['謝る', 'あやまる', '道歉'], ['運ぶ', 'はこぶ', '搬運'], ['壊れる', 'こわれる', '壞掉']] },
+      { name: '形容詞・副詞', items: [['珍しい', 'めずらしい', '稀奇、少見'], ['厳しい', 'きびしい', '嚴格'], ['優しい', 'やさしい', '溫柔'], ['危ない', 'あぶない', '危險'], ['複雑', 'ふくざつ', '複雜'], ['大切', 'たいせつ', '重要、珍惜'], ['急に', 'きゅうに', '突然'], ['必ず', 'かならず', '一定'], ['特に', 'とくに', '特別、尤其'], ['なかなか', 'なかなか', '相當；（接否定）不容易']] },
+    ],
+    grammar: [
+      ['～たことがある', '曾經…過', '富士山に登ったことがあります。', '我曾經爬過富士山。'],
+      ['～つもりだ', '打算…', '来年、日本へ留学するつもりです。', '打算明年去日本留學。'],
+      ['～（よ）うと思う', '我想要…（意向形）', '週末は部屋を掃除しようと思います。', '週末想打掃房間。'],
+      ['～なければならない', '必須…', '明日は早く起きなければなりません。', '明天必須早起。'],
+      ['～なくてもいい', '不…也可以', '明日は来なくてもいいです。', '明天不來也可以。'],
+      ['～たら', '如果…的話／…之後', '雨が降ったら、試合は中止です。', '如果下雨，比賽就取消。'],
+      ['～ば', '如果…就…', '安ければ買います。', '如果便宜就買。'],
+      ['～と（條件）', '一…就…（必然結果）', '春になると、花が咲きます。', '一到春天花就開。'],
+      ['～そうだ（樣態）', '看起來好像…', 'このケーキはおいしそうです。', '這個蛋糕看起來很好吃。'],
+      ['～そうだ（傳聞）', '聽說…', '天気予報によると、明日は雪だそうです。', '根據氣象預報，聽說明天會下雪。'],
+      ['～ようだ／～みたいだ', '好像…（推測）', '誰か来たようです。', '好像有人來了。'],
+      ['～（ら）れる（可能）', '能夠…（可能形）', '私は日本語の新聞が読めます。', '我看得懂日文報紙。'],
+      ['～（ら）れる（被動）', '被…', '先生に褒められました。', '被老師稱讚了。'],
+      ['～（さ）せる（使役）', '讓／叫（某人）做…', '母は子供に野菜を食べさせます。', '媽媽讓孩子吃蔬菜。'],
+      ['～てくれる', '（別人）為我做…', '友達が駅まで送ってくれました。', '朋友送我到車站。'],
+      ['～ておく', '事先做好…', '旅行の前にホテルを予約しておきます。', '旅行前先預約好飯店。'],
+      ['～てしまう', '（不小心）…了／完全做完', '財布をなくしてしまいました。', '把錢包弄丟了。'],
+      ['～ながら', '一邊…一邊…', '音楽を聞きながら勉強します。', '一邊聽音樂一邊讀書。'],
+      ['～のに', '明明…卻…', '約束したのに、彼は来なかった。', '明明約好了，他卻沒來。'],
+      ['～ことができる', '能夠…', 'ここで泳ぐことができます。', '這裡可以游泳。'],
+    ],
+  },
+  N3: {
+    desc: '能在一定程度上理解日常生活中的日語：看得懂日常話題的具體內容與報紙標題；接近自然速度的日常對話大致能理解。',
+    vocab: [
+      { name: '社會・工作', items: [['環境', 'かんきょう', '環境'], ['状況', 'じょうきょう', '狀況'], ['責任', 'せきにん', '責任'], ['影響', 'えいきょう', '影響'], ['結果', 'けっか', '結果'], ['目的', 'もくてき', '目的'], ['条件', 'じょうけん', '條件'], ['関係', 'かんけい', '關係'], ['機会', 'きかい', '機會'], ['原因', 'げんいん', '原因']] },
+      { name: '動詞', items: [['増える', 'ふえる', '增加'], ['減る', 'へる', '減少'], ['比べる', 'くらべる', '比較'], ['守る', 'まもる', '遵守、保護'], ['認める', 'みとめる', '承認、認可'], ['確かめる', 'たしかめる', '確認'], ['伝える', 'つたえる', '傳達'], ['迷う', 'まよう', '迷路、猶豫'], ['断る', 'ことわる', '拒絕'], ['任せる', 'まかせる', '交給、託付']] },
+      { name: '形容詞・副詞', items: [['正確', 'せいかく', '正確'], ['不安', 'ふあん', '不安'], ['苦手', 'にがて', '不擅長'], ['豊か', 'ゆたか', '豐富、富裕'], ['詳しい', 'くわしい', '詳細'], ['偉い', 'えらい', '了不起'], ['必ずしも', 'かならずしも', '（接否定）未必'], ['結局', 'けっきょく', '結果、終究'], ['一応', 'いちおう', '姑且、大致'], ['ようやく', 'ようやく', '終於']] },
+    ],
+    grammar: [
+      ['～ばかり', '光是…、淨是…', '弟はゲームばかりしている。', '弟弟光是在打電動。'],
+      ['～たばかり', '剛…', '日本に来たばかりです。', '剛來日本。'],
+      ['～ようにする', '盡量做到…（養成習慣）', '毎日野菜を食べるようにしています。', '盡量每天吃蔬菜。'],
+      ['～ようになる', '變得（能）…', '日本語が話せるようになりました。', '變得會說日文了。'],
+      ['～わけだ', '難怪…、也就是說…', '十年住んでいたなら、日本語が上手なわけだ。', '住了十年的話，難怪日文那麼好。'],
+      ['～わけではない', '並不是…', '嫌いなわけではないが、あまり食べない。', '並不是討厭，只是不太吃。'],
+      ['～はずだ', '理應…、應該…', '彼はもう着いているはずだ。', '他應該已經到了。'],
+      ['～によって', '依…而不同／由於…', '国によって習慣が違う。', '習慣因國家而異。'],
+      ['～に対して', '對於…', '先生に対して失礼なことを言ってはいけない。', '不可以對老師說失禮的話。'],
+      ['～について', '關於…', '日本の歴史について調べています。', '正在查關於日本歷史的資料。'],
+      ['～とおりに', '按照…', '説明書のとおりに組み立ててください。', '請按照說明書組裝。'],
+      ['～っぽい', '有…的傾向、像…', '最近、忘れっぽくなった。', '最近變得健忘。'],
+      ['～らしい', '好像…（有根據的推測）', '彼は来月結婚するらしい。', '他好像下個月要結婚。'],
+      ['～うちに', '趁…的時候', '熱いうちに食べてください。', '請趁熱吃。'],
+      ['～おかげで', '多虧…', '先生のおかげで合格できました。', '多虧老師才考上了。'],
+      ['～せいで', '都怪…', '雨のせいで試合が中止になった。', '都怪下雨，比賽取消了。'],
+      ['～ことにする', '（自己）決定…', '来年から毎朝走ることにした。', '決定從明年起每天早上跑步。'],
+      ['～ことになる', '（被）決定…、結果變成…', '来月、大阪に転勤することになりました。', '下個月要調職到大阪了。'],
+      ['～ても', '即使…也…', '雨が降っても行きます。', '即使下雨也要去。'],
+      ['～かわりに', '代替…、作為交換', '手伝うかわりに、昼ご飯をおごってください。', '我幫你，作為交換請我吃午餐。'],
+    ],
+  },
+  N2: {
+    desc: '能理解日常生活中的日語，並在一定程度上理解較廣泛場合的日語：看得懂論點清楚的報導與評論；能聽懂接近自然速度的對話與新聞重點。',
+    vocab: [
+      { name: '抽象名詞', items: [['傾向', 'けいこう', '傾向'], ['要求', 'ようきゅう', '要求'], ['範囲', 'はんい', '範圍'], ['対象', 'たいしょう', '對象'], ['手段', 'しゅだん', '手段'], ['印象', 'いんしょう', '印象'], ['価値', 'かち', '價值'], ['効果', 'こうか', '效果'], ['改善', 'かいぜん', '改善'], ['対策', 'たいさく', '對策']] },
+      { name: '動詞', items: [['補う', 'おぎなう', '補充、彌補'], ['抱える', 'かかえる', '抱著、承擔'], ['訴える', 'うったえる', '控訴、訴諸'], ['備える', 'そなえる', '防備、具備'], ['及ぼす', 'およぼす', '波及、造成（影響）'], ['携わる', 'たずさわる', '從事、參與'], ['妨げる', 'さまたげる', '妨礙'], ['見直す', 'みなおす', '重新檢視'], ['取り組む', 'とりくむ', '致力於'], ['生じる', 'しょうじる', '產生、發生']] },
+      { name: '形容詞・副詞', items: [['明らか', 'あきらか', '明顯'], ['適切', 'てきせつ', '適當'], ['深刻', 'しんこく', '嚴重'], ['柔軟', 'じゅうなん', '柔軟、靈活'], ['慎重', 'しんちょう', '慎重'], ['著しい', 'いちじるしい', '顯著'], ['相変わらず', 'あいかわらず', '依舊'], ['次第に', 'しだいに', '逐漸'], ['いわゆる', 'いわゆる', '所謂'], ['むしろ', 'むしろ', '寧可、反而']] },
+    ],
+    grammar: [
+      ['～に関して', '關於…', 'この件に関して、ご意見をお聞かせください。', '關於這件事，請告訴我您的意見。'],
+      ['～をはじめ', '以…為首', '東京をはじめ、全国で雨が降った。', '以東京為首，全國都下了雨。'],
+      ['～に基づいて', '根據…', 'データに基づいて判断する。', '根據資料做判斷。'],
+      ['～にわたって', '遍及…、長達…', '三日間にわたって会議が行われた。', '會議舉行了長達三天。'],
+      ['～ものの', '雖然…但是…', '買ったものの、一度も使っていない。', '雖然買了，但一次也沒用過。'],
+      ['～ものだ', '本來就是…、應該…（常理）', '子供は外で遊ぶものだ。', '小孩本來就該在外面玩。'],
+      ['～ことはない', '沒必要…', '心配することはないよ。', '不用擔心喔。'],
+      ['～わけにはいかない', '（基於情理）不能…', '大事な会議なので、休むわけにはいかない。', '因為是重要會議，不能請假。'],
+      ['～ざるを得ない', '不得不…', '雨で、中止せざるを得なかった。', '因為下雨，不得不取消。'],
+      ['～に違いない', '一定是…', '彼は犯人に違いない。', '他一定是犯人。'],
+      ['～かねない', '很可能（導致不好的結果）', 'このままでは事故になりかねない。', '照這樣下去很可能發生事故。'],
+      ['～かねる', '難以…（婉拒）', 'その質問にはお答えしかねます。', '那個問題恕難回答。'],
+      ['～つつある', '正在逐漸…', '景気は回復しつつある。', '景氣正在逐漸回復。'],
+      ['～一方だ', '一直、不斷地…（單一方向變化）', '物価は上がる一方だ。', '物價不斷上漲。'],
+      ['～をきっかけに', '以…為契機', '留学をきっかけに、料理を始めた。', '以留學為契機開始做菜。'],
+      ['～次第', '一…就立刻…', '結果が分かり次第、ご連絡します。', '一知道結果就立刻聯絡您。'],
+      ['～上で', '在…之後（再）', 'よく考えた上で決めてください。', '請仔細考慮後再決定。'],
+      ['～ばかりか', '不僅…而且…', '彼は英語ばかりか、中国語も話せる。', '他不僅會英文，還會說中文。'],
+      ['～ようがない', '無法…、無從…', '連絡先が分からないので、連絡しようがない。', '不知道聯絡方式，無從聯絡。'],
+      ['～てならない', '…得不得了', '将来のことが心配でならない。', '非常擔心將來的事。'],
+    ],
+  },
+  N1: {
+    desc: '能理解各種場合的日語：看得懂邏輯複雜、抽象的社論與評論並掌握作者意圖；能聽懂自然速度的對話、新聞與講座並理解細節。',
+    vocab: [
+      { name: '抽象名詞', items: [['概念', 'がいねん', '概念'], ['矛盾', 'むじゅん', '矛盾'], ['把握', 'はあく', '掌握'], ['均衡', 'きんこう', '均衡'], ['是正', 'ぜせい', '糾正、修正'], ['憂慮', 'ゆうりょ', '憂慮'], ['打開', 'だかい', '打開（僵局）'], ['示唆', 'しさ', '暗示、啟示'], ['趣旨', 'しゅし', '宗旨、主旨'], ['懸念', 'けねん', '擔憂']] },
+      { name: '動詞', items: [['覆す', 'くつがえす', '推翻'], ['損なう', 'そこなう', '損害'], ['培う', 'つちかう', '培養'], ['賄う', 'まかなう', '供應、負擔（費用）'], ['阻む', 'はばむ', '阻止'], ['促す', 'うながす', '催促、促進'], ['委ねる', 'ゆだねる', '委託'], ['顧みる', 'かえりみる', '回顧、顧及'], ['潤す', 'うるおす', '滋潤、使受惠'], ['蓄える', 'たくわえる', '儲備']] },
+      { name: '形容詞・副詞', items: [['顕著', 'けんちょ', '顯著'], ['曖昧', 'あいまい', '曖昧'], ['頑な', 'かたくな', '頑固'], ['潔い', 'いさぎよい', '乾脆、光明磊落'], ['煩わしい', 'わずらわしい', '麻煩、繁瑣'], ['紛らわしい', 'まぎらわしい', '容易混淆'], ['一概に', 'いちがいに', '（接否定）不能一概'], ['甚だ', 'はなはだ', '非常、甚'], ['依然として', 'いぜんとして', '依然'], ['あえて', 'あえて', '敢於、特意']] },
+    ],
+    grammar: [
+      ['～をもって', '以…／於…（時間點，正式）', '本日をもって閉店いたします。', '本店於今日結束營業。'],
+      ['～を余儀なくされる', '被迫…', '台風で、イベントは中止を余儀なくされた。', '因為颱風，活動被迫取消。'],
+      ['～に至る', '達到…、以至於…', '交渉は合意に至らなかった。', '交涉未能達成協議。'],
+      ['～ともなると', '一旦到了…（地位、程度）', '社長ともなると、責任も重い。', '一旦當上社長，責任也很重。'],
+      ['～ならでは', '只有…才有的', 'これは京都ならではの景色だ。', '這是京都才有的景色。'],
+      ['～をよそに', '不顧…', '親の心配をよそに、彼は海外へ旅立った。', '他不顧父母的擔心出國去了。'],
+      ['～ずにはおかない', '必然會…、不…不罷休', 'この映画は観る人を感動させずにはおかない。', '這部電影必定讓觀眾感動。'],
+      ['～に越したことはない', '最好是…', '用心するに越したことはない。', '小心為上。'],
+      ['～までもない', '不必…', '言うまでもなく、健康が一番大切だ。', '不用說，健康最重要。'],
+      ['～とはいえ', '雖說…但是…', '春とはいえ、まだ寒い。', '雖說是春天，但還是很冷。'],
+      ['～が早いか', '剛一…就…', 'ベルが鳴るが早いか、生徒たちは教室を飛び出した。', '鈴聲一響，學生們就衝出教室。'],
+      ['～や否や', '一…就立刻…', '家に帰るや否や、寝てしまった。', '一回到家就睡著了。'],
+      ['～んばかりに', '幾乎要…似的', '彼女は泣き出さんばかりの顔をしていた。', '她一副快要哭出來的表情。'],
+      ['～きらいがある', '有…的傾向（負面）', '彼は物事を悲観的に考えるきらいがある。', '他有悲觀看待事情的傾向。'],
+      ['～にかたくない', '不難…', '彼の苦労は想像にかたくない。', '他的辛苦不難想像。'],
+      ['～てやまない', '衷心…、一直…（願望）', '皆様のご活躍を願ってやみません。', '衷心祝福各位大展鴻圖。'],
+      ['～べく', '為了…', '夢を実現すべく、努力を続けている。', '為了實現夢想持續努力。'],
+      ['～ながらも', '雖然…但是…', '狭いながらも、楽しい我が家だ。', '雖然狹小，卻是快樂的家。'],
+      ['～をものともせず', '不把…當一回事', '彼は怪我をものともせず、試合に出場した。', '他不顧傷勢出賽。'],
+      ['～といったらない', '…到了極點', 'あの時の恥ずかしさといったらなかった。', '那時真是丟臉極了。'],
+    ],
+  },
+};
+
+</script>
+<script>
+// ===== 開發選項：作者訊息頁的按鈕，用密碼開啟後左側多出 財務紀錄 / 我獨自升級 / 日文學習 =====
+(() => {
+  const box = $('devBox');
+  function renderBox() {
+    $('devForm').hidden = hexAuth.dev; $('devOn').hidden = !hexAuth.dev;
+    $('devBtn').textContent = hexAuth.dev ? '開發選項（已開啟）' : '開發選項';
+    $('devBtn').setAttribute('aria-pressed', hexAuth.dev);
+  }
+  $('devBtn').addEventListener('click', () => {
+    box.hidden = !box.hidden; renderBox();
+    if (!box.hidden && !hexAuth.dev) $('devPass').focus();
+  });
+  async function unlock() {
+    const pw = val('devPass'); if (!pw) return status('devSt', '請輸入密碼', 'err');
+    $('devGo').disabled = true; status('devSt', '驗證中…');
+    try {
+      if (!(await hexAuth.tryPassword(pw))) return status('devSt', '密碼錯誤', 'err');
+      $('devPass').value = ''; hexAuth.setDev(true); renderBox();
+      status('devSt', '開發選項已開啟，左側多了四個項目', 'ok');
+    } finally { $('devGo').disabled = false; }
+  }
+  $('devGo').addEventListener('click', unlock);
+  $('devPass').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+  $('devOff').addEventListener('click', () => { hexAuth.setDev(false); hexAuth.key = null; renderBox(); status('devSt', '已關閉開發選項'); });
+  renderBox();
+})();
+
+// ===== 財務紀錄（以密碼金鑰加密後存在瀏覽器） =====
+(() => {
+  const KEY = 'hexlab-fin';
+  const CATS = { out: ['飲食', '交通', '居住', '購物', '娛樂', '醫療', '教育', '通訊', '保險', '其他'], in: ['薪資', '獎金', '投資', '副業', '其他'] };
+  let recs = null, kind = 'out';
+  const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+  const money = n => 'NT$ ' + Math.round(n).toLocaleString('zh-TW');
+  async function load() {
+    if (recs) return;
+    const b = store.get(KEY, null);
+    try { recs = b ? await hexAuth.open(b) : []; } catch { recs = []; status('finSt', '無法解開已存的財務資料', 'err'); }
+  }
+  const save = async () => store.set(KEY, await hexAuth.seal(recs));
+  function setKind(k) {
+    kind = k;
+    document.querySelectorAll('#finKind button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+    $('finCatList').innerHTML = CATS[k].map(c => `<option value="${c}">`).join('');
+    if (!CATS[k].includes(val('finCat'))) $('finCat').value = CATS[k][0];
+  }
+  function render() {
+    const m = val('finMonth');
+    const inM = recs.filter(r => r.date.startsWith(m));
+    const sum = k => inM.filter(r => r.kind === k).reduce((a, r) => a + r.amount, 0);
+    const inc = sum('in'), out = sum('out');
+    $('finIn').textContent = money(inc); $('finOut').textContent = money(out);
+    $('finBal').textContent = money(inc - out); $('finBal').className = 'num ' + (inc - out < 0 ? 'neg' : 'pos');
+    // 支出分類
+    const byCat = {}; inM.filter(r => r.kind === 'out').forEach(r => byCat[r.cat] = (byCat[r.cat] || 0) + r.amount);
+    const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+    $('finCats').innerHTML = cats.length ? cats.map(([c, v]) => `<div class="hbar"><span>${escHtml(c)}</span><div class="track"><i style="width:${(v / cats[0][1]) * 100}%"></i></div><b>${money(v)}</b><small>${Math.round(v / out * 100)}%</small></div>`).join('')
+      : '<p class="note">這個月還沒有支出紀錄。</p>';
+    // 近 6 個月
+    const months = []; const [y, mo] = m.split('-').map(Number);
+    for (let i = 5; i >= 0; i--) { const d = new Date(y, mo - 1 - i, 1); months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`); }
+    const tot = months.map(mm => ({ mm, i: recs.filter(r => r.date.startsWith(mm) && r.kind === 'in').reduce((a, r) => a + r.amount, 0), o: recs.filter(r => r.date.startsWith(mm) && r.kind === 'out').reduce((a, r) => a + r.amount, 0) }));
+    const max = Math.max(1, ...tot.flatMap(t => [t.i, t.o]));
+    $('finTrend').innerHTML = tot.map(t => `<div class="mcol${t.mm === m ? ' cur' : ''}" title="${t.mm}　收入 ${money(t.i)}　支出 ${money(t.o)}"><div class="bars"><i class="bi" style="height:${t.i / max * 100}%"></i><i class="bo" style="height:${t.o / max * 100}%"></i></div><span>${Number(t.mm.slice(5))} 月</span></div>`).join('');
+    // 明細
+    const rows = inM.slice().sort((a, b) => b.date.localeCompare(a.date) || b.t - a.t);
+    $('finList').innerHTML = rows.length ? rows.map(r => `<tr><td class="c">${r.date.slice(5)}</td><td><span class="tag ${r.kind}">${escHtml(r.cat)}</span></td><td>${escHtml(r.note)}</td><td class="amt ${r.kind}">${r.kind === 'in' ? '+' : '−'}${Math.round(r.amount).toLocaleString('zh-TW')}</td><td><button class="tbtn del" data-del="${r.id}">刪除</button></td></tr>`).join('')
+      : `<tr><td colspan="5" class="note" style="padding:14px 8px">${m} 沒有紀錄，從上方新增第一筆。</td></tr>`;
+    $('finCount').textContent = `${rows.length} 筆`;
+  }
+  $('finKind').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setKind(b.dataset.k); });
+  $('finAdd').addEventListener('click', async () => {
+    const amount = parseFloat(val('finAmt'));
+    if (!(amount > 0)) return status('finSt', '請輸入大於 0 的金額', 'err');
+    const date = val('finDate') || today();
+    recs.push({ id: uid(), t: Date.now(), date, kind, cat: val('finCat').trim() || '其他', amount, note: val('finNote').trim() });
+    await save(); $('finAmt').value = ''; $('finNote').value = ''; $('finMonth').value = date.slice(0, 7); render();
+    status('finSt', `已記錄 ${kind === 'in' ? '收入' : '支出'} ${money(amount)}`, 'ok'); $('finAmt').focus();
+  });
+  $('finAmt').addEventListener('keydown', e => { if (e.key === 'Enter') $('finAdd').click(); });
+  $('finNote').addEventListener('keydown', e => { if (e.key === 'Enter') $('finAdd').click(); });
+  $('finMonth').addEventListener('input', render);
+  $('finList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-del]'); if (!b) return;
+    if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.textContent = '確認？'; setTimeout(() => { if (b.isConnected) { b.textContent = '刪除'; delete b.dataset.arm; } }, 2500); return; }
+    recs = recs.filter(r => r.id !== b.dataset.del); await save(); render(); status('finSt', '已刪除一筆', 'ok');
+  });
+  $('finCsv').addEventListener('click', () => {
+    const lines = ['日期,類型,分類,金額,備註', ...recs.slice().sort((a, b) => a.date.localeCompare(b.date)).map(r => [r.date, r.kind === 'in' ? '收入' : '支出', r.cat, r.amount, '"' + (r.note || '').replace(/"/g, '""') + '"'].join(','))];
+    navigator.clipboard.writeText(lines.join('\n')).then(() => status('finSt', `已複製 ${recs.length} 筆 CSV，可貼到 Excel`, 'ok'), () => status('finSt', '瀏覽器不允許複製', 'err'));
+  });
+  document.addEventListener('viewchange', async e => {
+    if (e.detail !== 'fin' || !hexAuth.key) return;
+    await load();
+    if (!val('finDate')) $('finDate').value = today();
+    if (!val('finMonth')) $('finMonth').value = today().slice(0, 7);
+    setKind(kind); render();
+  });
+  hexAuth.listeners.push(on => { if (!on) recs = null; });
+})();
+
+// ===== 我獨自升級：每日任務、等級、連續達成、完成率 =====
+(() => {
+  const KEY = 'hexlab-level';
+  const ymd = d => new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  let S = store.get(KEY, null);
+  if (!S) S = { quests: [
+    { id: uid(), name: '伏地挺身', target: 100, unit: '下' }, { id: uid(), name: '仰臥起坐', target: 100, unit: '下' },
+    { id: uid(), name: '深蹲', target: 100, unit: '下' }, { id: uid(), name: '跑步', target: 10, unit: '公里' },
+    { id: uid(), name: '日文單字', target: 20, unit: '個' }, { id: uid(), name: '閱讀', target: 30, unit: '分鐘' },
+  ], log: {} };
+  let day = ymd(new Date()), editing = false;
+  const save = () => store.set(KEY, S);
+  const done = (q, d) => ((S.log[d] || {})[q.id] || 0) >= q.target;
+  const dayPct = d => S.quests.length ? S.quests.filter(q => done(q, d)).length / S.quests.length : 0;
+  const XP_QUEST = 10, XP_ALL = 30;
+  function totalXp() {
+    let xp = 0;
+    for (const d of Object.keys(S.log)) { const n = S.quests.filter(q => done(q, d)).length; xp += n * XP_QUEST + (n && n === S.quests.length ? XP_ALL : 0); }
+    return xp;
+  }
+  // 升到 Lv n+1 需要累積 50·n·(n+1) XP
+  const levelOf = xp => { let n = 1; while (xp >= 50 * n * (n + 1)) n++; return n; };
+  const rankOf = lv => lv >= 50 ? 'S' : lv >= 35 ? 'A' : lv >= 22 ? 'B' : lv >= 12 ? 'C' : lv >= 5 ? 'D' : 'E';
+  function streak() {
+    let n = 0; const d = new Date();
+    if (dayPct(ymd(d)) < 1) d.setDate(d.getDate() - 1); // 今天還沒完成不算中斷
+    while (dayPct(ymd(d)) >= 1 && S.quests.length) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
+  function render() {
+    const xp = totalXp(), lv = levelOf(xp), lo = 50 * (lv - 1) * lv, hi = 50 * lv * (lv + 1);
+    $('lvLevel').textContent = lv; $('lvRank').textContent = rankOf(lv) + ' 級';
+    $('lvXp').textContent = `${xp - lo} / ${hi - lo} XP`; $('lvXpBar').style.width = `${(xp - lo) / (hi - lo) * 100}%`;
+    $('lvStreak').textContent = `${streak()} 天`; $('lvTotal').textContent = `${xp} XP`;
+    const pct = dayPct(day);
+    $('lvToday').textContent = `${Math.round(pct * 100)}%`;
+    const isToday = day === ymd(new Date());
+    $('lvDate').textContent = day + (isToday ? '（今天）' : '');
+    $('lvTodayBtn').disabled = isToday;
+    $('lvDayBar').style.width = `${pct * 100}%`;
+    $('lvAllDone').hidden = !(pct >= 1 && S.quests.length);
+    const L = S.log[day] || {};
+    $('lvQuests').innerHTML = S.quests.length ? S.quests.map(q => {
+      const v = L[q.id] || 0, ok = v >= q.target, p = Math.min(1, v / q.target);
+      return `<li class="quest${ok ? ' ok' : ''}" data-id="${q.id}">
+        ${editing ? `<input class="qn" data-f="name" value="${escHtml(q.name)}" aria-label="任務名稱"><input class="qt" type="number" min="1" data-f="target" value="${q.target}" aria-label="目標"><input class="qu" data-f="unit" value="${escHtml(q.unit)}" aria-label="單位"><button class="tbtn del" data-act="qdel">刪除</button>`
+        : `<button class="qcheck" data-act="full" aria-label="${ok ? '取消完成' : '直接完成'}">${ok ? '✓' : ''}</button>
+        <div class="qmain"><div class="qhead"><b>${escHtml(q.name)}</b><span>${v} / ${q.target} ${escHtml(q.unit)}</span></div><div class="qbar"><i style="width:${p * 100}%"></i></div></div>
+        <input class="qv" type="number" min="0" step="any" value="${v || ''}" placeholder="0" data-act="val" aria-label="${escHtml(q.name)}完成量">`}
+      </li>`;
+    }).join('') : '<li class="tempty">還沒有任務，按「編輯任務」新增。</li>';
+    // 30 天熱度
+    const cells = []; const d = new Date(); d.setDate(d.getDate() - 29);
+    for (let i = 0; i < 30; i++) { const k = ymd(d), p = dayPct(k); cells.push(`<button class="hcell" data-day="${k}" style="--p:${p}" title="${k}　完成 ${Math.round(p * 100)}%" aria-label="${k} 完成 ${Math.round(p * 100)}%"${k === day ? ' aria-current="date"' : ''}></button>`); d.setDate(d.getDate() + 1); }
+    $('lvHeat').innerHTML = cells.join('');
+    // 各任務近 7 / 30 天達成率
+    const rate = (q, n) => { let c = 0; const t = new Date(); for (let i = 0; i < n; i++) { if (done(q, ymd(t))) c++; t.setDate(t.getDate() - 1); } return c / n; };
+    $('lvStats').innerHTML = S.quests.map(q => { const r7 = rate(q, 7), r30 = rate(q, 30); return `<div class="hbar"><span>${escHtml(q.name)}</span><div class="track"><i style="width:${r30 * 100}%"></i></div><b>${Math.round(r30 * 100)}%</b><small>7 天 ${Math.round(r7 * 100)}%</small></div>`; }).join('') || '<p class="note">沒有任務。</p>';
+    $('lvEdit').textContent = editing ? '完成編輯' : '編輯任務';
+    $('lvAddRow').hidden = !editing;
+  }
+  const shift = n => { const d = new Date(day + 'T00:00'); d.setDate(d.getDate() + n); day = ymd(d); render(); };
+  $('lvPrev').addEventListener('click', () => shift(-1));
+  $('lvNext').addEventListener('click', () => shift(1));
+  $('lvTodayBtn').addEventListener('click', () => { day = ymd(new Date()); render(); });
+  $('lvHeat').addEventListener('click', e => { const b = e.target.closest('[data-day]'); if (b) { day = b.dataset.day; render(); } });
+  $('lvEdit').addEventListener('click', () => { editing = !editing; render(); });
+  const list = $('lvQuests');
+  list.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const id = el.closest('.quest').dataset.id, q = S.quests.find(x => x.id === id);
+    if (el.dataset.act === 'full') { S.log[day] = S.log[day] || {}; S.log[day][id] = done(q, day) ? 0 : q.target; save(); render(); }
+    if (el.dataset.act === 'qdel') { S.quests = S.quests.filter(x => x.id !== id); save(); render(); }
+  });
+  list.addEventListener('change', e => {
+    const el = e.target, li = el.closest('.quest'); if (!li) return;
+    const q = S.quests.find(x => x.id === li.dataset.id);
+    if (el.dataset.act === 'val') { S.log[day] = S.log[day] || {}; S.log[day][q.id] = Math.max(0, parseFloat(el.value) || 0); }
+    if (el.dataset.f === 'name') q.name = el.value.trim() || q.name;
+    if (el.dataset.f === 'target') q.target = Math.max(1, parseFloat(el.value) || 1);
+    if (el.dataset.f === 'unit') q.unit = el.value.trim();
+    save(); render();
+  });
+  $('lvAdd').addEventListener('click', () => {
+    const name = val('lvNewName').trim(); if (!name) return $('lvNewName').focus();
+    S.quests.push({ id: uid(), name, target: Math.max(1, parseFloat(val('lvNewTarget')) || 1), unit: val('lvNewUnit').trim() || '次' });
+    $('lvNewName').value = ''; save(); render(); $('lvNewName').focus();
+  });
+  document.addEventListener('viewchange', e => { if (e.detail === 'level') { day = ymd(new Date()); render(); } });
+})();
+
+// ===== 日文學習書：N5–N1，單字與文法可展開，標記已學會 =====
+(() => {
+  const KEY = 'hexlab-jp';
+  const learned = new Set(store.get(KEY, []));
+  let level = store.get('hexlab-jp-level', 'N5'), quiz = false;
+  const saveL = () => store.set(KEY, [...learned]);
+  function counts(lv) {
+    const L = JP_DATA[lv]; const ids = [...L.vocab.flatMap(g => g.items.map(v => `${lv}:v:${v[0]}`)), ...L.grammar.map(g => `${lv}:g:${g[0]}`)];
+    return { all: ids.length, done: ids.filter(i => learned.has(i)).length };
+  }
+  function render() {
+    const L = JP_DATA[level], q = val('jpSearch').trim().toLowerCase();
+    document.querySelectorAll('#jpLevels button').forEach(b => {
+      const c = counts(b.dataset.lv);
+      b.setAttribute('aria-pressed', b.dataset.lv === level);
+      b.querySelector('small').textContent = `${c.done}/${c.all}`;
+    });
+    const c = counts(level);
+    $('jpTitle').textContent = `JLPT ${level}`; $('jpDesc').textContent = L.desc;
+    $('jpProg').textContent = `已學會 ${c.done} / ${c.all}`; $('jpBar').style.width = `${c.done / c.all * 100}%`;
+    const match = arr => !q || arr.some(s => String(s).toLowerCase().includes(q));
+    const vocabHtml = L.vocab.map(g => {
+      const items = g.items.filter(match); if (!items.length) return '';
+      const d = items.filter(v => learned.has(`${level}:v:${v[0]}`)).length;
+      return `<details class="jgroup" data-k="v:${escHtml(g.name)}" ${q ? 'open' : ''}><summary><span>${escHtml(g.name)}</span><small>${d}/${items.length}</small></summary>
+        <table class="jtab"><tbody>${items.map(v => { const id = `${level}:v:${v[0]}`; return `<tr class="${learned.has(id) ? 'got' : ''}"><td><input type="checkbox" data-id="${escHtml(id)}" ${learned.has(id) ? 'checked' : ''} aria-label="已學會 ${escHtml(v[0])}"></td><td class="jw" lang="ja">${escHtml(v[0])}</td><td class="jr hid" lang="ja">${v[1] === v[0] ? '' : escHtml(v[1])}</td><td class="jm hid">${escHtml(v[2])}</td></tr>`; }).join('')}</tbody></table></details>`;
+    }).join('');
+    const gram = L.grammar.filter(match);
+    const gramHtml = gram.map(g => { const id = `${level}:g:${g[0]}`; return `<div class="jgram${learned.has(id) ? ' got' : ''}"><input type="checkbox" data-id="${escHtml(id)}" ${learned.has(id) ? 'checked' : ''} aria-label="已學會 ${escHtml(g[0])}"><details data-k="g:${escHtml(g[0])}"><summary><b lang="ja">${escHtml(g[0])}</b><span class="hid">${escHtml(g[1])}</span></summary>
+      <div class="jex"><p lang="ja">${escHtml(g[2])}</p><p class="tr">${escHtml(g[3])}</p></div></details></div>`; }).join('');
+    const vCount = L.vocab.reduce((a, g) => a + g.items.filter(match).length, 0);
+    $('jpVocab').innerHTML = vocabHtml || '<p class="note">沒有符合的單字。</p>';
+    $('jpGrammar').innerHTML = gramHtml || '<p class="note">沒有符合的文法。</p>';
+    $('jpVocabN').textContent = `${vCount} 個`; $('jpGramN').textContent = `${gram.length} 條`;
+    document.getElementById('v-jp').classList.toggle('quiz', quiz);
+  }
+  $('jpLevels').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; level = b.dataset.lv; store.set('hexlab-jp-level', level); render(); });
+  $('jpSearch').addEventListener('input', render);
+  $('jpQuiz').addEventListener('click', () => { quiz = !quiz; $('jpQuiz').setAttribute('aria-pressed', quiz); render(); });
+  $('v-jp').addEventListener('click', e => {
+    const cb = e.target.closest('input[type=checkbox][data-id]');
+    if (cb) { cb.checked ? learned.add(cb.dataset.id) : learned.delete(cb.dataset.id); saveL(); const keep = [...document.querySelectorAll('#v-jp details[open]')].map(d => d.dataset.k); render(); document.querySelectorAll('#v-jp details').forEach(d => { if (keep.includes(d.dataset.k)) d.open = true; }); return; }
+    const h = e.target.closest('.quiz .hid'); if (h) h.classList.toggle('show');
+  });
+  $('jpExpand').addEventListener('click', () => { const ds = document.querySelectorAll('#v-jp details'); const any = [...ds].some(d => !d.open); ds.forEach(d => d.open = any); });
+  document.addEventListener('viewchange', e => { if (e.detail === 'jp') render(); });
+})();
+
+</script>
+<script>
+// ===== 台股策略回測：2560 戰法 + MACD（資料來源：Fugle 富果 MarketData API） =====
+// 指標與回測全部在瀏覽器計算；API 金鑰用開發選項密碼加密後存在這個瀏覽器。
+const STK = (() => {
+  const API = 'https://api.fugle.tw/marketdata/v1.0/stock';
+  let apiKey = null;
+
+  // ---------- 資料 ----------
+  async function get(path) {
+    if (!apiKey) throw new Error('請先在上方輸入 Fugle API 金鑰');
+    let r;
+    try { r = await fetch(API + path, { headers: { 'X-API-KEY': apiKey } }); }
+    catch {
+      const h = location.hostname;
+      if (location.protocol === 'file:') throw new Error('連不到 Fugle：直接開啟本機的 HTML 檔時瀏覽器會擋下連線，請改用 GitHub 網站（mtk29073.github.io）開啟');
+      if (/claude|anthropic/.test(h) || h.endsWith('.usercontent.goog')) throw new Error('連不到 Fugle：這個預覽頁會封鎖外部連線，請改用 GitHub 網站（mtk29073.github.io）開啟');
+      throw new Error('連不到 Fugle：可能是網路中斷，或目前網址不被 Fugle 允許（已確認 mtk29073.github.io 可以連線）');
+    }
+    if (r.status === 401) throw new Error('API 金鑰無效（401），請重新輸入');
+    if (r.status === 429) throw new Error('超過 Fugle 免費版每分鐘次數上限（429），請等一分鐘再試');
+    if (r.status === 404) throw new Error('查無資料（404），請確認股票代號');
+    if (!r.ok) throw new Error(`Fugle 回應錯誤 ${r.status}`);
+    return r.json();
+  }
+  const ymd = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  // Fugle 單次查詢需小於一年，分段抓再合併
+  async function daily(symbol, days, onStep) {
+    const end = new Date(); const start = new Date(); start.setDate(start.getDate() - days);
+    const map = new Map(); let to = new Date(end), n = 0;
+    while (to > start) {
+      const from = new Date(to); from.setDate(from.getDate() - 330); if (from < start) from.setTime(start.getTime());
+      onStep && onStep(++n);
+      try {
+        const j = await get(`/historical/candles/${encodeURIComponent(symbol)}?from=${ymd(from)}&to=${ymd(to)}&timeframe=D&fields=open,high,low,close,volume&sort=asc`);
+        for (const c of j.data || []) map.set(c.date, { date: c.date, open: +c.open, high: +c.high, low: +c.low, close: +c.close, volume: +c.volume });
+      } catch (e) { if (!/404/.test(e.message) || n === 1) throw e; }
+      to = new Date(from); to.setDate(to.getDate() - 1);
+      await new Promise(r => setTimeout(r, 1100)); // 免費版每分鐘 60 次，保守間隔
+    }
+    return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
+  }
+  const quote = symbol => get(`/intraday/quote/${encodeURIComponent(symbol)}`);
+
+  // 模擬資料：隨機漫步產生，僅用來預覽功能（非真實行情）
+  function mock(seed = 7, days = 560) {
+    let s = seed; const rnd = () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648;
+    const out = []; let p = 100, vol = 20000; const d = new Date(); d.setDate(d.getDate() - Math.round(days * 1.45));
+    let drift = 0;
+    while (out.length < days) {
+      d.setDate(d.getDate() + 1); if (d.getDay() === 0 || d.getDay() === 6) continue;
+      if (rnd() < 0.02) drift = (rnd() - 0.45) * 0.006;
+      const o = p * (1 + (rnd() - 0.5) * 0.01), c = o * (1 + drift + (rnd() - 0.5) * 0.035);
+      const h = Math.max(o, c) * (1 + rnd() * 0.012), l = Math.min(o, c) * (1 - rnd() * 0.012);
+      vol = Math.max(3000, vol * (1 + (rnd() - 0.5) * 0.5) * (1 + Math.abs(c / o - 1) * 4));
+      vol = vol * 0.9 + 20000 * 0.1;
+      const r2 = x => Math.round(x * 100) / 100;
+      out.push({ date: ymd(d), open: r2(o), high: r2(h), low: r2(l), close: r2(c), volume: Math.round(vol) * 1000 });
+      p = c;
+    }
+    return out;
+  }
+
+  // ---------- 指標 ----------
+  function sma(arr, n) { const o = new Array(arr.length).fill(null); let s = 0; for (let i = 0; i < arr.length; i++) { s += arr[i]; if (i >= n) s -= arr[i - n]; if (i >= n - 1) o[i] = s / n; } return o; }
+  function ema(arr, n) { const o = new Array(arr.length).fill(null); const k = 2 / (n + 1); let e = null; for (let i = 0; i < arr.length; i++) { e = e === null ? arr[i] : arr[i] * k + e * (1 - k); o[i] = e; } return o; }
+  function indicators(bars, P) {
+    const c = bars.map(b => b.close), v = bars.map(b => b.volume);
+    const ma = sma(c, P.ma), vs = sma(v, P.vs), vl = sma(v, P.vl);
+    const e12 = ema(c, 12), e26 = ema(c, 26);
+    const dif = c.map((_, i) => e12[i] - e26[i]);
+    const dea = ema(dif, 9);
+    const osc = dif.map((x, i) => x - dea[i]);
+    return { ma, vs, vl, dif, dea, osc, ready: Math.max(P.ma, P.vl, 35) };
+  }
+
+  // ---------- 策略 ----------
+  // 進場（收盤判斷、隔日開盤成交）：
+  //  ① 25 日線上揚 ② 近 N 日內 5 日均量上穿 60 日均量且仍在上方 ③ 收盤在 25 日線之上且距離不超過 X%
+  //  ④ MACD：DIF > DEA（可選：DIF 也要 > 0）
+  // 出場（任一成立）：收盤跌破 25 日線、5 日均量下穿 60 日均量、DIF 下穿 DEA、跌破停損
+  function entryChecks(bars, I, t, P) {
+    const ma = I.ma[t], c = bars[t].close;
+    let crossAt = -1;
+    for (let k = t; k > t - P.look && k > 0; k--) if (I.vs[k] > I.vl[k] && I.vs[k - 1] <= I.vl[k - 1]) { crossAt = k; break; }
+    const dist = (c - ma) / ma * 100;
+    return [
+      { key: 'maUp', label: `${P.ma} 日均線上揚`, ok: I.ma[t] > I.ma[t - 1], val: `${f2(I.ma[t - 1])} → ${f2(ma)}` },
+      { key: 'volX', label: `${P.look} 日內 ${P.vs} 日均量上穿 ${P.vl} 日均量，且仍在上方`, ok: crossAt >= 0 && I.vs[t] > I.vl[t], val: crossAt >= 0 ? `${t - crossAt === 0 ? '今天' : (t - crossAt) + ' 天前'}交叉；${lots(I.vs[t])} / ${lots(I.vl[t])} 張` : `${lots(I.vs[t])} / ${lots(I.vl[t])} 張，近期沒有交叉` },
+      { key: 'near', label: `收盤在 ${P.ma} 日線上方 ${P.near}% 以內（回檔不破）`, ok: c >= ma && dist <= P.near, val: `收盤 ${f2(c)}，距 ${P.ma} 日線 ${dist >= 0 ? '+' : ''}${dist.toFixed(2)}%` },
+      { key: 'macd', label: P.zero ? 'MACD：DIF > DEA 且 DIF > 0' : 'MACD：DIF > DEA（多方）', ok: I.dif[t] > I.dea[t] && (!P.zero || I.dif[t] > 0), val: `DIF ${I.dif[t].toFixed(2)}，DEA ${I.dea[t].toFixed(2)}` },
+    ];
+  }
+  function exitChecks(bars, I, t, P, entry) {
+    const c = bars[t].close;
+    const on = P.exits || { belowMa: true, volDead: true, macdDead: true, stop: true };
+    return [
+      { key: 'belowMa', label: `收盤跌破 ${P.ma} 日線`, hit: c < I.ma[t], val: `收盤 ${f2(c)}，${P.ma} 日線 ${f2(I.ma[t])}` },
+      { key: 'volDead', label: `${P.vs} 日均量下穿 ${P.vl} 日均量`, hit: I.vs[t] < I.vl[t] && I.vs[t - 1] >= I.vl[t - 1], val: `${lots(I.vs[t])} / ${lots(I.vl[t])} 張` },
+      { key: 'macdDead', label: 'MACD 死亡交叉（DIF 下穿 DEA）', hit: I.dif[t] < I.dea[t] && I.dif[t - 1] >= I.dea[t - 1], val: `DIF ${I.dif[t].toFixed(2)}，DEA ${I.dea[t].toFixed(2)}` },
+      { key: 'stop', label: `停損：跌破進場價 ${P.stop}%`, hit: entry ? c <= entry * (1 - P.stop / 100) : false, val: entry ? `進場 ${f2(entry)}，停損價 ${f2(entry * (1 - P.stop / 100))}` : '—' },
+    ].filter(x => on[x.key]);
+  }
+  function backtest(bars, P) {
+    const I = indicators(bars, P);
+    const last = bars.length - 1;
+    const startDate = new Date(bars[last].date); startDate.setFullYear(startDate.getFullYear() - P.years);
+    let s = bars.findIndex(b => b.date >= ymd(startDate)); s = Math.max(s, I.ready);
+    const buyCost = px => px * (1 + P.fee / 100 * P.disc), sellNet = px => px * (1 - P.fee / 100 * P.disc - P.tax / 100);
+    const trades = []; let pos = null; let eq = 1, peak = 1, mdd = 0; const curve = [];
+    for (let t = s; t <= last; t++) {
+      // 盯市權益（用收盤）
+      const mtm = pos ? eq * sellNet(bars[t].close) / buyCost(pos.price) : eq;
+      peak = Math.max(peak, mtm); mdd = Math.min(mdd, mtm / peak - 1); curve.push({ date: bars[t].date, v: mtm });
+      if (t === last) break;
+      if (!pos) {
+        if (entryChecks(bars, I, t, P).every(x => x.ok)) pos = { i: t + 1, date: bars[t + 1].date, price: bars[t + 1].open };
+      } else {
+        const ex = exitChecks(bars, I, t, P, pos.price).filter(x => x.hit);
+        if (ex.length) {
+          const out = bars[t + 1].open, ret = sellNet(out) / buyCost(pos.price) - 1;
+          trades.push({ inDate: pos.date, inPx: pos.price, outDate: bars[t + 1].date, outPx: out, ret, days: t + 1 - pos.i, why: ex.map(x => x.label).join('、'), inI: pos.i, outI: t + 1 });
+          eq *= 1 + ret; pos = null;
+        }
+      }
+    }
+    const wins = trades.filter(x => x.ret > 0), losses = trades.filter(x => x.ret <= 0);
+    const gw = wins.reduce((a, x) => a + x.ret, 0), gl = -losses.reduce((a, x) => a + x.ret, 0);
+    const openRet = pos ? sellNet(bars[last].close) / buyCost(pos.price) - 1 : null;
+    const bh = sellNet(bars[last].close) / buyCost(bars[s].open) - 1;
+    return {
+      I, s, trades, pos, openRet,
+      stats: {
+        n: trades.length, win: trades.length ? wins.length / trades.length : null,
+        avgWin: wins.length ? gw / wins.length : null, avgLoss: losses.length ? -gl / losses.length : null,
+        pf: gl > 0 ? gw / gl : (gw > 0 ? Infinity : null),
+        total: eq * (pos ? 1 + openRet : 1) - 1, closedTotal: eq - 1, bh, mdd,
+        avgDays: trades.length ? trades.reduce((a, x) => a + x.days, 0) / trades.length : null,
+        from: bars[s].date, to: bars[last].date,
+      },
+      curve,
+    };
+  }
+  function verdict(bars, R, P) {
+    const t = bars.length - 1;
+    if (R.pos) {
+      const ex = exitChecks(bars, R.I, t, P, R.pos.price);
+      const hit = ex.filter(x => x.hit);
+      return { kind: hit.length ? 'sell' : 'hold', title: hit.length ? '賣出訊號' : '續抱（策略持有中）',
+        sub: hit.length ? `策略出場條件成立：${hit.map(x => x.label).join('、')}。依規則會在下一個交易日開盤賣出。` : `策略在 ${R.pos.date} 以 ${f2(R.pos.price)} 進場，目前報酬 ${pct(R.openRet)}，出場條件都還沒成立。`,
+        checks: ex.map(x => ({ label: x.label, ok: !x.hit, val: x.val, invert: true })) };
+    }
+    const en = entryChecks(bars, R.I, t, P), okN = en.filter(x => x.ok).length;
+    return { kind: okN === en.length ? 'buy' : 'wait', title: okN === en.length ? '買進訊號' : `觀望（${okN} / ${en.length} 條件成立）`,
+      sub: okN === en.length ? '四個進場條件全部成立。依規則會在下一個交易日開盤買進。' : '進場條件還沒全部成立，策略目前不持有。',
+      checks: en };
+  }
+  const f2 = x => x == null || isNaN(x) ? '—' : (+x).toFixed(2);
+  const lots = x => x == null ? '—' : Math.round(x / 1000).toLocaleString('zh-TW');
+  const pct = x => x == null ? '—' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(2)}%`;
+
+  return { setKey: k => apiKey = k, hasKey: () => !!apiKey, daily, quote, mock, backtest, verdict, f2, lots, pct, ymd };
+})();
+
+// ---------- K 線圖（canvas，紅漲綠跌） ----------
+function StockChart(canvas, tip) {
+  let bars = [], R = null, P = null, i0 = 0, i1 = 0, hover = -1;
+  const ctx = canvas.getContext('2d');
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888';
+  function size() { const r = canvas.getBoundingClientRect(), d = devicePixelRatio || 1; canvas.width = Math.round(r.width * d); canvas.height = Math.round(r.height * d); ctx.setTransform(d, 0, 0, d, 0, 0); return r; }
+  function draw() {
+    if (!bars.length) return;
+    const { width: W, height: H } = size();
+    const C = { fg: css('--fg'), mu: css('--muted'), line: css('--line'), up: css('--k-up'), dn: css('--k-dn'), ma: css('--accent'), vs: css('--k-vs'), vl: css('--k-vl'), bg: css('--panel') };
+    ctx.clearRect(0, 0, W, H);
+    const padR = 58, padB = 20, plotW = W - padR - 6;
+    const panes = [{ y: 4, h: (H - padB) * 0.58 }, { y: 0, h: (H - padB) * 0.18 }, { y: 0, h: (H - padB) * 0.24 - 8 }];
+    panes[1].y = panes[0].y + panes[0].h + 4; panes[2].y = panes[1].y + panes[1].h + 4;
+    const n = i1 - i0 + 1, bw = plotW / n, x = i => 6 + (i - i0 + 0.5) * bw;
+    const sl = (a, b) => bars.slice(a, b + 1);
+    const I = R.I;
+    // 價格範圍
+    let lo = Infinity, hi = -Infinity; for (let i = i0; i <= i1; i++) { lo = Math.min(lo, bars[i].low, I.ma[i] ?? Infinity); hi = Math.max(hi, bars[i].high, I.ma[i] ?? -Infinity); }
+    const padP = (hi - lo) * 0.08 || 1; lo -= padP; hi += padP;
+    const yP = v => panes[0].y + (hi - v) / (hi - lo) * panes[0].h;
+    let vmax = 0; for (let i = i0; i <= i1; i++) vmax = Math.max(vmax, bars[i].volume, I.vs[i] || 0, I.vl[i] || 0);
+    const yV = v => panes[1].y + panes[1].h - v / vmax * panes[1].h;
+    let mm = 0; for (let i = i0; i <= i1; i++) mm = Math.max(mm, Math.abs(I.dif[i]), Math.abs(I.dea[i]), Math.abs(I.osc[i]));
+    mm = mm || 1; const yM = v => panes[2].y + panes[2].h / 2 - v / mm * panes[2].h / 2;
+    // 格線與座標
+    ctx.font = '11px ' + css('--mono'); ctx.lineWidth = 1;
+    for (const p of panes) { ctx.strokeStyle = C.line; ctx.strokeRect(6.5, p.y + 0.5, plotW, p.h); }
+    ctx.fillStyle = C.mu; ctx.textAlign = 'left';
+    for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4, y = yP(v); ctx.strokeStyle = C.line; ctx.globalAlpha = .5; ctx.beginPath(); ctx.moveTo(6, y); ctx.lineTo(6 + plotW, y); ctx.stroke(); ctx.globalAlpha = 1; ctx.fillText(v.toFixed(v < 100 ? 2 : 1), plotW + 10, y + 4); }
+    ctx.fillText('量（張）', plotW + 10, panes[1].y + 12); ctx.fillText(STK.lots(vmax), plotW + 10, panes[1].y + 26);
+    ctx.fillText('MACD', plotW + 10, panes[2].y + 12);
+    ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(6, yM(0)); ctx.lineTo(6 + plotW, yM(0)); ctx.stroke();
+    ctx.textAlign = 'center'; const step = Math.max(1, Math.ceil(n / 6));
+    for (let i = i0; i <= i1; i += step) ctx.fillText(bars[i].date.slice(2), x(i), H - 5);
+    // 回測區間起點
+    if (R.s >= i0 && R.s <= i1) { ctx.strokeStyle = C.mu; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(x(R.s), panes[0].y); ctx.lineTo(x(R.s), panes[2].y + panes[2].h); ctx.stroke(); ctx.setLineDash([]); }
+    // K 線
+    const cw = Math.max(1, bw * 0.65);
+    for (let i = i0; i <= i1; i++) {
+      const b = bars[i], up = b.close >= b.open; ctx.strokeStyle = ctx.fillStyle = up ? C.up : C.dn;
+      ctx.beginPath(); ctx.moveTo(x(i), yP(b.high)); ctx.lineTo(x(i), yP(b.low)); ctx.stroke();
+      const y1 = yP(Math.max(b.open, b.close)), y2 = yP(Math.min(b.open, b.close));
+      ctx.fillRect(x(i) - cw / 2, y1, cw, Math.max(1, y2 - y1));
+      ctx.globalAlpha = .55; ctx.fillRect(x(i) - cw / 2, yV(b.volume), cw, panes[1].y + panes[1].h - yV(b.volume)); ctx.globalAlpha = 1;
+      const o = I.osc[i]; ctx.fillStyle = o >= 0 ? C.up : C.dn; ctx.globalAlpha = .6; ctx.fillRect(x(i) - cw / 2, Math.min(yM(0), yM(o)), cw, Math.abs(yM(o) - yM(0))); ctx.globalAlpha = 1;
+    }
+    const line = (arr, y, color, w = 1.5) => { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); let st = false; for (let i = i0; i <= i1; i++) { if (arr[i] == null) continue; st ? ctx.lineTo(x(i), y(arr[i])) : ctx.moveTo(x(i), y(arr[i])); st = true; } ctx.stroke(); ctx.lineWidth = 1; };
+    line(I.ma, yP, C.ma, 2); line(I.vs, yV, C.vs); line(I.vl, yV, C.vl); line(I.dif, yM, C.vs); line(I.dea, yM, C.vl);
+    // 買賣點
+    const mark = (i, up) => { if (i < i0 || i > i1) return; const b = bars[i], X = x(i), Y = up ? yP(b.low) + 8 : yP(b.high) - 8; ctx.fillStyle = up ? C.up : C.dn; ctx.beginPath(); if (up) { ctx.moveTo(X, Y); ctx.lineTo(X - 6, Y + 10); ctx.lineTo(X + 6, Y + 10); } else { ctx.moveTo(X, Y); ctx.lineTo(X - 6, Y - 10); ctx.lineTo(X + 6, Y - 10); } ctx.fill(); };
+    for (const t of R.trades) { mark(t.inI, true); mark(t.outI, false); }
+    if (R.pos) mark(R.pos.i, true);
+    // 圖例
+    ctx.textAlign = 'left'; ctx.font = '11px ' + css('--sans');
+    const leg = [[C.ma, `MA${P.ma}`], [C.up, '▲ 買進'], [C.dn, '▼ 賣出']]; let lx = 12;
+    for (const [c, t] of leg) { ctx.fillStyle = c; ctx.fillRect(lx, panes[0].y + 8, 10, 3); ctx.fillStyle = C.fg; ctx.fillText(t, lx + 14, panes[0].y + 13); lx += ctx.measureText(t).width + 28; }
+    lx = 12; for (const [c, t] of [[C.vs, `${P.vs}日均量`], [C.vl, `${P.vl}日均量`]]) { ctx.fillStyle = c; ctx.fillRect(lx, panes[1].y + 8, 10, 3); ctx.fillStyle = C.fg; ctx.fillText(t, lx + 14, panes[1].y + 13); lx += ctx.measureText(t).width + 28; }
+    lx = 12; for (const [c, t] of [[C.vs, 'DIF'], [C.vl, 'DEA'], [C.up, 'OSC']]) { ctx.fillStyle = c; ctx.fillRect(lx, panes[2].y + 8, 10, 3); ctx.fillStyle = C.fg; ctx.fillText(t, lx + 14, panes[2].y + 13); lx += ctx.measureText(t).width + 28; }
+    // 十字線
+    if (hover >= i0 && hover <= i1) {
+      ctx.strokeStyle = C.mu; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(x(hover), panes[0].y); ctx.lineTo(x(hover), panes[2].y + panes[2].h); ctx.stroke(); ctx.setLineDash([]);
+      const b = bars[hover];
+      tip.innerHTML = `<b>${b.date}</b>　開 ${STK.f2(b.open)}　高 ${STK.f2(b.high)}　低 ${STK.f2(b.low)}　收 <b>${STK.f2(b.close)}</b>　量 ${STK.lots(b.volume)} 張<br>MA${P.ma} ${STK.f2(I.ma[hover])}　均量 ${STK.lots(I.vs[hover])} / ${STK.lots(I.vl[hover])}　DIF ${STK.f2(I.dif[hover])}　DEA ${STK.f2(I.dea[hover])}`;
+    } else tip.textContent = '滑鼠移到圖上看當日數值；滾輪縮放、拖曳平移。';
+    x0 = x; bwNow = bw;
+  }
+  let x0 = null, bwNow = 1, drag = null;
+  const idxAt = e => { const r = canvas.getBoundingClientRect(); return Math.round(i0 + (e.clientX - r.left - 6) / bwNow - 0.5); };
+  canvas.addEventListener('mousemove', e => {
+    if (drag) { const d = Math.round((drag.x - e.clientX) / bwNow); const len = drag.i1 - drag.i0; let a = Math.max(0, Math.min(bars.length - 1 - len, drag.i0 + d)); i0 = a; i1 = a + len; }
+    hover = idxAt(e); draw();
+  });
+  canvas.addEventListener('mouseleave', () => { hover = -1; drag = null; draw(); });
+  canvas.addEventListener('mousedown', e => { drag = { x: e.clientX, i0, i1 }; });
+  window.addEventListener('mouseup', () => drag = null);
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault(); const len = i1 - i0, c = idxAt(e);
+    let nl = Math.round(len * (e.deltaY > 0 ? 1.15 : 0.87)); nl = Math.max(20, Math.min(bars.length - 1, nl));
+    const ratio = (c - i0) / (len || 1); let a = Math.round(c - ratio * nl); a = Math.max(0, Math.min(bars.length - 1 - nl, a)); i0 = a; i1 = a + nl; draw();
+  }, { passive: false });
+  // 觸控：單指拖曳
+  canvas.addEventListener('touchstart', e => { drag = { x: e.touches[0].clientX, i0, i1 }; }, { passive: true });
+  canvas.addEventListener('touchmove', e => { if (!drag) return; const d = Math.round((drag.x - e.touches[0].clientX) / bwNow); const len = drag.i1 - drag.i0; const a = Math.max(0, Math.min(bars.length - 1 - len, drag.i0 + d)); i0 = a; i1 = a + len; draw(); }, { passive: true });
+  canvas.addEventListener('touchend', () => drag = null);
+  window.addEventListener('resize', () => { if (bars.length && canvas.offsetWidth) draw(); });
+  return {
+    set(b, r, p) { bars = b; R = r; P = p; i1 = b.length - 1; i0 = Math.max(0, i1 - (canvas.offsetWidth < 500 ? 70 : 140)); draw(); },
+    showAll() { if (!bars.length) return; i0 = Math.max(0, R.s - 10); i1 = bars.length - 1; draw(); },
+    redraw: draw,
+  };
+}
+
+// ---------- 頁面 ----------
+(() => {
+  const KEY = 'hexlab-fugle';
+  const cache = new Map();
+  let chart = null, cur = null;
+  const P = () => ({ ma: +val('skMa') || 25, vs: +val('skVs') || 5, vl: +val('skVl') || 60, look: +val('skLook') || 5, near: +val('skNear') || 3,
+    zero: $('skZero').checked, stop: +val('skStop') || 8, fee: 0.1425, disc: (+val('skDisc') || 10) / 10, tax: 0.3, years: 2,
+    exits: { belowMa: $('skExMa').checked, volDead: $('skExVol').checked, macdDead: $('skExMacd').checked, stop: $('skExStop').checked } });
+
+  async function loadKey() {
+    const b = store.get(KEY, null);
+    if (b && hexAuth.key) { try { STK.setKey((await hexAuth.open(b)).key); } catch {} }
+    $('skKeyState').textContent = STK.hasKey() ? '已設定（加密保存在這個瀏覽器）' : '尚未設定';
+    $('skKeyState').className = 'chip' + (STK.hasKey() ? ' okchip' : '');
+  }
+  $('skKeySave').addEventListener('click', async () => {
+    const k = val('skKey').trim(); if (!k) return status('skSt', '請貼上 API 金鑰', 'err');
+    STK.setKey(k); store.set(KEY, await hexAuth.seal({ key: k })); $('skKey').value = '';
+    await loadKey(); status('skSt', '金鑰已加密保存', 'ok');
+  });
+  $('skKeyClear').addEventListener('click', () => { store.set(KEY, null); STK.setKey(null); loadKey(); status('skSt', '已移除金鑰'); });
+
+  async function getBars(sym, mock) {
+    if (mock) return STK.mock([...sym].reduce((a, c) => a + c.charCodeAt(0), 0) || 7);
+    if (cache.has(sym)) return cache.get(sym);
+    const b = await STK.daily(sym, 365 * 2 + 130, n => status('skSt', `正在下載 ${sym} 日 K 資料（第 ${n} / 3 段）…`));
+    if (b.length < 120) throw new Error(`${sym} 的歷史資料只有 ${b.length} 天，不足以回測 2 年`);
+    cache.set(sym, b); return b;
+  }
+
+  function renderResult(sym, name, bars, R, V, p, mock) {
+    cur = { sym, bars, R, p };
+    $('skResult').hidden = false;
+    const last = bars[bars.length - 1], prev = bars[bars.length - 2];
+    const ch = last.close - prev.close;
+    $('skName').textContent = `${sym}${name ? ' ' + name : ''}`;
+    $('skPrice').innerHTML = `<b class="${ch >= 0 ? 'kup' : 'kdn'}">${STK.f2(last.close)}</b><span class="${ch >= 0 ? 'kup' : 'kdn'}">${ch >= 0 ? '▲' : '▼'} ${STK.f2(Math.abs(ch))}（${STK.pct(ch / prev.close)}）</span><small>${last.date} 收盤${mock ? '　·　模擬資料' : ''}</small>`;
+    $('skMockTag').hidden = !mock;
+    const vc = $('skVerdict'); vc.className = 'card verdict v-' + V.kind;
+    $('skVTitle').textContent = V.title; $('skVSub').textContent = V.sub;
+    $('skChecks').innerHTML = V.checks.map(c => `<li class="${c.ok ? 'ok' : 'no'}"><span class="mk">${c.ok ? '✓' : '✗'}</span><div><b>${escHtml(c.label)}</b>${c.invert ? `<em>${c.ok ? '未觸發' : '已觸發'}</em>` : ''}<small>${escHtml(c.val)}</small></div></li>`).join('');
+    const S = R.stats;
+    const tile = (l, v, cls = '', sub = '') => `<div class="tile"><span>${l}</span><b class="num ${cls}">${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+    $('skStats').innerHTML =
+      tile('勝率', S.win == null ? '—' : (S.win * 100).toFixed(1) + '%', S.win == null ? '' : S.win >= 0.5 ? 'pos' : 'neg', `${S.n} 筆已出場交易`) +
+      tile('策略總報酬', STK.pct(S.total), S.total >= 0 ? 'pos' : 'neg', R.pos ? '含持有中部位' : '') +
+      tile('買進持有', STK.pct(S.bh), S.bh >= 0 ? 'pos' : 'neg', '同期間一直抱著') +
+      tile('最大回撤', STK.pct(S.mdd), 'neg', '權益從高點最大跌幅') +
+      tile('平均獲利 / 虧損', `${STK.pct(S.avgWin)} / ${STK.pct(S.avgLoss)}`, '', S.pf == null ? '' : `獲利因子 ${S.pf === Infinity ? '∞' : S.pf.toFixed(2)}`) +
+      tile('平均持有', S.avgDays == null ? '—' : S.avgDays.toFixed(1) + ' 天', '', `${S.from} ～ ${S.to}`);
+    $('skTrades').innerHTML = (R.pos ? `<tr class="open"><td>${R.pos.date}</td><td>${STK.f2(R.pos.price)}</td><td>持有中</td><td>${STK.f2(last.close)}</td><td class="amt ${R.openRet >= 0 ? 'in' : 'out'}">${STK.pct(R.openRet)}</td><td>${bars.length - 1 - R.pos.i}</td><td>—</td></tr>` : '') +
+      R.trades.slice().reverse().map(t => `<tr><td>${t.inDate}</td><td>${STK.f2(t.inPx)}</td><td>${t.outDate}</td><td>${STK.f2(t.outPx)}</td><td class="amt ${t.ret >= 0 ? 'in' : 'out'}">${STK.pct(t.ret)}</td><td>${t.days}</td><td class="why">${escHtml(t.why)}</td></tr>`).join('') ||
+      '<tr><td colspan="7" class="note" style="padding:12px 8px">兩年內沒有符合條件的交易。可以試著放寬「距 25 日線」或「交叉回看天數」。</td></tr>';
+    if (!chart) chart = StockChart($('skCanvas'), $('skTip'));
+    requestAnimationFrame(() => chart.set(bars, R, p));
+  }
+
+  async function run(sym, mock = false) {
+    sym = (sym || '').trim().toUpperCase(); if (!sym) return status('skSt', '請輸入股票代號', 'err');
+    if (!mock && !STK.hasKey()) return status('skSt', '請先輸入 Fugle API 金鑰，或按「用模擬資料預覽」', 'err');
+    $('skRun').disabled = true;
+    try {
+      const bars = await getBars(sym, mock);
+      let name = '';
+      if (!mock) { try { name = (await STK.quote(sym)).name || ''; } catch {} }
+      const p = P(), R = STK.backtest(bars, p), V = STK.verdict(bars, R, p);
+      renderResult(sym, mock ? '（模擬資料，非真實行情）' : name, bars, R, V, p, mock);
+      status('skSt', `${sym} 回測完成：${R.stats.from} ～ ${R.stats.to}，${R.stats.n} 筆交易`, 'ok');
+      store.set('hexlab-stock-last', sym);
+    } catch (e) { status('skSt', e.message, 'err'); }
+    finally { $('skRun').disabled = false; }
+  }
+  $('skRun').addEventListener('click', () => run(val('skSym')));
+  $('skSym').addEventListener('keydown', e => { if (e.key === 'Enter') run(val('skSym')); });
+  $('skMock').addEventListener('click', () => run(val('skSym') || 'DEMO', true));
+  $('skAll').addEventListener('click', () => chart && chart.showAll());
+  ['skMa', 'skVs', 'skVl', 'skLook', 'skNear', 'skZero', 'skStop', 'skDisc', 'skExMa', 'skExVol', 'skExMacd', 'skExStop'].forEach(id => $(id).addEventListener('change', () => {
+    if (!cur) return; const p = P(), R = STK.backtest(cur.bars, p), V = STK.verdict(cur.bars, R, p);
+    renderResult(cur.sym, $('skName').textContent.replace(/^\S+\s?/, ''), cur.bars, R, V, p, !$('skMockTag').hidden);
+    status('skSt', '已用新參數重新回測', 'ok');
+  }));
+  $('skReset').addEventListener('click', () => { Object.entries({ skMa: 25, skVs: 5, skVl: 60, skLook: 5, skNear: 3, skStop: 8, skDisc: 10 }).forEach(([k, v]) => $(k).value = v); $('skZero').checked = false; ['skExMa', 'skExVol', 'skExMacd', 'skExStop'].forEach(k => $(k).checked = true); $('skMa').dispatchEvent(new Event('change')); });
+
+  // 批次回測
+  $('skBatch').addEventListener('click', async () => {
+    const list = val('skList').split(/[\s,，、]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+    if (!list.length) return status('skBatchSt', '請輸入股票代號，用逗號或空白分隔', 'err');
+    if (!STK.hasKey()) return status('skBatchSt', '請先設定 Fugle API 金鑰', 'err');
+    const tb = $('skBatchRows'); tb.innerHTML = ''; $('skBatch').disabled = true;
+    for (const [k, sym] of list.entries()) {
+      status('skBatchSt', `回測中 ${k + 1} / ${list.length}：${sym}（免費版有次數限制，每檔約需 4 秒）`);
+      try {
+        const bars = await getBars(sym), p = P(), R = STK.backtest(bars, p), V = STK.verdict(bars, R, p), S = R.stats;
+        tb.insertAdjacentHTML('beforeend', `<tr data-sym="${escHtml(sym)}"><td><b>${escHtml(sym)}</b></td><td><span class="vtag v-${V.kind}">${escHtml(V.title.replace(/（.*/, ''))}</span></td><td>${S.win == null ? '—' : (S.win * 100).toFixed(0) + '%'}</td><td>${S.n}</td><td class="amt ${S.total >= 0 ? 'in' : 'out'}">${STK.pct(S.total)}</td><td class="amt ${S.bh >= 0 ? 'in' : 'out'}">${STK.pct(S.bh)}</td><td>${STK.pct(S.mdd)}</td></tr>`);
+      } catch (e) { tb.insertAdjacentHTML('beforeend', `<tr><td><b>${escHtml(sym)}</b></td><td colspan="6" class="note">${escHtml(e.message)}</td></tr>`); if (/429|401/.test(e.message)) break; }
+    }
+    $('skBatch').disabled = false; status('skBatchSt', '批次回測完成，點任一列看詳細圖表', 'ok');
+  });
+  $('skBatchRows').addEventListener('click', e => { const r = e.target.closest('tr[data-sym]'); if (r) { $('skSym').value = r.dataset.sym; run(r.dataset.sym); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
+
+  document.addEventListener('viewchange', async e => {
+    if (e.detail !== 'stock') return;
+    await loadKey();
+    if (!val('skSym')) $('skSym').value = store.get('hexlab-stock-last', '2330');
+    if (chart) requestAnimationFrame(() => chart.redraw());
+  });
+  hexAuth.listeners.push(on => { if (!on) { STK.setKey(null); cache.clear(); } });
+})();
 
 </script>
 
