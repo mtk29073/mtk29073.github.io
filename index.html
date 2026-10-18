@@ -666,7 +666,7 @@ canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; 
     <div class="f"><label for="hkPrk">K = PRK <span><span class="len"></span> <span class="note" id="hkPrkNote">由 Extract 算出</span></span></label><textarea id="hkPrk" class="hx" rows="1" readonly></textarea></div>
     <div class="row" style="align-items:flex-end">
       <div class="f" style="flex:0 1 220px"><label for="hkInfoLen">info 長度</label><select id="hkInfoLen">
-        <option value="256">256 bit（32 B）</option><option value="384">384 bit（48 B）</option><option value="512">512 bit（64 B）</option><option value="768">768 bit（96 B）</option><option value="any">不限制（RFC 範例用）</option></select></div>
+        <option value="192">192 bit（24 B）</option><option selected value="256">256 bit（32 B）</option><option value="384">384 bit（48 B）</option><option value="512">512 bit（64 B）</option><option value="768">768 bit（96 B）</option><option value="any">不限制（RFC 範例用）</option></select></div>
       <div class="f" style="flex:0 1 200px"><label for="hkL">輸出長度 L（bytes）</label><input id="hkL" type="number" min="1" max="8160" value="32"></div>
       <span class="note" id="hkN"></span>
     </div>
