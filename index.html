@@ -671,7 +671,7 @@ canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; 
       <span class="note" id="hkN"></span>
     </div>
     <div class="f"><label for="hkInfo">info <span class="len"></span></label><textarea id="hkInfo" class="hx" rows="2"></textarea></div>
-    <div class="btns"><button class="b pri" id="hkRun">計算 HKDF</button><button class="b" id="hkRand">隨機 IKM / info</button><button class="b ghost" id="hkSample">RFC 5869 範例</button></div>
+    <div class="btns"><button class="b pri" id="hkRun">計算 HKDF</button><button class="b" id="hkRand">隨機 IKM / info</button><button class="b ghost" id="hkDef">預設值</button><button class="b ghost" id="hkSample">RFC 5869 範例</button></div>
     <div class="f"><label for="hkExp">預期 OKM（選填）<span class="len"></span></label><textarea id="hkExp" class="hx" rows="2"></textarea></div>
   </div>
   <div class="card">
@@ -2430,6 +2430,13 @@ $('hkSample').addEventListener('click', () => {
   setOut('hkInfo', 'f0f1f2f3f4f5f6f7f8f9'); $('hkL').value = 42;
   setOut('hkExp', '3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865'); $('hkRun').click();
 });
+// 預設值（開啟頁面時載入）
+function hkDefault() {
+  hkSetMode('prk'); $('hkInfoLen').value = '192'; $('hkL').value = 32;
+  setOut('hkPrk', '64ba30760755ff1eb7f3e2c10a0d0649152d990aaafc4fde55f0ea17af5c8153');
+  setOut('hkInfo', '5d051758e95ed4abb2cdc69bb454110e827441213ddc8770'); setOut('hkExp', ''); $('hkRun').click();
+}
+$('hkDef').addEventListener('click', hkDefault);
 hkN();
 
 // ===== Key Ladder =====
@@ -2533,7 +2540,7 @@ $('upIntro').textContent = UP.endpoint
   aesSample(); await aesDo(true)();
   eccGen('A'); eccGen('B'); await run('eccSt', eccDh)();
   dsaGen(); setOut('dsaMsg', '616263'); await run('dsaSt', dsaSignUi)();
-  $('hashSample').click(); $('hmacSample').click(); $('hkSample').click();
+  $('hashSample').click(); $('hmacSample').click(); hkDefault();
   $('klSample').click();
   $('tT2H').click(); $('tH2B').click(); $('tRand').click(); $('tXor').click();
   setOut('rsaIn', '48656c6c6f'); setOut('rsaMsg', '616263');
