@@ -405,6 +405,24 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
 .mkdhead b { font-size: 1rem; } .mkdhead span { font: 600 0.9rem var(--mono); }
 canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; touch-action: pan-y; }
 .mksrc { margin: 10px 0 0; font-size: 0.75rem; }
+.lbl { display: block; font-size: 0.82rem; color: var(--muted); font-weight: 500; }
+.tblwrap { overflow-x: auto; }
+.hkfig { margin: 12px 0; overflow-x: auto; }
+.hkfig svg { display: block; max-width: 100%; height: auto; font-family: var(--sans); }
+@media (max-width: 560px) { .hkfig svg { max-width: none; } }
+.hkfig .bx { fill: var(--well); stroke: var(--line); } .hkfig .bi { fill: var(--hk-info); stroke: var(--hk-info-s); stroke-dasharray: 5 3; }
+.hkfig .bk { fill: var(--hk-info); stroke: var(--hk-info-s); } .hkfig .hm { fill: var(--accent); }
+.hkfig text { fill: var(--fg); font-size: 12px; } .hkfig text.mono { font-family: var(--mono); font-size: 11px; } .hkfig text.mu { fill: var(--muted); font-size: 11px; }
+.hkfig text.on { fill: var(--accent-ink); font-weight: 600; } .hkfig text.oi { fill: var(--hk-info-t); font-weight: 600; }
+.hkfig .ln { stroke: var(--muted); fill: none; stroke-width: 1.3; } .hkfig .fb { stroke: var(--hk-fb); fill: none; stroke-width: 2; }
+.hkfig .t0 { fill: var(--well); stroke: var(--line); stroke-dasharray: 3 3; }
+.hktab td { font-family: var(--mono); font-size: 0.76rem; word-break: break-all; vertical-align: top; }
+.hktab td:first-child { white-space: nowrap; color: var(--muted); }
+.card.wide { grid-column: 1 / -1; }
+.hktab .hkp { color: var(--muted); } .hktab .ii { color: var(--hk-info-t); } .hktab .cc { color: var(--accent); font-weight: 600; }
+:root { --hk-info: #f6d8bf; --hk-info-s: #c4661c; --hk-info-t: #a4520f; --hk-fb: #d9a400; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hk-info: #4a2d17; --hk-info-s: #e8853a; --hk-info-t: #ffaa66; --hk-fb: #ffcc33; } }
+:root[data-theme="dark"] { --hk-info: #4a2d17; --hk-info-s: #e8853a; --hk-info-t: #ffaa66; --hk-fb: #ffcc33; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -439,6 +457,7 @@ canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; 
   <button role="tab" data-tab="ecdsa">ECDSA</button>
   <button role="tab" data-tab="hash">SHA / Hash</button>
   <button role="tab" data-tab="hmac">HMAC</button>
+  <button role="tab" data-tab="hkdf">HKDF</button>
   <button role="tab" data-tab="kl">Key Ladder</button>
   <button role="tab" data-tab="ts">MPEG-TS 解析</button>
   <button role="tab" data-tab="tools">轉換工具</button>
@@ -631,6 +650,40 @@ canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; 
     <h2>結果</h2>
     <div class="f"><label for="hmacOut">MAC <span><span class="len"></span> <button class="cp" data-copy="hmacOut">複製</button></span></label><textarea id="hmacOut" class="hx" rows="3" readonly></textarea></div>
     <p class="st" id="hmacSt">就緒</p>
+  </div>
+</section>
+
+<!-- ============ HKDF ============ -->
+<section class="panel" id="p-hkdf" hidden>
+  <div class="card">
+    <h2>輸入（HKDF，HMAC-SHA256，RFC 5869）</h2>
+    <div class="f"><span class="lbl">PRK 來源</span>
+      <div class="segbtns" id="hkMode"><button data-m="ext" aria-pressed="true">salt + IKM → Extract</button><button data-m="prk" aria-pressed="false">直接輸入 PRK</button></div></div>
+    <div id="hkExtBox">
+      <div class="f"><label for="hkSalt">salt（選填，空白＝32 個 0x00）<span class="len"></span></label><textarea id="hkSalt" class="hx" rows="1"></textarea></div>
+      <div class="f"><label for="hkIkm">IKM <span class="len"></span></label><textarea id="hkIkm" class="hx" rows="2"></textarea></div>
+    </div>
+    <div class="f"><label for="hkPrk">K = PRK <span><span class="len"></span> <span class="note" id="hkPrkNote">由 Extract 算出</span></span></label><textarea id="hkPrk" class="hx" rows="1" readonly></textarea></div>
+    <div class="row" style="align-items:flex-end">
+      <div class="f" style="flex:0 1 220px"><label for="hkInfoLen">info 長度</label><select id="hkInfoLen">
+        <option value="256">256 bit（32 B）</option><option value="384">384 bit（48 B）</option><option value="512">512 bit（64 B）</option><option value="768">768 bit（96 B）</option><option value="any">不限制（RFC 範例用）</option></select></div>
+      <div class="f" style="flex:0 1 200px"><label for="hkL">輸出長度 L（bytes）</label><input id="hkL" type="number" min="1" max="8160" value="32"></div>
+      <span class="note" id="hkN"></span>
+    </div>
+    <div class="f"><label for="hkInfo">info <span class="len"></span></label><textarea id="hkInfo" class="hx" rows="2"></textarea></div>
+    <div class="btns"><button class="b pri" id="hkRun">計算 HKDF</button><button class="b" id="hkRand">隨機 IKM / info</button><button class="b ghost" id="hkSample">RFC 5869 範例</button></div>
+    <div class="f"><label for="hkExp">預期 OKM（選填）<span class="len"></span></label><textarea id="hkExp" class="hx" rows="2"></textarea></div>
+  </div>
+  <div class="card">
+    <h2>結果</h2>
+    <div class="f"><label for="hkOkm">OKM = T(1) || T(2) || … 的前 L bytes <span><span class="len"></span> <button class="cp" data-copy="hkOkm">複製</button></span></label><textarea id="hkOkm" class="hx" rows="2" readonly></textarea></div>
+    <p class="st" id="hkSt">就緒</p>
+    <p class="note">下方流程圖對應這次的實際數值；滑鼠停在方塊上可看完整 hex。</p>
+  </div>
+  <div class="card wide">
+    <h2>流程圖與每一輪的值</h2>
+    <div class="hkfig" id="hkFig" aria-label="HKDF 計算流程圖"></div>
+    <div class="tblwrap"><table class="fintab hktab"><thead><tr><th>i</th><th>HMAC 輸入 = <span class="hkp">T(i−1)</span> || <span class="ii">info</span> || <span class="cc">i</span></th><th>T(i) = HMAC-SHA256(PRK, 輸入)</th></tr></thead><tbody id="hkRows"></tbody></table></div>
   </div>
 </section>
 
@@ -2273,6 +2326,112 @@ $('hmacSample').addEventListener('click', () => {
   setOut('hmacExp', '5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843'); $('hmacRun').click();
 });
 
+// ===== HKDF（HMAC-SHA256，RFC 5869） =====
+const HK = { mode: 'ext', last: null };
+async function hkdfExtract(salt, ikm) { return hmac('SHA-256', salt.length ? salt : new Uint8Array(32), ikm); }
+async function hkdfExpand(prk, info, L) {
+  const n = Math.ceil(L / 32); if (n > 255) throw new Error('L 最多 255 × 32 = 8160 bytes');
+  if (prk.length < 32) throw new Error(`PRK 至少要 32 bytes（目前 ${prk.length} B）`);
+  const rounds = []; let prev = new Uint8Array(0);
+  for (let i = 1; i <= n; i++) { const input = concat(prev, info, new Uint8Array([i])); const t = await hmac('SHA-256', prk, input); rounds.push({ i, prev, input, t }); prev = t; }
+  return { n, rounds, okm: concat(...rounds.map(r => r.t)).slice(0, L) };
+}
+function hkSetMode(m) {
+  HK.mode = m; $('hkMode').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+  $('hkExtBox').hidden = m !== 'ext'; $('hkPrk').readOnly = m === 'ext';
+  $('hkPrkNote').textContent = m === 'ext' ? '由 Extract 算出' : '請輸入（至少 32 B）'; autosizeAll();
+}
+$('hkMode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) hkSetMode(b.dataset.m); });
+function hkN() { const L = +val('hkL') || 0, n = Math.ceil(L / 32); $('hkN').textContent = L > 0 ? `n = ceil(${L} / 32) = ${n} 輪 HMAC` : ''; }
+$('hkL').addEventListener('input', hkN);
+const hkShort = h => h.length <= 20 ? h : h.slice(0, 8) + '…' + h.slice(-8);
+function hkFigure(R, prk, info, L, ext) {
+  const NS = 'http://www.w3.org/2000/svg', esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // 輪數多時顯示前 3 輪 + … + 最後一輪
+  const show = R.n <= 4 ? R.rounds : [...R.rounds.slice(0, 3), null, R.rounds[R.n - 1]];
+  const CW = 220, X0 = 120, W = Math.max(X0 + show.length * CW + 20, ext ? 730 : 0);
+  const yTop = ext ? 96 : 10, yIn = yTop + 92, yH = yIn + 108, yT = yH + 84, yB = yT + 66, H = yB + 64;
+  let g = '';
+  const box = (x, y, w, h, cls, label, tcls = '', title = '') => `<g>${title ? `<title>${esc(title)}</title>` : ''}<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" class="${cls}"/><text x="${x + w / 2}" y="${y + h / 2 + 4}" text-anchor="middle" class="${tcls}">${esc(label)}</text></g>`;
+  const arrow = (d, cls = 'ln') => `<path d="${d}" class="${cls}" marker-end="url(#${cls === 'fb' ? 'hkAf' : 'hkA'})"/>`;
+  g += `<defs><marker id="hkA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="hkAf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--hk-fb)"/></marker></defs>`;
+  if (ext) {
+    const s = ext.salt.length ? buf2hex(ext.salt) : '00 × 32';
+    g += `<text x="10" y="18" class="mu">HKDF-Extract</text>`;
+    g += box(10, 28, 150, 30, 'bx', 'salt', '', s) + `<text x="85" y="72" text-anchor="middle" class="mono mu">${esc(hkShort(ext.salt.length ? buf2hex(ext.salt) : '00…00'))}</text>`;
+    g += box(200, 28, 150, 30, 'bx', 'IKM', '', buf2hex(ext.ikm)) + `<text x="275" y="72" text-anchor="middle" class="mono mu">${esc(hkShort(buf2hex(ext.ikm)))}</text>`;
+    g += `<circle cx="420" cy="43" r="22" class="hm"/><text x="420" y="47" text-anchor="middle" class="on" style="font-size:11px">HMAC</text>`;
+    g += arrow('M160 43 C 180 10, 370 10, 400 33') + arrow('M350 43 L 397 43') + arrow('M442 43 L 488 43');
+    g += `<text x="270" y="16" class="mu" text-anchor="middle">key</text>`;
+    g += box(490, 28, 220, 30, 'bk', 'PRK = ' + hkShort(buf2hex(prk)), 'oi mono', buf2hex(prk));
+  }
+  g += `<text x="10" y="${yTop + 8}" class="mu">HKDF-Expand</text>`;
+  // 上方 K=PRK 與 info
+  g += box(10, yTop + 18, 100, 30, 'bk', 'K = PRK', 'oi', buf2hex(prk));
+  g += box(X0 + CW / 2 - 50, yTop + 18, 140, 30, 'bi', `info（${info.length} B）`, 'oi', buf2hex(info));
+  const infoX = X0 + CW / 2 + 20, infoY = yTop + 48;
+  // 金鑰匯流排：PRK 往下接到每個 HMAC 的左邊
+  const busY = yH + 46, lastCx = X0 + (show.length - 1) * CW + 95;
+  g += `<path d="M60 ${yTop + 48} L 60 ${busY} L ${lastCx - 18} ${busY}" class="ln"/><text x="66" y="${busY - 6}" class="mu">key = PRK</text>`;
+  show.forEach((r, k) => {
+    const x = X0 + k * CW, cx = x + 95;
+    if (!r) { g += `<text x="${cx}" y="${yH + 5}" text-anchor="middle" style="font-size:20px" class="mu">⋯</text><text x="${cx}" y="${yT + 24}" text-anchor="middle" class="mu">（共 ${R.n} 輪）</text>`; return; }
+    const ctr = '0x' + r.i.toString(16).padStart(2, '0');
+    // 輸入區塊 [T(i-1) | info | i]
+    if (r.i === 1) g += box(x, yIn, 70, 34, 't0', 'T(0)=空', 'mu', '空字串（0 bytes）');
+    else g += box(x, yIn, 70, 34, 'bx', `T(${r.i - 1})`, '', buf2hex(r.prev));
+    g += box(x + 70, yIn, 70, 34, 'bi', 'info', 'oi', buf2hex(info));
+    g += box(x + 140, yIn, 50, 34, 'bx', ctr, 'mono', `計數器 ${ctr}`);
+    g += `<text x="${cx + 6}" y="${yIn + 54}" class="mu">輸入 ${r.input.length} B</text>`;
+    g += arrow(`M${infoX} ${infoY} C ${infoX} ${infoY + 26}, ${x + 105} ${yIn - 40}, ${x + 105} ${yIn - 2}`);
+    // HMAC
+    g += `<g><title>T(${r.i}) = HMAC-SHA256(PRK, T(${r.i - 1}) || info || ${ctr})</title><circle cx="${cx}" cy="${yH}" r="26" class="hm"/><text x="${cx}" y="${yH + 4}" text-anchor="middle" class="on">HMAC</text></g>`;
+    g += arrow(`M${cx} ${yIn + 34} L ${cx} ${yH - 28}`);
+    g += arrow(`M${cx - 18} ${busY} L ${cx - 18} ${yH + 21}`);
+    // 輸出 T(i)
+    g += box(x, yT, 190, 34, 'bx', `T(${r.i}) = ${hkShort(buf2hex(r.t))}`, 'mono', buf2hex(r.t));
+    g += arrow(`M${cx} ${yH + 26} L ${cx} ${yT - 2}`);
+    // 回饋：T(i) 變成下一輪的 T(i-1)
+    const nx = show[k + 1];
+    if (nx && nx.i === r.i + 1) { const tx = x + CW + 35; g += arrow(`M${x + 190} ${yT + 17} C ${x + 210} ${yT + 17}, ${tx - 40} ${yIn + 80}, ${tx} ${yIn + 36}`, 'fb'); }
+  });
+  // 下方 OKM
+  const last = X0 + (show.length - 1) * CW + 190;
+  g += `<path d="M${X0} ${yB - 18} Q ${X0} ${yB - 6}, ${X0 + 14} ${yB - 6} L ${(X0 + last) / 2 - 10} ${yB - 6} L ${(X0 + last) / 2} ${yB + 4} L ${(X0 + last) / 2 + 10} ${yB - 6} L ${last - 14} ${yB - 6} Q ${last} ${yB - 6}, ${last} ${yB - 18}" class="ln"/>`;
+  const okmTxt = `OKM = T(1) || … || T(${R.n}) 的前 ${L} bytes = ${hkShort(buf2hex(R.okm))}`;
+  const ow = Math.min(W - 20, okmTxt.length * 7 + 40);
+  g += box(Math.max(10, (X0 + last) / 2 - ow / 2), yB + 8, ow, 34, 'bk', okmTxt, 'oi mono', buf2hex(R.okm));
+  if (R.n * 32 > L) g += `<text x="${(X0 + last) / 2}" y="${yB + 58}" text-anchor="middle" class="mu">T(${R.n}) 只取前 ${L - (R.n - 1) * 32} bytes，其餘 ${R.n * 32 - L} bytes 捨棄</text>`;
+  $('hkFig').innerHTML = `<svg xmlns="${NS}" viewBox="0 0 ${W} ${H + 10}" width="${W}" role="img"><title>HKDF 計算流程（滑鼠停在方塊上看完整數值）</title>${g}</svg>`;
+}
+$('hkRun').addEventListener('click', run('hkSt', async () => {
+  let prk, ext = null;
+  if (HK.mode === 'ext') { const salt = hx('hkSalt', 'salt'), ikm = hx('hkIkm', 'IKM'); if (!ikm.length) throw new Error('請輸入 IKM'); prk = await hkdfExtract(salt, ikm); setOut('hkPrk', prk); ext = { salt, ikm }; }
+  else { prk = hx('hkPrk', 'PRK'); }
+  const info = hx('hkInfo', 'info'), want = val('hkInfoLen');
+  if (want !== 'any' && info.length * 8 !== +want) throw new Error(`info 應為 ${want} bit（${want / 8} B），目前是 ${info.length} B`);
+  const L = Math.floor(+val('hkL')); if (!(L >= 1)) throw new Error('L 要是正整數');
+  const R = await hkdfExpand(prk, info, L);
+  setOut('hkOkm', R.okm); hkN();
+  $('hkRows').innerHTML = R.rounds.map(r => { const ih = buf2hex(r.input), p = r.prev.length * 2, q = p + info.length * 2;
+    return `<tr><td>${r.i}</td><td><span class="hkp">${ih.slice(0, p) || '（T(0) 空）'}</span><span class="ii">${ih.slice(p, q)}</span><span class="cc">${ih.slice(q)}</span></td><td>${buf2hex(r.t)}</td></tr>`; }).join('');
+  hkFigure(R, prk, info, L, ext);
+  return cmpMsg(`HKDF 完成：${R.n} 輪 HMAC-SHA256，輸出 ${L} bytes`, compare(buf2hex(R.okm), 'hkExp'));
+}));
+$('hkRand').addEventListener('click', () => {
+  const v = val('hkInfoLen'), n = v === 'any' ? 32 : +v / 8;
+  if (HK.mode === 'ext') setOut('hkIkm', randBytes(32)); else setOut('hkPrk', randBytes(32));
+  setOut('hkInfo', randBytes(n)); status('hkSt', `已產生隨機 ${HK.mode === 'ext' ? 'IKM' : 'PRK'} 與 ${n} B info`);
+});
+$('hkInfoLen').addEventListener('change', () => { const v = val('hkInfoLen'); if (v !== 'any' && $('hkL').value === '42') $('hkL').value = 32; hkN(); });
+$('hkSample').addEventListener('click', () => {
+  hkSetMode('ext'); $('hkInfoLen').value = 'any';
+  setOut('hkIkm', '0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'); setOut('hkSalt', '000102030405060708090a0b0c');
+  setOut('hkInfo', 'f0f1f2f3f4f5f6f7f8f9'); $('hkL').value = 42;
+  setOut('hkExp', '3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865'); $('hkRun').click();
+});
+hkN();
+
 // ===== Key Ladder =====
 const KL_IN = { sck: 'klSck', smk: 'klSmk', vendor: 'klVendor', module: 'klModule', ek3: 'klEk3', ek2: 'klEk2', ek1: 'klEk1' };
 const KL_NAME = { sck: 'SCK', smk: 'Secret Mask Key', vendor: 'Vendor ID', module: 'Module ID', ek3: 'Ek3', ek2: 'Ek2', ek1: 'Ek1' };
@@ -2374,7 +2533,7 @@ $('upIntro').textContent = UP.endpoint
   aesSample(); await aesDo(true)();
   eccGen('A'); eccGen('B'); await run('eccSt', eccDh)();
   dsaGen(); setOut('dsaMsg', '616263'); await run('dsaSt', dsaSignUi)();
-  $('hashSample').click(); $('hmacSample').click();
+  $('hashSample').click(); $('hmacSample').click(); $('hkSample').click();
   $('klSample').click();
   $('tT2H').click(); $('tH2B').click(); $('tRand').click(); $('tXor').click();
   setOut('rsaIn', '48656c6c6f'); setOut('rsaMsg', '616263');
