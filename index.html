@@ -490,6 +490,9 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
 .cxtab .sep { border-left: 1px solid var(--line); }
 .kup0 { color: var(--k-up); } .kdn0 { color: var(--k-dn); }
 .cxmkt-wrap > section { margin: 0; }
+.syncbox { border-top: 1px dashed var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.syncbox h3 { margin: 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+#syncCode { font-family: var(--mono); font-size: 0.78rem; word-break: break-all; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -896,6 +899,24 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
     </div>
     <div id="devOn" hidden class="row" style="align-items:center"><span class="note" style="flex:1">已開啟：左側多了台股策略回測、財務紀錄、我獨自升級、日文學習。重新整理網頁後會自動關閉。</span><button class="b" id="devOff">關閉開發選項</button></div>
     <p class="st" id="devSt">開啟後左側會多出三個項目</p>
+    <div id="migBox" class="syncbox" hidden>
+      <h3>轉換舊密碼的資料</h3>
+      <p class="note">這個瀏覽器裡有用舊密碼加密的資料（<span id="migList"></span>）。輸入舊密碼一次，會改用新密碼重新加密，之後就不再需要舊密碼。</p>
+      <div class="row" style="align-items:flex-end"><div class="f" style="flex:1 1 200px"><label for="migPass">舊密碼</label><input id="migPass" type="password" autocomplete="off"></div><button class="b pri" id="migGo">轉換</button></div>
+    </div>
+    <div id="syncBox" class="syncbox" hidden>
+      <h3>雲端同步 <span class="chip" id="syncChip">未設定</span></h3>
+      <p class="note">同步 Script、待辦事項、財務紀錄、我獨自升級、日文學習進度、自選股、Fugle 金鑰等。資料先在瀏覽器裡加密才上傳到你自己的 Google Drive，Drive 上只有密文。</p>
+      <div id="syncSetup">
+        <div class="f"><label for="syncUrl">第一台電腦：貼上 Apps Script 網址（https://script.google.com/macros/s/…/exec）</label><div class="row" style="flex-wrap:nowrap"><input id="syncUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"><button class="b pri" id="syncCreate">建立同步</button></div></div>
+        <div class="f"><label for="syncJoin">其他電腦：貼上第一台電腦產生的同步碼（雲端資料會取代這台電腦的資料）</label><div class="row" style="flex-wrap:nowrap"><input id="syncJoin" type="text" placeholder="hexsync1:…" autocomplete="off"><button class="b" id="syncJoinGo">加入同步</button></div></div>
+      </div>
+      <div id="syncOn" hidden>
+        <div class="btns"><button class="b pri" id="syncNow">立即同步</button><button class="b" id="syncShow">顯示同步碼</button><button class="b ghost" id="syncOff">解除這台電腦的同步</button></div>
+        <div class="f" id="syncCodeBox" hidden><label for="syncCode">同步碼（貼到其他電腦；請像密碼一樣保管，不要公開）<span><button class="cp" data-copy="syncCode">複製</button></span></label><textarea id="syncCode" rows="2" readonly></textarea></div>
+      </div>
+      <p class="st" id="syncSt">尚未設定</p>
+    </div>
   </div>
   <div class="owner-grid" id="ownerBody"></div>
 </div>
@@ -2902,7 +2923,8 @@ const OWNER_INFO_EMBED = "# ====================================================
 // ===== 左側選單：切換「加密測試台 / 作者訊息 / Script 紀錄區 / 待辦事項」 =====
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); if (store.onset) store.onset(k); return true; } catch { return false; } },
+  onset: null, // 雲端同步模組會掛在這裡，記錄修改時間並排程上傳
 };
 const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtTime = s => { try { return new Date(s).toLocaleString('zh-TW', { hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return s; } };
@@ -2910,18 +2932,32 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 
 // 共用密碼驗證：同一組密碼解鎖 Script 紀錄區與開發選項（網頁裡只有驗證用的密文，沒有密碼本身）
 const hexAuth = (() => {
-  const V = { salt: 'f0c2930ecdd23f8ee5644d38e5bb7c8a', iv: '3ed7dd5e915f1030f1ea3981', ct: '925c0cd3902fd759df3100bdc279f88915fe7819a53147dc134946a5f08fdf1d5b99161800d26a', iter: 250000 };
+  const V = { salt: '66748cd256cfeb35892e925796b1614a', iv: '622da9ff9e51c3a36a5469bd', ct: '76b1318e84a43b6d9f7698dfd9c3e45cd93044a1050c3059ae85d43ec1feeb661bf1d82865810a', iter: 250000 };
+  // 舊密碼的驗證資料：只用來把舊密碼加密的資料轉換成新密碼
+  const V_OLD = { salt: 'f0c2930ecdd23f8ee5644d38e5bb7c8a', iv: '3ed7dd5e915f1030f1ea3981', ct: '925c0cd3902fd759df3100bdc279f88915fe7819a53147dc134946a5f08fdf1d5b99161800d26a', iter: 250000 };
+  const SEALED = ['hexlab-vault', 'hexlab-fin', 'hexlab-fugle'];
   const enc = new TextEncoder();
+  async function derive(pw, v) {
+    const base = await subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+    const k = await subtle.deriveKey({ name: 'PBKDF2', salt: hex2buf(v.salt), iterations: v.iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    try { const t = new TextDecoder().decode(await subtle.decrypt({ name: 'AES-GCM', iv: hex2buf(v.iv) }, k, hex2buf(v.ct))); return t === 'hex-crypto-lab:vault:v1' ? k : null; } catch { return null; }
+  }
+  const openWith = async (k, box) => JSON.parse(new TextDecoder().decode(await subtle.decrypt({ name: 'AES-GCM', iv: hex2buf(box.iv) }, k, hex2buf(box.ct))));
   const api = {
     key: null, dev: false, listeners: [],
-    async tryPassword(pw) {
-      const base = await subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
-      const k = await subtle.deriveKey({ name: 'PBKDF2', salt: hex2buf(V.salt), iterations: V.iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-      try {
-        const t = new TextDecoder().decode(await subtle.decrypt({ name: 'AES-GCM', iv: hex2buf(V.iv) }, k, hex2buf(V.ct)));
-        if (t !== 'hex-crypto-lab:vault:v1') return null;
-      } catch { return null; }
-      api.key = k; return k;
+    async tryPassword(pw) { const k = await derive(pw, V); if (!k) return null; api.key = k; return k; },
+    // 找出還是用舊密碼加密、新密碼解不開的資料
+    async legacy() {
+      if (!api.key) return [];
+      const out = [];
+      for (const n of SEALED) { const b = store.get(n, null); if (!b || !b.ct) continue; try { await openWith(api.key, b); } catch { out.push(n); } }
+      return out;
+    },
+    async migrate(oldPw) {
+      const ok = await derive(oldPw, V_OLD); if (!ok) throw new Error('舊密碼不正確');
+      let n = 0;
+      for (const name of await api.legacy()) { const obj = await openWith(ok, store.get(name, null)); store.set(name, await api.seal(obj)); n++; }
+      return n;
     },
     async seal(obj) {
       const iv = randBytes(12);
@@ -3061,7 +3097,7 @@ const showView = (() => {
     {
       const box = store.get(KEY, null);
       items = [];
-      if (box) items = await open(box);
+      if (box) { try { items = await open(box); } catch { status('vLoginSt', 'Script 資料是用舊密碼加密的：請到「作者訊息 → 開發選項」用新密碼開啟後，輸入舊密碼轉換一次', 'err'); return; } }
       else {
         try { const r = await fetch('scripts.enc.json', { cache: 'no-store' }); if (r.ok) { items = await open(await r.json()); await save(); } } catch {}
       }
@@ -3072,6 +3108,7 @@ const showView = (() => {
   }
   // 開發選項已用同一組密碼解鎖時，進入這頁就直接打開
   document.addEventListener('viewchange', e => { if (e.detail === 'scripts' && hexAuth.key && !unlocked) enter(); });
+  document.addEventListener('hexsync', e => { if (e.detail.includes(KEY) && unlocked && !dirty) enter(); });
   async function save() { store.set(KEY, await seal(items)); dirty = false; }
   function logout() { unlocked = false; if (!hexAuth.dev) hexAuth.key = null; items = []; sel = null; $('vApp').hidden = true; $('vLogin').hidden = false; $('vList').innerHTML = ''; status('vLoginSt', '已登出，資料仍以加密方式保存在這個瀏覽器'); $('vPass').focus(); }
 
@@ -3239,6 +3276,7 @@ const showView = (() => {
     const prune = l => l.filter(t => !t.done).map(t => (t.children = prune(t.children), t));
     todos = prune(todos); save(); render();
   });
+  document.addEventListener('hexsync', e => { if (e.detail.includes(KEY)) { todos = store.get(KEY, todos) || todos; render(); } });
   $('todoExpand').addEventListener('click', () => { const any = JSON.stringify(todos).includes('"open":false'); const setO = l => l.forEach(t => { t.open = any; setO(t.children); }); setO(todos); save(); render(); });
   render();
 })();
@@ -3506,6 +3544,7 @@ const JP_DATA = {
     setKind(kind); render();
   });
   hexAuth.listeners.push(on => { if (!on) recs = null; });
+  document.addEventListener('hexsync', async e => { if (!e.detail.includes(KEY)) return; recs = null; if (!$('v-fin').hidden && hexAuth.key) { await load(); render(); } });
 })();
 
 // ===== 我獨自升級：每日任務、等級、連續達成、完成率 =====
@@ -3597,6 +3636,7 @@ const JP_DATA = {
     $('lvNewName').value = ''; save(); render(); $('lvNewName').focus();
   });
   document.addEventListener('viewchange', e => { if (e.detail === 'level') { day = ymd(new Date()); render(); } });
+  document.addEventListener('hexsync', e => { if (e.detail.includes(KEY)) { S = store.get(KEY, S) || S; render(); } });
 })();
 
 // ===== 日文學習書：N5–N1，單字與文法可展開，標記已學會 =====
@@ -3637,6 +3677,7 @@ const JP_DATA = {
   }
   $('jpLevels').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; level = b.dataset.lv; store.set('hexlab-jp-level', level); render(); });
   $('jpSearch').addEventListener('input', render);
+  document.addEventListener('hexsync', e => { if (e.detail.includes(KEY) || e.detail.includes('hexlab-jp-level')) { learned.clear(); for (const i of store.get(KEY, [])) learned.add(i); level = store.get('hexlab-jp-level', level); render(); } });
   $('jpQuiz').addEventListener('click', () => { quiz = !quiz; $('jpQuiz').setAttribute('aria-pressed', quiz); render(); });
   $('v-jp').addEventListener('click', e => {
     const cb = e.target.closest('input[type=checkbox][data-id]');
@@ -4011,6 +4052,7 @@ function StockChart(canvas, tip) {
     if (chart) requestAnimationFrame(() => chart.redraw());
   });
   hexAuth.listeners.push(on => { if (!on) { STK.setKey(null); cache.clear(); } });
+  document.addEventListener('hexsync', e => { if (e.detail.includes(KEY)) loadKey(); });
 })();
 
 // ---------- 大盤指數（鉅亨網公開行情，免金鑰、可跨網域） ----------
@@ -4482,6 +4524,7 @@ function ChipChart(canvas, infoEl) {
     $('cxWatch').innerHTML = watch.map(id => { const q = Q[id]; return `<li><button data-id="${id}" class="${cur && cur.id === id ? 'cur' : ''}"><span class="wn">${escHtml(nameOf(id) || id)}</span><span class="wp ${q ? cls(q.chg) : ''}">${q ? f0(q.price) : '—'}</span><span class="wc">${id}</span><span class="wq ${q ? cls(q.chg) : ''}">${q ? pct(q.pct) : ''}</span></button></li>`; }).join('') || '<li class="note">還沒有自選股，查詢個股後按「☆ 加入」。</li>';
     const on = cur && watch.includes(cur.id); $('cxStar').textContent = on ? '★ 已加入' : '☆ 加入'; $('cxStar').setAttribute('aria-pressed', String(!!on)); $('cxStar').disabled = !cur;
   }
+  document.addEventListener('hexsync', e => { if (e.detail.includes(WKEY)) { watch = store.get(WKEY, watch) || watch; renderWatch(); refreshQuotes(); } });
   $('cxWatch').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) load(b.dataset.id); });
   $('cxStar').addEventListener('click', () => { if (!cur) return; watch = watch.includes(cur.id) ? watch.filter(x => x !== cur.id) : [...watch, cur.id]; store.set(WKEY, watch); renderWatch(); refreshQuotes(); });
   async function refreshQuotes() { const ids = [...new Set([...watch, ...(cur ? [cur.id] : [])])]; try { Object.assign(Q, await CX.quotes(ids)); } catch {} renderWatch(); if (cur) renderHead(); }
@@ -4636,6 +4679,132 @@ function ChipChart(canvas, infoEl) {
   }
   document.addEventListener('viewchange', e => { if (e.detail === 'chip') start(); else { clearInterval(timer); timer = null; } });
   hexAuth.listeners.push(on => { if (!on) { clearInterval(timer); timer = null; } });
+})();
+
+// ================= 雲端同步（Google Apps Script + 你的 Google Drive） =================
+// 同步碼 = Apps Script 網址 + 32 bytes 隨機金鑰。資料在瀏覽器裡用這把金鑰 AES-GCM 加密後才上傳，
+// 伺服器只拿到密文與一個由金鑰算出的通行碼雜湊，看不到內容。同步碼只存在各台電腦的瀏覽器裡，不在網頁原始碼中。
+const HEXSYNC = (() => {
+  const CFG = 'hexlab-sync-cfg', META = 'hexlab-sync-meta', LAST = 'hexlab-sync-last';
+  const LOCAL_ONLY = ['hexlab-view', 'hexlab-tab', 'hexlab-twlist', 'hexlab-chip-last', 'hexlab-stock-last'];
+  const synced = k => k.startsWith('hexlab-') && !k.startsWith('hexlab-sync') && !LOCAL_ONLY.includes(k);
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  let cfg = store.get(CFG, null), aes = null, timer = null, busy = null, applying = false;
+  const meta = () => store.get(META, {});
+  const setMeta = m => { try { localStorage.setItem(META, JSON.stringify(m)); } catch {} };
+  const b64u = u8 => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const unb64u = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+  const sha = async s => buf2hex(new Uint8Array(await subtle.digest('SHA-256', enc.encode(s))));
+  async function keyOf(c) { return subtle.importKey('raw', hex2buf(c.k), 'AES-GCM', false, ['encrypt', 'decrypt']); }
+  const token = c => sha('hexlab-sync-auth:' + c.k);
+  const encodeCode = c => 'hexsync1:' + b64u(enc.encode(JSON.stringify({ u: c.u, k: c.k })));
+  function decodeCode(s) {
+    s = s.trim(); if (!s.startsWith('hexsync1:')) throw new Error('同步碼格式不對（應以 hexsync1: 開頭）');
+    let o; try { o = JSON.parse(dec.decode(unb64u(s.slice(9)))); } catch { throw new Error('同步碼不完整或打錯了，請重新複製貼上'); }
+    if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(o.u) || !/^[0-9a-f]{64}$/.test(o.k)) throw new Error('同步碼內容不正確');
+    return { u: o.u, k: o.k };
+  }
+  async function call(c, body) {
+    let r;
+    try { r = await fetch(c.u, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, token: await token(c) }), redirect: 'follow' }); }
+    catch { throw new Error('連不到同步伺服器（Apps Script），請確認網路或網址'); }
+    const j = await r.json().catch(() => null);
+    if (!j) throw new Error('同步伺服器回應格式不對，請確認 Apps Script 已部署為「網頁應用程式」且存取權為「所有人」');
+    if (!j.ok && !j.conflict) throw new Error(j.error || '同步失敗');
+    return j;
+  }
+  async function seal(c, obj) { const iv = randBytes(12); const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, aes || (aes = await keyOf(c)), enc.encode(JSON.stringify(obj)))); return { iv: buf2hex(iv), ct: b64u(ct) }; }
+  async function unseal(c, b) { return JSON.parse(dec.decode(await subtle.decrypt({ name: 'AES-GCM', iv: hex2buf(b.iv) }, aes || (aes = await keyOf(c)), unb64u(b.ct)))); }
+  function localMap() {
+    const m = meta(), out = {};
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (synced(k)) out[k] = { v: localStorage.getItem(k), t: m[k] || 0 }; }
+    return out;
+  }
+  // 核心：下載 → 依每個項目的修改時間合併（新的勝出）→ 有需要才上傳
+  async function syncOnce(c = cfg, { preferCloud = false } = {}) {
+    const got = await call(c, { action: 'sync-get' });
+    const cloud = got.blob ? (await unseal(c, got.blob)).items || {} : {};
+    const local = localMap(), m = meta(), changed = [];
+    let needPush = false;
+    for (const k of new Set([...Object.keys(cloud), ...Object.keys(local)])) {
+      const a = local[k], b = cloud[k];
+      if (b && (!a || b.t > a.t || (preferCloud && b.t >= a.t))) {
+        if (!a || a.v !== b.v) { applying = true; try { b.v === null ? localStorage.removeItem(k) : localStorage.setItem(k, b.v); } finally { applying = false; } changed.push(k); }
+        m[k] = b.t;
+      } else if (a && (!b || a.t > b.t)) needPush = true;
+    }
+    setMeta(m);
+    if (needPush) {
+      const items = {}; for (const [k, x] of Object.entries(localMap())) items[k] = x;
+      for (const [k, x] of Object.entries(cloud)) if (!items[k]) items[k] = x;
+      const put = await call(c, { action: 'sync-put', baseRev: got.rev || 0, blob: await seal(c, { v: 1, items }) });
+      if (put.conflict) return syncOnce(c);
+    }
+    store.set(LAST, Date.now());
+    if (changed.length) document.dispatchEvent(new CustomEvent('hexsync', { detail: changed }));
+    return { changed, pushed: needPush };
+  }
+  function run(opts) { if (!cfg) return Promise.resolve(null); if (busy) return busy; busy = syncOnce(cfg, opts).finally(() => { busy = null; }); return busy; }
+  function schedule() { clearTimeout(timer); timer = setTimeout(() => run().then(ui).catch(e => ui(e)), 2000); }
+  store.onset = k => { if (applying || !synced(k)) return; const m = meta(); m[k] = Date.now(); setMeta(m); if (cfg) schedule(); };
+
+  async function create(url) {
+    url = url.trim(); if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)) throw new Error('請貼上 Apps Script 部署後的網址（https://script.google.com/macros/s/…/exec）');
+    const c = { u: url, k: buf2hex(randBytes(32)) }; aes = null;
+    const r = await call(c, { action: 'sync-init' });
+    if (r.claimed === false) throw new Error('這個 Apps Script 已經綁定其他同步碼。要重設的話，到 Apps Script「專案設定 → 指令碼屬性」刪除 syncTokenHash 後再試');
+    const m = meta(), now = Date.now(); for (const k of Object.keys(localMap())) m[k] = m[k] || now; setMeta(m);   // 第一台電腦的資料當作基準
+    cfg = c; store.set(CFG, c); await syncOnce(c); return encodeCode(c);
+  }
+  async function join(code) {
+    const c = decodeCode(code); aes = null;
+    await call(c, { action: 'sync-get' });          // 先確認同步碼有效
+    setMeta({});                                     // 這台電腦的舊資料一律視為較舊，雲端版本優先
+    cfg = c; store.set(CFG, c);
+    return syncOnce(c, { preferCloud: true });
+  }
+  function off() { cfg = null; aes = null; try { localStorage.removeItem(CFG); } catch {} }
+
+  // 啟動：有設定就先同步一次；剛打開網頁時若雲端有新資料，重新整理一次讓各頁讀到最新內容
+  if (cfg) {
+    run().then(r => { if (r && r.changed.length && !sessionStorage.getItem('hexsync-reloaded')) { sessionStorage.setItem('hexsync-reloaded', '1'); location.reload(); } else ui(); }).catch(e => ui(e));
+    setInterval(() => { if (!document.hidden) run().then(ui).catch(e => ui(e)); }, 60000);
+    window.addEventListener('focus', () => run().then(ui).catch(e => ui(e)));
+  }
+  setTimeout(() => sessionStorage.removeItem('hexsync-reloaded'), 5000);
+
+  function ui(err) {
+    if (!$('syncBox')) return;
+    $('syncChip').textContent = cfg ? '已啟用' : '未設定'; $('syncChip').className = 'chip' + (cfg ? ' okchip' : '');
+    $('syncSetup').hidden = !!cfg; $('syncOn').hidden = !cfg;
+    if (err instanceof Error) return status('syncSt', err.message, 'err');
+    const last = store.get(LAST, 0);
+    status('syncSt', cfg ? (last ? `最後同步：${fmtTime(new Date(last))}（每分鐘與切回網頁時自動同步，修改後 2 秒自動上傳）` : '已設定，等待第一次同步') : '尚未設定。先部署 Apps Script（見 DEPLOY.md），第一台電腦貼網址建立，其他電腦貼同步碼加入。', cfg && last ? 'ok' : '');
+  }
+  return { run, create, join, off, ui, code: () => cfg && encodeCode(cfg), get on() { return !!cfg; } };
+})();
+
+// 開發選項裡的同步與舊資料轉換介面
+(() => {
+  async function refreshMig() {
+    const list = hexAuth.dev ? await hexAuth.legacy() : [];
+    const names = { 'hexlab-vault': 'Script 紀錄區', 'hexlab-fin': '財務紀錄', 'hexlab-fugle': 'Fugle 金鑰' };
+    $('migBox').hidden = !list.length; $('migList').textContent = list.map(n => names[n] || n).join('、');
+  }
+  function show() { $('syncBox').hidden = !hexAuth.dev; HEXSYNC.ui(); refreshMig(); }
+  hexAuth.listeners.push(show); show();
+  $('migGo').addEventListener('click', async () => {
+    try { const n = await hexAuth.migrate(val('migPass')); $('migPass').value = ''; status('devSt', `已用新密碼重新加密 ${n} 項資料`, 'ok'); document.dispatchEvent(new CustomEvent('hexsync', { detail: ['hexlab-vault', 'hexlab-fin', 'hexlab-fugle'] })); refreshMig(); }
+    catch (e) { status('devSt', e.message, 'err'); }
+  });
+  const busyBtn = async (id, fn) => { const b = $(id); b.disabled = true; status('syncSt', '處理中…'); try { await fn(); } catch (e) { status('syncSt', e.message, 'err'); } finally { b.disabled = false; } };
+  $('syncCreate').addEventListener('click', () => busyBtn('syncCreate', async () => { const code = await HEXSYNC.create(val('syncUrl')); HEXSYNC.ui(); $('syncCode').value = code; $('syncCodeBox').hidden = false; status('syncSt', '同步已建立。把下面的同步碼複製到其他電腦，在同一個地方貼上並按「加入同步」。', 'ok'); }));
+  $('syncJoinGo').addEventListener('click', () => busyBtn('syncJoinGo', async () => { await HEXSYNC.join(val('syncJoin')); $('syncJoin').value = ''; status('syncSt', '已加入同步，正在重新整理網頁載入雲端資料…', 'ok'); setTimeout(() => location.reload(), 900); }));
+  $('syncNow').addEventListener('click', () => busyBtn('syncNow', async () => { const r = await HEXSYNC.run(); HEXSYNC.ui(); if (r) status('syncSt', `同步完成：${r.changed.length ? `從雲端更新 ${r.changed.length} 項` : '雲端沒有新資料'}${r.pushed ? '，已上傳本機的修改' : ''}`, 'ok'); }));
+  $('syncShow').addEventListener('click', () => { const box = $('syncCodeBox'); box.hidden = !box.hidden; $('syncCode').value = HEXSYNC.code() || ''; });
+  $('syncOff').addEventListener('click', e => { const b = e.currentTarget; if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.textContent = '確定解除？'; setTimeout(() => { b.textContent = '解除這台電腦的同步'; delete b.dataset.arm; }, 2500); return; } HEXSYNC.off(); $('syncCodeBox').hidden = true; HEXSYNC.ui(); status('syncSt', '這台電腦已停止同步，本機資料保留；雲端資料不受影響', 'ok'); });
+  // 登入後若發現舊密碼加密的資料，提醒轉換
+  document.addEventListener('viewchange', e => { if (e.detail === 'owner') refreshMig(); });
 })();
 
 </script>
