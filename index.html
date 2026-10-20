@@ -4861,10 +4861,11 @@ const MKT = (() => {
 // 資料來源：FinMind 開放 API（免金鑰，約每小時 300 次）、鉅亨網即時報價、證交所 T86（法人排行）
 const FM = (() => {
   const B = 'https://api.finmindtrade.com/api/v4/data';
-  const cache = new Map();
-  async function get(dataset, p = {}) {
+  const cache = new Map(), TTL = 20 * 60e3;
+  async function get(dataset, p = {}, fresh = false) {
     const q = new URLSearchParams({ dataset, ...p }).toString();
-    if (cache.has(q)) return cache.get(q);
+    const hit = cache.get(q);
+    if (hit && !fresh && Date.now() - hit.t < TTL) return hit.job;
     const job = (async () => {
       let r; try { r = await fetch(B + '?' + q); } catch { throw new Error('連不到 FinMind：可能是網路中斷，或已達免費版每小時查詢上限，請稍後再試'); }
       const j = await r.json().catch(() => ({}));
@@ -4872,10 +4873,10 @@ const FM = (() => {
       if (!r.ok || j.status !== 200) throw new Error('FinMind 回應錯誤：' + (j.msg || r.status));
       return j.data || [];
     })();
-    cache.set(q, job); job.catch(() => cache.delete(q));
+    cache.set(q, { job, t: Date.now() }); job.catch(() => cache.delete(q));
     return job;
   }
-  return { get };
+  return { get, clear: () => cache.clear() };
 })();
 
 const CX = (() => {
@@ -4957,7 +4958,7 @@ const CX = (() => {
     for (const r of rows) {
       const k = keyOf(r.d, p);
       if (k !== ck) { if (cur) out.push(cur); ck = k; cur = { ...r, d0: r.d }; for (const s of SUMK) cur[s] = r[s] ?? null; continue; }
-      cur.h = Math.max(cur.h, r.h); cur.l = Math.min(cur.l, r.l); cur.c = r.c; cur.d = r.d;
+      cur.h = Math.max(cur.h, r.h); cur.l = Math.min(cur.l, r.l); cur.c = r.c; cur.d = r.d; if (r.live) cur.live = true;
       for (const s of SUMK) if (r[s] != null) cur[s] = (cur[s] ?? 0) + r[s];
       for (const s of LASTK) if (r[s] != null) cur[s] = r[s];
     }
@@ -5067,7 +5068,7 @@ function ChipChart(canvas, infoEl) {
   function info(i) {
     const r = S.bars[i], pv = S.bars[i - 1], ch = pv ? r.c - pv.c : 0, pc = pv ? ch / pv.c * 100 : 0;
     const per = S.per === 'D' ? r.d : S.per === 'W' ? `${r.d0}～${r.d}` : lbl(r);
-    let h = `<span><b>${per}</b></span><span>開 <b>${f0(r.o)}</b></span><span>高 <b>${f0(r.h)}</b></span><span>低 <b>${f0(r.l)}</b></span><span>收 <b class="${cls(ch)}">${f0(r.c)}</b></span><span class="${cls(ch)}">${ch >= 0 ? '▲' : '▼'} ${f0(Math.abs(ch))}（${pc.toFixed(2)}%）</span><span>量 <b>${f0(r.v)}</b> 張</span>`;
+    let h = `<span><b>${per}</b>${r.live ? ' <small>（盤中即時，收盤後定案）</small>' : ''}</span><span>開 <b>${f0(r.o)}</b></span><span>高 <b>${f0(r.h)}</b></span><span>低 <b>${f0(r.l)}</b></span><span>收 <b class="${cls(ch)}">${f0(r.c)}</b></span><span class="${cls(ch)}">${ch >= 0 ? '▲' : '▼'} ${f0(Math.abs(ch))}（${pc.toFixed(2)}%）</span><span>量 <b>${f0(r.v)}</b> 張</span>`;
     for (const [nn, a] of cacheSer.ma) h += `<span style="color:var(--ma${nn})">MA${nn} ${f0(a[i])}</span>`;
     infoEl.innerHTML = h;
   }
@@ -5117,7 +5118,7 @@ function ChipChart(canvas, infoEl) {
   const WKEY = 'hexlab-watch', LKEY = 'hexlab-chip-last', PKEY = 'hexlab-chip-prefs';
   let watch = store.get(WKEY, null) || ['2330', '2317', '2454', '2308', '0050'];
   const prefs = Object.assign({ per: 'D', mas: [5, 20, 60], panes: ['vol', 'inst', 'kd'] }, store.get(PKEY, {}));
-  let list = [], cur = null, Q = {}, chart = null, tab = 'stock', sub = 'k', timer = null, instRows = 40, mgRows = 40, loading = 0;
+  let list = [], cur = null, Q = {}, chart = null, tab = 'stock', sub = 'k', timer = null, instRows = 40, mgRows = 40, loading = 0, loading2 = false;
   const f0 = v => v == null || !isFinite(v) ? '—' : Math.abs(v) >= 1000 ? Math.round(v).toLocaleString('en-US') : (+(+v).toFixed(2)).toLocaleString('en-US', { maximumFractionDigits: 2 });
   const fs = v => v == null || !isFinite(v) ? '—' : (v > 0 ? '+' : '') + f0(v);
   const cls = v => v > 0 ? 'kup0' : v < 0 ? 'kdn0' : '';
@@ -5158,7 +5159,17 @@ function ChipChart(canvas, infoEl) {
   document.addEventListener('hexsync', e => { if (e.detail.includes(WKEY)) { watch = store.get(WKEY, watch) || watch; renderWatch(); refreshQuotes(); } });
   $('cxWatch').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) load(b.dataset.id); });
   $('cxStar').addEventListener('click', () => { if (!cur) return; watch = watch.includes(cur.id) ? watch.filter(x => x !== cur.id) : [...watch, cur.id]; store.set(WKEY, watch); renderWatch(); refreshQuotes(); });
-  async function refreshQuotes() { const ids = [...new Set([...watch, ...(cur ? [cur.id] : [])])]; try { Object.assign(Q, await CX.quotes(ids)); } catch {} renderWatch(); if (cur) renderHead(); }
+  async function refreshQuotes() { const ids = [...new Set([...watch, ...(cur ? [cur.id] : [])])]; try { Object.assign(Q, await CX.quotes(ids)); } catch {} renderWatch(); if (cur) renderHead(); if (cur && cur.data.bars && !loading2) { stLine(); if (sub === 'k' && chart && prefs.per !== 'I' && liveBar()) renderK(true); } }
+  // 網頁開著跨過收盤後：每 20 分鐘重抓一次 FinMind，抓到新的一天就更新畫面
+  async function refreshData() {
+    if (!cur || !cur.data.bars || loading2 || Date.now() - (cur.at || 0) < 20 * 60e3) return;
+    const id = cur.id, old = cur.data.bars[cur.data.bars.length - 1].d; loading2 = true;
+    try {
+      const [b, inst, share, mg] = await Promise.all([CX.price(id), CX.inst(id), CX.share(id), CX.margin(id)]);
+      if (!cur || cur.id !== id) return; cur.at = Date.now();
+      if (b.length && b[b.length - 1].d > old) { Object.assign(cur.data, { bars: b, inst, share, mg }); delete cur.data.dt; delete cur.data.sbl; renderHead(); await renderSub(); }
+    } catch {} finally { loading2 = false; stLine(); }
+  }
 
   // 個股
   async function load(id) {
@@ -5172,7 +5183,7 @@ function ChipChart(canvas, infoEl) {
       if (!bars.length) throw new Error(`查不到 ${id} 的歷史股價（可能代號有誤或為興櫃股票）`);
       Object.assign(cur.data, { bars, inst, share, mg });
       if (!nameOf(id)) { const nm = Object.values(share).map(x => x.name).find(Boolean); if (nm) $('cxNm').textContent = nm; }
-      renderHead(); await renderSub(); st(`${id} ${nameOf(id)} 資料更新至 ${bars[bars.length - 1].d}`, 'ok');
+      cur.at = Date.now(); renderHead(); await renderSub(); stLine();
       CX.per(id).then(p => { if (my === loading) { cur.data.per = p; renderHead(); } }).catch(() => {});
     } catch (e) { if (my === loading) st(e.message, 'err'); }
   }
@@ -5196,8 +5207,23 @@ function ChipChart(canvas, infoEl) {
     if (need.includes('dt') && !d.dt) d.dt = await CX.daytrade(id);
     if (need.includes('sbl') && !d.sbl) d.sbl = await CX.sbl(id);
   }
+  // 台北時間的日期
+  const tpeDay = t => new Date(t + 8 * 3600e3).toISOString().slice(0, 10);
+  // FinMind 日 K 要收盤後才有當天資料；盤中用即時報價補上今天這根（標記 live）
+  function liveBar() {
+    const q = cur && Q[cur.id], b = cur && cur.data.bars; if (!q || !b || !b.length || !(q.price > 0) || !q.time) return null;
+    const d = tpeDay(q.time); if (d <= b[b.length - 1].d) return null;
+    const ok = v => v > 0 && Math.abs(v - q.price) / q.price < 0.15 ? v : q.price;   // 開盤前或來源異常時退回現價
+    return { d, o: ok(q.open), h: Math.max(ok(q.high), q.price), l: Math.min(ok(q.low), q.price), c: q.price, v: q.vol || 0, live: true };
+  }
+  function bars() { const b = cur.data.bars, lb = liveBar(); return lb ? [...b, lb] : b; }
+  function stLine() {
+    if (!cur || !cur.data.bars) return; const last = cur.data.bars[cur.data.bars.length - 1].d, lb = liveBar(), q = Q[cur.id];
+    const tm = q && q.time ? new Date(q.time).toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit' }) : '';
+    st(`報價：${q ? (q.live ? '盤中即時 ' : '最新收盤 ') + tm + (q.live ? '（每 30 秒更新）' : '') : '—'}｜日 K、籌碼收錄至 ${last.slice(5)}` + (lb ? `；今天 ${lb.d.slice(5)} 的 K 棒暫用即時報價，法人與資券約 15:00～21:00 公布後自動補上` : ''), 'ok');
+  }
   function merged() {
-    const d = cur.data; return d.bars.map(r => Object.assign({}, r, d.inst && d.inst[r.d], d.mg && d.mg[r.d], d.share && d.share[r.d], d.dt && d.dt[r.d], d.sbl && d.sbl[r.d]));
+    const d = cur.data; return bars().map(r => Object.assign({}, r, d.inst && d.inst[r.d], d.mg && d.mg[r.d], d.share && d.share[r.d], d.dt && d.dt[r.d], d.sbl && d.sbl[r.d]));
   }
   async function renderK(keep) {
     if (!cur || !cur.data.bars) return; if (!chart) chart = ChipChart($('cxCanvas'), $('cxInfo'));
@@ -5305,8 +5331,8 @@ function ChipChart(canvas, infoEl) {
   let started = false;
   async function start() {
     if (!started) { started = true; renderWatch(); CX.info().then(l => { list = l; renderWatch(); if (cur) { $('cxInd').textContent = (list.find(x => x[0] === cur.id) || [])[3] || ''; if (!Q[cur.id]) $('cxNm').textContent = nameOf(cur.id) || cur.id; } }).catch(() => {}); load(store.get(LKEY, '2330')); }
-    else { refreshQuotes(); if (chart) requestAnimationFrame(chart.redraw); }
-    clearInterval(timer); timer = setInterval(() => { if ($('v-chip').hidden || document.hidden || tab !== 'stock') return; refreshQuotes(); if (prefs.per === 'I' && sub === 'k') renderK(); }, 30000);
+    else { refreshQuotes(); refreshData(); if (chart) requestAnimationFrame(chart.redraw); }
+    clearInterval(timer); timer = setInterval(() => { if ($('v-chip').hidden || document.hidden || tab !== 'stock') return; refreshQuotes(); if (prefs.per === 'I' && sub === 'k') renderK(); refreshData(); }, 30000);
   }
   document.addEventListener('viewchange', e => { if (e.detail === 'chip') start(); else { clearInterval(timer); timer = null; } });
   hexAuth.listeners.push(on => { if (!on) { clearInterval(timer); timer = null; } });
