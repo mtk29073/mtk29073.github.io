@@ -366,15 +366,8 @@ tr.got .jw { color: var(--ok); }
 .vw { font-size: 1.08rem; font-weight: 500; white-space: normal !important; }
 table.jtab td.jm { min-width: 7em; }
 .vnote { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px; }
-table.jtab td.vsp { width: 1%; padding-inline: 2px; }
-button.say { background: none; border: 0; padding: 4px; color: var(--accent); cursor: pointer; display: inline-flex; border-radius: 6px; }
-button.say svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-button.say:hover { background: var(--well); }
-.vtips { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; }
-.vtips div { background: var(--well); border-radius: 6px; padding: 8px 12px; font-size: 0.86rem; }
-.vtips b { display: block; margin-bottom: 2px; }
 #vnQuiz[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
-@media (max-width: 560px) { #v-vn table.jtab tr { display: grid; grid-template-columns: auto auto minmax(0, 1fr); border-top: 1px solid var(--line); } #v-vn table.jtab td { border-top: 0; } #v-vn table.jtab td.jm { grid-column: 3; padding-top: 0; min-width: 0; } #v-vn table.jtab td:first-child, #v-vn table.jtab td.vsp { width: auto; } }
+@media (max-width: 560px) { #v-vn table.jtab tr { display: grid; grid-template-columns: auto minmax(0, 1fr); border-top: 1px solid var(--line); } #v-vn table.jtab td { border-top: 0; } #v-vn table.jtab td.jm { grid-column: 2; padding-top: 0; min-width: 0; } #v-vn table.jtab td:first-child { width: auto; } }
 /* ---- 台股策略回測 ---- */
 :root { --k-up: #d12f3a; --k-dn: #16884a; --k-vs: #e08a00; --k-vl: #7a4fd6; }
 @media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) { --k-up: #ff5c66; --k-dn: #35c27a; --k-vs: #ffb340; --k-vl: #b391ff; } }
@@ -1290,17 +1283,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
     <details class="jsec" open><summary>常用口語 <small id="vnPhN"></small></summary><div id="vnPhrases"></div></details>
     <details class="jsec" open><summary>句型 <small id="vnGramN"></small></summary><div id="vnGrammar"></div></details>
   </div>
-  <div class="card" style="margin-top:16px">
-    <details class="jsec"><summary>南越發音重點</summary><div class="vtips">
-      <div><b>問聲、跌聲不分</b>dấu hỏi（ả）和 dấu ngã（ã）在南部念成同一個聲調，例如 bảo、bão 聽起來一樣。</div>
-      <div><b>v 念成 y/j</b>vậy 念 dzậy、vô 念 dzô、về 念 yề。</div>
-      <div><b>d、gi、r 多念成 y/j</b>da、gia 念法相同；r 有時也接近 y。</div>
-      <div><b>字尾 -n 念成 -ng</b>bàn 聽起來像 bàng、ăn 像 ăng。</div>
-      <div><b>字尾 -t 念成 -c</b>một 像 mộc、hết 像 hếc。</div>
-      <div><b>常見口語縮讀</b>không → hông／hổng、tôi → tui、ông ấy → ổng、bà ấy → bả。</div>
-    </div></details>
-    <p class="note">點擊喇叭會用手機或電腦內建的越南語語音朗讀；系統語音多半是北部腔，南部念法以上面的重點為準。分級對應越南教育部《外國人越南語能力框架》（Thông tư 17/2015/TT-BGDĐT），內容為參考整理。</p>
-  </div>
+  <p class="note" style="margin-top:12px">分級對應越南教育部《外國人越南語能力框架》（Thông tư 17/2015/TT-BGDĐT），內容為參考整理。</p>
 </div>
 
 </main>
@@ -4252,32 +4235,16 @@ const VN_DATA = {
   document.addEventListener('viewchange', e => { if (e.detail === 'jp') render(); });
 })();
 
-// ===== 越南文學習（南越口語）：A1–C2，口語與句型，標記已學會，可朗讀 =====
+// ===== 越南文學習（南越口語）：A1–C2，口語與句型，標記已學會 =====
 (() => {
   const KEY = 'hexlab-vn', LKEY = 'hexlab-vn-level';
   const learned = new Set(store.get(KEY, []));
   let level = store.get(LKEY, 'A1'), quiz = false;
   if (!VN_DATA[level]) level = 'A1';
   const saveL = () => store.set(KEY, [...learned]);
-  const SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
   function counts(lv) {
     const L = VN_DATA[lv]; const ids = [...L.phrases.flatMap(g => g.items.map(v => `${lv}:p:${v[0]}`)), ...L.grammar.map(g => `${lv}:g:${g[0]}`)];
     return { all: ids.length, done: ids.filter(i => learned.has(i)).length };
-  }
-  // 朗讀：優先挑越南語語音（名稱含南部字樣者優先）
-  let voice = null;
-  function pickVoice() {
-    if (!('speechSynthesis' in window)) return;
-    const vs = speechSynthesis.getVoices().filter(v => /^vi/i.test(v.lang));
-    voice = vs.find(v => /south|nam|sài gòn|saigon|hcm/i.test(v.name)) || vs[0] || null;
-  }
-  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', pickVoice); }
-  function say(text) {
-    if (!("speechSynthesis" in window)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text.replace(/[…/]/g, ', '));
-    u.lang = 'vi-VN'; if (voice) u.voice = voice; u.rate = 0.85;
-    speechSynthesis.speak(u);
   }
   function render() {
     const L = VN_DATA[level], q = val('vnSearch').trim().toLowerCase();
@@ -4294,11 +4261,11 @@ const VN_DATA = {
       const items = g.items.filter(match); if (!items.length) return '';
       const d = items.filter(v => learned.has(`${level}:p:${v[0]}`)).length;
       return `<details class="jgroup" data-k="p:${escHtml(g.name)}" ${q ? 'open' : ''}><summary><span>${escHtml(g.name)}</span><small>${d}/${items.length}</small></summary>
-        <table class="jtab"><tbody>${items.map(v => { const id = `${level}:p:${v[0]}`; return `<tr class="${learned.has(id) ? 'got' : ''}"><td><input type="checkbox" data-id="${escHtml(id)}" ${learned.has(id) ? 'checked' : ''} aria-label="已學會 ${escHtml(v[0])}"></td><td class="vsp"><button type="button" class="say" data-say="${escHtml(v[0])}" aria-label="朗讀 ${escHtml(v[0])}">${SPK}</button></td><td><span class="jw vw" lang="vi">${escHtml(v[0])}</span></td><td class="jm"><span class="hid">${escHtml(v[1])}</span>${v[2] ? `<span class="vnote hid">${escHtml(v[2])}</span>` : ''}</td></tr>`; }).join('')}</tbody></table></details>`;
+        <table class="jtab"><tbody>${items.map(v => { const id = `${level}:p:${v[0]}`; return `<tr class="${learned.has(id) ? 'got' : ''}"><td><input type="checkbox" data-id="${escHtml(id)}" ${learned.has(id) ? 'checked' : ''} aria-label="已學會 ${escHtml(v[0])}"></td><td><span class="jw vw" lang="vi">${escHtml(v[0])}</span></td><td class="jm"><span class="hid">${escHtml(v[1])}</span>${v[2] ? `<span class="vnote hid">${escHtml(v[2])}</span>` : ''}</td></tr>`; }).join('')}</tbody></table></details>`;
     }).join('');
     const gram = L.grammar.filter(match);
     const gramHtml = gram.map(g => { const id = `${level}:g:${g[0]}`; return `<div class="jgram${learned.has(id) ? ' got' : ''}"><input type="checkbox" data-id="${escHtml(id)}" ${learned.has(id) ? 'checked' : ''} aria-label="已學會 ${escHtml(g[0])}"><details data-k="g:${escHtml(g[0])}"><summary><b lang="vi">${escHtml(g[0])}</b><span class="hid">${escHtml(g[1])}</span></summary>
-      <div class="jex"><p lang="vi">${escHtml(g[2])} <button type="button" class="say" data-say="${escHtml(g[2])}" aria-label="朗讀例句">${SPK}</button></p><p class="tr hid">${escHtml(g[3])}</p></div></details></div>`; }).join('');
+      <div class="jex"><p lang="vi">${escHtml(g[2])}</p><p class="tr hid">${escHtml(g[3])}</p></div></details></div>`; }).join('');
     const n = L.phrases.reduce((a, g) => a + g.items.filter(match).length, 0);
     $('vnPhrases').innerHTML = phHtml || '<p class="note">沒有符合的句子。</p>';
     $('vnGrammar').innerHTML = gramHtml || '<p class="note">沒有符合的句型。</p>';
@@ -4309,7 +4276,6 @@ const VN_DATA = {
   $('vnSearch').addEventListener('input', render);
   $('vnQuiz').addEventListener('click', () => { quiz = !quiz; $('vnQuiz').setAttribute('aria-pressed', quiz); render(); });
   $('v-vn').addEventListener('click', e => {
-    const sp = e.target.closest('button.say'); if (sp) { e.preventDefault(); say(sp.dataset.say); return; }
     const cb = e.target.closest('input[type=checkbox][data-id]');
     if (cb) { cb.checked ? learned.add(cb.dataset.id) : learned.delete(cb.dataset.id); saveL(); const keep = [...document.querySelectorAll('#v-vn details[open]')].map(d => d.dataset.k); render(); document.querySelectorAll('#v-vn details[data-k]').forEach(d => { if (keep.includes(d.dataset.k)) d.open = true; }); return; }
     const h = e.target.closest('.quiz .hid'); if (h) h.classList.toggle('show');
