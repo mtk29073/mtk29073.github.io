@@ -9,7 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="mtk29073">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000" media="(max-width: 800px)">
 <meta name="theme-color" content="#eef0f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1217" media="(prefers-color-scheme: dark)">
 </head>
@@ -27,7 +28,7 @@
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --sans: "IBM Plex Sans", system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+@media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) {
   --bg: #0f1217; --panel: #171b22; --well: #1d222b; --line: #2d3440;
   --fg: #e4e8ee; --muted: #9099a8; --accent: #8199ff; --accent-ink: #0f1217;
   --ok: #5fd39a; --ok-bg: #12301f; --err: #ff8b93; --err-bg: #3a1a1e; color-scheme: dark; } }
@@ -35,6 +36,9 @@
   --bg: #0f1217; --panel: #171b22; --well: #1d222b; --line: #2d3440;
   --fg: #e4e8ee; --muted: #9099a8; --accent: #8199ff; --accent-ink: #0f1217;
   --ok: #5fd39a; --ok-bg: #12301f; --err: #ff8b93; --err-bg: #3a1a1e; color-scheme: dark; }
+
+/* 手機（窄螢幕）一律黑色背景；要改回淺色可在 html 加 data-theme="light" */
+@media (max-width: 800px) { :root:not([data-theme="light"]) { --bg: #000000; --panel: #0d0f13; --well: #161920; --line: #262b34; } }
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
@@ -95,7 +99,7 @@ table.uplist td.s.ok { color: var(--ok); } table.uplist td.s.err { color: var(--
 table.uplist small { color: var(--muted); font-family: var(--mono); }
 /* ---- MPEG-TS ---- */
 :root { --g-hdr: #dbe4ff; --g-af: #ffe6bd; --g-pes: #d2f1db; --g-psi: #ead9ff; --g-es: #e3e8ee; --g-pl: #e3e8ee; --g-stuff: #efefea; --lit: #fff1a8; --lit-line: #d9a400; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --g-hdr: #26325f; --g-af: #4b3815; --g-pes: #1b4029; --g-psi: #3b2a5e; --g-es: #2b323b; --g-pl: #2b323b; --g-stuff: #2a2a27; --lit: #5b4a08; --lit-line: #f2c230; } }
+@media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) { --g-hdr: #26325f; --g-af: #4b3815; --g-pes: #1b4029; --g-psi: #3b2a5e; --g-es: #2b323b; --g-pl: #2b323b; --g-stuff: #2a2a27; --lit: #5b4a08; --lit-line: #f2c230; } }
 :root[data-theme="dark"] { --g-hdr: #26325f; --g-af: #4b3815; --g-pes: #1b4029; --g-psi: #3b2a5e; --g-es: #2b323b; --g-pl: #2b323b; --g-stuff: #2a2a27; --lit: #5b4a08; --lit-line: #f2c230; }
 .g-hdr { --gc: var(--g-hdr); } .g-af { --gc: var(--g-af); } .g-pes { --gc: var(--g-pes); } .g-psi { --gc: var(--g-psi); }
 .g-es { --gc: var(--g-es); } .g-pl { --gc: var(--g-pl); } .g-stuff { --gc: var(--g-stuff); } .g-none { --gc: transparent; }
@@ -358,9 +362,22 @@ tr.got .jw { color: var(--ok); }
 .quiz .hid.show { color: inherit !important; background: transparent; }
 #jpQuiz[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
 @media (max-width: 560px) { .jplevels { gap: 4px; } .jplevels button { font-size: 1rem; padding: 10px 2px; } }
+.jplevels.six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.vw { font-size: 1.08rem; font-weight: 500; white-space: normal !important; }
+table.jtab td.jm { min-width: 7em; }
+.vnote { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px; }
+table.jtab td.vsp { width: 1%; padding-inline: 2px; }
+button.say { background: none; border: 0; padding: 4px; color: var(--accent); cursor: pointer; display: inline-flex; border-radius: 6px; }
+button.say svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+button.say:hover { background: var(--well); }
+.vtips { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; }
+.vtips div { background: var(--well); border-radius: 6px; padding: 8px 12px; font-size: 0.86rem; }
+.vtips b { display: block; margin-bottom: 2px; }
+#vnQuiz[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
+@media (max-width: 560px) { #v-vn table.jtab tr { display: grid; grid-template-columns: auto auto minmax(0, 1fr); border-top: 1px solid var(--line); } #v-vn table.jtab td { border-top: 0; } #v-vn table.jtab td.jm { grid-column: 3; padding-top: 0; min-width: 0; } #v-vn table.jtab td:first-child, #v-vn table.jtab td.vsp { width: auto; } }
 /* ---- 台股策略回測 ---- */
 :root { --k-up: #d12f3a; --k-dn: #16884a; --k-vs: #e08a00; --k-vl: #7a4fd6; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --k-up: #ff5c66; --k-dn: #35c27a; --k-vs: #ffb340; --k-vl: #b391ff; } }
+@media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) { --k-up: #ff5c66; --k-dn: #35c27a; --k-vs: #ffb340; --k-vl: #b391ff; } }
 :root[data-theme="dark"] { --k-up: #ff5c66; --k-dn: #35c27a; --k-vs: #ffb340; --k-vl: #b391ff; }
 .kup { color: var(--k-up); } .kdn { color: var(--k-dn); }
 .chip.okchip { color: var(--ok); border-color: var(--ok); background: var(--ok-bg); }
@@ -440,7 +457,7 @@ canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; 
 .card.wide { grid-column: 1 / -1; }
 .hktab .hkp { color: var(--muted); } .hktab .ii { color: var(--hk-info-t); } .hktab .cc { color: var(--accent); font-weight: 600; }
 :root { --hk-info: #f6d8bf; --hk-info-s: #c4661c; --hk-info-t: #a4520f; --hk-fb: #d9a400; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hk-info: #4a2d17; --hk-info-s: #e8853a; --hk-info-t: #ffaa66; --hk-fb: #ffcc33; } }
+@media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) { --hk-info: #4a2d17; --hk-info-s: #e8853a; --hk-info-t: #ffaa66; --hk-fb: #ffcc33; } }
 :root[data-theme="dark"] { --hk-info: #4a2d17; --hk-info-s: #e8853a; --hk-info-t: #ffaa66; --hk-fb: #ffcc33; }
 /* 側欄群組 */
 .navgrp { display: flex; flex-direction: column; gap: 2px; }
@@ -455,7 +472,7 @@ canvas.mkchart { width: 100%; height: 320px; display: block; cursor: crosshair; 
 @media (max-width: 800px) { .navgrp { flex-direction: row; } .navhead { display: none; } .navsub { flex-direction: row; padding-left: 0; } .navsub[hidden] { display: flex !important; } }
 /* 股市籌碼（App 風格） */
 :root { --c-f: #2563eb; --c-t: #e07800; --c-d: #8b44d6; --ma5: #e08a00; --ma10: #2563eb; --ma20: #d6336c; --ma60: #179a4b; --ma120: #7c3aed; --ma240: #6b7280; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c-f: #6ea0ff; --c-t: #ffab4a; --c-d: #c095ff; --ma5: #ffb340; --ma10: #6ea0ff; --ma20: #ff6b9a; --ma60: #4bd486; --ma120: #b391ff; --ma240: #a7afbd; } }
+@media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) { --c-f: #6ea0ff; --c-t: #ffab4a; --c-d: #c095ff; --ma5: #ffb340; --ma10: #6ea0ff; --ma20: #ff6b9a; --ma60: #4bd486; --ma120: #b391ff; --ma240: #a7afbd; } }
 :root[data-theme="dark"] { --c-f: #6ea0ff; --c-t: #ffab4a; --c-d: #c095ff; --ma5: #ffb340; --ma10: #6ea0ff; --ma20: #ff6b9a; --ma60: #4bd486; --ma120: #b391ff; --ma240: #a7afbd; }
 .cxtop { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
 .cxmain button { font-size: 0.95rem; padding: 7px 18px; }
@@ -535,6 +552,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
       <a href="#fin" data-view="fin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg><span>財務紀錄</span></a>
       <a href="#level" data-view="level"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>我獨自升級</span></a>
       <a href="#jp" data-view="jp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>日文學習</span></a>
+      <a href="#vn" data-view="vn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a5 5 0 0 1 5 5v9H9a5 5 0 0 1-5-5z"/><path d="M8 10h8M8 14h5"/></svg><span>越南文學習</span></a>
     </div>
   </div>
   <div class="side-bottom"><a href="#owner" data-view="owner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>作者訊息</span></a></div>
@@ -1253,6 +1271,35 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
     <details class="jsec" open><summary>單字 <small id="jpVocabN"></small></summary><div id="jpVocab"></div></details>
     <details class="jsec" open><summary>文法 <small id="jpGramN"></small></summary><div id="jpGrammar"></div></details>
     <p class="note">JLPT 官方自 2010 年起不公布單字與文法清單，這裡的分級參考常見教材整理，僅供學習參考。等級說明摘自 jlpt.jp。</p>
+  </div>
+</div>
+
+<!-- ============ 越南文學習（南越） ============ -->
+<div class="view" id="v-vn" hidden>
+  <header class="vhead"><h1>越南文學習</h1><p>以胡志明市（西貢）的南部口語為主，分 A1–C2 六級。勾選代表已學會，進度會跟著雲端同步。</p></header>
+  <div class="jplevels six" id="vnLevels">
+    <button data-lv="A1">A1<small></small></button><button data-lv="A2">A2<small></small></button><button data-lv="B1">B1<small></small></button><button data-lv="B2">B2<small></small></button><button data-lv="C1">C1<small></small></button><button data-lv="C2">C2<small></small></button>
+  </div>
+  <div class="card">
+    <div class="row" style="align-items:flex-start">
+      <div style="flex:2 1 280px"><h2 id="vnTitle" class="jptitle"></h2><p class="note" id="vnDesc"></p></div>
+      <div class="f" style="flex:1 1 200px"><label for="vnSearch">搜尋 <span class="len" id="vnProg"></span></label><input id="vnSearch" type="search" placeholder="越南文或中文"></div>
+    </div>
+    <div class="progress"><i id="vnBar"></i></div>
+    <div class="btns"><button class="b ghost" id="vnExpand">全部展開 / 收合</button><button class="b ghost" id="vnQuiz" aria-pressed="false">測驗模式（遮住中文）</button></div>
+    <details class="jsec" open><summary>常用口語 <small id="vnPhN"></small></summary><div id="vnPhrases"></div></details>
+    <details class="jsec" open><summary>句型 <small id="vnGramN"></small></summary><div id="vnGrammar"></div></details>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <details class="jsec"><summary>南越發音重點</summary><div class="vtips">
+      <div><b>問聲、跌聲不分</b>dấu hỏi（ả）和 dấu ngã（ã）在南部念成同一個聲調，例如 bảo、bão 聽起來一樣。</div>
+      <div><b>v 念成 y/j</b>vậy 念 dzậy、vô 念 dzô、về 念 yề。</div>
+      <div><b>d、gi、r 多念成 y/j</b>da、gia 念法相同；r 有時也接近 y。</div>
+      <div><b>字尾 -n 念成 -ng</b>bàn 聽起來像 bàng、ăn 像 ăng。</div>
+      <div><b>字尾 -t 念成 -c</b>một 像 mộc、hết 像 hếc。</div>
+      <div><b>常見口語縮讀</b>không → hông／hổng、tôi → tui、ông ấy → ổng、bà ấy → bả。</div>
+    </div></details>
+    <p class="note">點擊喇叭會用手機或電腦內建的越南語語音朗讀；系統語音多半是北部腔，南部念法以上面的重點為準。分級對應越南教育部《外國人越南語能力框架》（Thông tư 17/2015/TT-BGDĐT），內容為參考整理。</p>
   </div>
 </div>
 
@@ -2991,8 +3038,8 @@ const hexAuth = (() => {
 })();
 
 const showView = (() => {
-  const VIEWS = ['crypto', 'scripts', 'todo', 'owner', 'chip', 'stock', 'fin', 'level', 'jp'];
-  const DEV_VIEWS = ['chip', 'stock', 'fin', 'level', 'jp'];
+  const VIEWS = ['crypto', 'scripts', 'todo', 'owner', 'chip', 'stock', 'fin', 'level', 'jp', 'vn'];
+  const DEV_VIEWS = ['chip', 'stock', 'fin', 'level', 'jp', 'vn'];
   const links = document.querySelectorAll('.side [data-view]');
   function showView(v) {
     if (!VIEWS.includes(v)) v = 'crypto';
@@ -3474,6 +3521,492 @@ const JP_DATA = {
   },
 };
 
+// ===== 越南文學習資料（南越口語，A1–C2） =====
+// 分級對應越南教育部《外國人越南語能力框架》（Thông tư 17/2015/TT-BGDĐT，6 級，對應 CEFR A1–C2）。
+// 句子以胡志明市（西貢）一帶的南部口語為主；第三欄註明南北用詞差異或用法。
+// 口語：[越南文, 中文, 備註]；句型：[句型, 中文說明, 例句, 例句翻譯]
+const VN_DATA = {
+  A1: {
+    desc: '能理解並使用熟悉的日常用語與非常基本的句子，能簡單介紹自己、問答個人基本資訊（住哪裡、認識誰、有什麼東西）；對方說得慢而清楚時能進行簡單互動。',
+    phrases: [
+      { name: '打招呼與禮貌', items: [
+        ['Xin chào', '你好', '較正式；熟人間常說 Chào anh / Chào chị'],
+        ['Chào anh / Chào chị / Chào em', '你好（對年長男性／年長女性／晚輩）', '越南語依年紀選稱謂'],
+        ['Dạ', '是（禮貌的應答詞）', '南部極常用；北部多用 Vâng'],
+        ['Cảm ơn nha', '謝謝啦', '南部句尾常加 nha；北部用 nhé'],
+        ['Không có chi', '不客氣', '南部說法；北部說 Không có gì'],
+        ['Xin lỗi', '對不起／不好意思', ''],
+        ['Hông sao đâu', '沒關係', 'hông 是南部口語的 không'],
+        ['Hẹn gặp lại', '下次見', ''],
+        ['Thôi tui về nha', '那我先走囉', 'tui 是南部口語的 tôi'],
+        ['Lâu quá hông gặp', '好久不見', ''],
+      ] },
+      { name: '自我介紹', items: [
+        ['Tui tên là Darren', '我叫 Darren', ''],
+        ['Tui là người Đài Loan', '我是台灣人', ''],
+        ['Tui làm kỹ sư', '我是工程師', ''],
+        ['Anh tên gì?', '你叫什麼名字？（對男性）', ''],
+        ['Rất vui được gặp anh', '很高興認識你', ''],
+        ['Tui đang học tiếng Việt', '我正在學越南文', ''],
+        ['Tui nói tiếng Việt chưa giỏi', '我越南文還說得不好', ''],
+        ['Anh nói chậm chậm được hông?', '你可以說慢一點嗎？', '疊字 chậm chậm 語氣較柔'],
+        ['Cái này tiếng Việt nói sao?', '這個越南文怎麼說？', '南部 nói sao；北部 nói thế nào'],
+        ['Tui hông hiểu', '我聽不懂', ''],
+      ] },
+      { name: '數字與購物', items: [
+        ['Cái này bao nhiêu tiền?', '這個多少錢？', '南部常縮成一個字：Nhiêu?'],
+        ['Mắc quá!', '太貴了！', '南部 mắc；北部 đắt'],
+        ['Bớt chút đi chị', '算便宜一點啦', '南部殺價常用 bớt'],
+        ['Lấy cái này', '我要這個', ''],
+        ['Một, hai, ba, bốn, năm', '一、二、三、四、五', ''],
+        ['Một trăm ngàn', '十萬（越南盾）', '南部 ngàn；北部 nghìn'],
+        ['Hai chục ngàn', '兩萬（越南盾）', 'chục = 十'],
+        ['Có size lớn hơn hông?', '有大一點的尺寸嗎？', ''],
+        ['Tính tiền!', '結帳！', '在餐廳叫店員結帳'],
+        ['Có tiền lẻ hông?', '有零錢嗎？', ''],
+      ] },
+      { name: '吃喝', items: [
+        ['Cho tui một ly cà phê sữa đá', '給我一杯冰煉乳咖啡', '南部 ly；北部 cốc'],
+        ['Ít đường thôi', '少糖就好', ''],
+        ['Hông bỏ đá', '不加冰', '南部 bỏ（放）；北部常說 cho'],
+        ['Ngon quá!', '好好吃！', ''],
+        ['Tui hông ăn cay được', '我不能吃辣', ''],
+        ['Cho thêm cái muỗng', '再給我一支湯匙', '南部 muỗng；北部 thìa'],
+        ['Đói bụng quá', '肚子好餓', ''],
+        ['Ăn cơm chưa?', '吃飯了沒？', '也常當作打招呼'],
+        ['Một hai ba dzô!', '一、二、三，乾杯！', '寫作 vô，南部念 dzô'],
+        ['No rồi', '飽了', ''],
+      ] },
+      { name: '問路與交通', items: [
+        ['Nhà vệ sinh ở đâu vậy?', '廁所在哪裡？', 'vậy 南部念 dzậy'],
+        ['Đi thẳng', '直走', ''],
+        ['Quẹo trái / quẹo phải', '左轉／右轉', '南部 quẹo；北部 rẽ'],
+        ['Gần đây hông?', '在附近嗎？', ''],
+        ['Xa hông?', '遠嗎？', ''],
+        ['Dừng ở đây', '停在這裡', ''],
+        ['Cho tui xuống đây', '讓我在這裡下車', ''],
+        ['Chợ Bến Thành đi đường nào?', '濱城市場怎麼走？', ''],
+      ] },
+      { name: '時間', items: [
+        ['Mấy giờ rồi?', '幾點了？', ''],
+        ['Bây giờ', '現在', '南部口語常念成 bi giờ'],
+        ['Hôm nay / ngày mai / hôm qua', '今天／明天／昨天', ''],
+        ['Chút nữa', '等一下（稍後）', ''],
+        ['Đợi xíu nha', '等我一下喔', 'xíu = 一點點，南部常用'],
+        ['Thứ hai', '星期一', '星期二是 thứ ba，以此類推'],
+        ['Chủ nhật', '星期日', ''],
+      ] },
+    ],
+    grammar: [
+      ['S + là + N', '「是」，連接名詞', 'Tui là kỹ sư.', '我是工程師。'],
+      ['S + có + N + hông?', '「有…嗎？」', 'Chị có tiền lẻ hông?', '你有零錢嗎？'],
+      ['… hông?（= không?）', '句尾加 hông 變成是非問句，南部口語', 'Anh khỏe hông?', '你好嗎？'],
+      ['… chưa?', '「…了沒？」，詢問是否完成', 'Em ăn cơm chưa?', '你吃飯了沒？'],
+      ['hông + V', '否定「不…」', 'Tui hông biết.', '我不知道。'],
+      ['Cho tui + N / V', '請給我…／讓我…', 'Cho tui coi cái đó.', '讓我看看那個。（coi 是南部的「看」，北部 xem）'],
+      ['… nha', '句尾語氣「喔／囉」，柔和地請求或提醒', 'Mai gặp nha.', '明天見喔。'],
+      ['V + được hông?', '「可以…嗎？」', 'Ở đây chụp hình được hông?', '這裡可以拍照嗎？（南部 chụp hình；北部 chụp ảnh）'],
+    ],
+  },
+  A2: {
+    desc: '能理解與切身相關的常用句子（家庭、購物、工作、周遭環境）；能在簡單、例行的情境中交換資訊，用簡單的方式描述自己的背景與需求。',
+    phrases: [
+      { name: '市場與殺價', items: [
+        ['Bán sao vậy chị?', '這個怎麼賣？', '南部市場常用問法'],
+        ['Một ký bao nhiêu?', '一公斤多少？', 'ký = 公斤'],
+        ['Lấy nửa ký thôi', '只要半公斤', ''],
+        ['Bớt cho em đi, em mua nhiều mà', '算我便宜點啦，我買很多欸', ''],
+        ['Mua mở hàng nha', '跟你買今天第一筆喔', '開市第一筆，攤販很在意，好殺價'],
+        ['Trái này ngọt hông?', '這水果甜嗎？', '南部 trái；北部 quả'],
+        ['Thơm này bao nhiêu?', '這鳳梨多少？', '南部 thơm 或 khóm；北部 dứa'],
+        ['Thôi để lần sau', '那下次好了', '委婉地不買'],
+        ['Có bịch hông?', '有袋子嗎？', '南部 bịch；北部 túi'],
+        ['Thối tiền cho tui', '找錢給我', '南部 thối tiền；北部 trả lại tiền'],
+      ] },
+      { name: '咖啡廳與餐廳', items: [
+        ['Cho em coi menu', '給我看菜單', ''],
+        ['Món này là món gì?', '這道是什麼菜？', ''],
+        ['Cho thêm rau', '多加點生菜', ''],
+        ['Hông bỏ hành', '不要加蔥', ''],
+        ['Ăn ở đây hay mang về?', '內用還是外帶？', '店員常問'],
+        ['Mang về', '外帶', ''],
+        ['Cà phê sữa đá, ít sữa', '冰煉乳咖啡，煉乳少一點', ''],
+        ['Trà đá miễn phí hông?', '冰茶免費嗎？', '很多小店冰茶免費'],
+        ['Cho tui cái chén', '給我一個碗', '南部 chén；北部 bát'],
+        ['Em ơi, gọi món!', '服務生，點菜！', '叫年輕店員用 em ơi'],
+      ] },
+      { name: '交通與 Grab', items: [
+        ['Anh chạy chậm chậm giùm em', '請你騎慢一點', '南部 giùm；北部 giúp'],
+        ['Kẹt xe quá', '塞車好嚴重', '南部 kẹt xe；北部 tắc đường'],
+        ['Đi Grab cho lẹ', '叫 Grab 比較快', 'lẹ 是南部的「快」，北部 nhanh'],
+        ['Đặt xe chưa?', '叫車了沒？', ''],
+        ['Tới chưa anh?', '到了沒？', ''],
+        ['Ghé vô đây chút', '在這邊停一下', 'ghé = 順路停靠'],
+        ['Xe ôm', '摩托計程車', ''],
+        ['Đổ xăng', '加油', ''],
+        ['Lộn đường rồi', '走錯路了', '南部 lộn；北部 nhầm'],
+        ['Trễ rồi', '遲到了／太晚了', ''],
+      ] },
+      { name: '天氣與日常', items: [
+        ['Trời nóng quá trời', '天氣熱到不行', 'quá trời 是南部的「非常」'],
+        ['Sắp mưa rồi', '快下雨了', ''],
+        ['Mùa mưa / mùa khô', '雨季／乾季', '南部只分這兩季'],
+        ['Mưa lớn quá', '雨好大', '南部 mưa lớn；北部 mưa to'],
+        ['Nhớ mang dù', '記得帶傘', '南部 dù；北部 ô'],
+        ['Mệt quá', '好累', ''],
+        ['Buồn ngủ quá', '好睏', ''],
+        ['Tắm cái đã', '先洗個澡', ''],
+      ] },
+      { name: '家人與朋友', items: [
+        ['Ba má', '爸媽', '南部；北部 bố mẹ'],
+        ['Anh hai', '大哥', '南部老大排行稱 hai；北部 anh cả'],
+        ['Chị hai / Út', '大姊／老么', ''],
+        ['Bạn gái / bạn trai', '女朋友／男朋友', ''],
+        ['Có gia đình chưa?', '結婚了嗎？', '越南人很常問'],
+        ['Có mấy đứa con?', '有幾個小孩？', ''],
+        ['Ổng / bả', '他／她', 'ông ấy、bà ấy 的南部縮讀'],
+        ['Mấy đứa nhỏ', '小孩子們', ''],
+      ] },
+      { name: '電話與邀約', items: [
+        ['Alo, ai đó?', '喂，哪位？', ''],
+        ['Lát gọi lại nha', '等等再打給你喔', ''],
+        ['Rảnh hông?', '有空嗎？', ''],
+        ['Đi cà phê hông?', '要不要去喝咖啡？', '越南人邀約的萬用句'],
+        ['Mấy giờ gặp?', '幾點見？', ''],
+        ['Tui tới liền', '我馬上到', '南部 liền；北部 ngay'],
+        ['Nhắn tin cho tui', '傳訊息給我', ''],
+        ['Cho tui xin số Zalo', '給我你的 Zalo', 'Zalo 是越南最主流的通訊軟體'],
+      ] },
+    ],
+    grammar: [
+      ['đang + V', '正在…', 'Tui đang ăn cơm.', '我正在吃飯。'],
+      ['đã + V + rồi', '已經…了', 'Tui đã tới rồi.', '我已經到了。'],
+      ['sẽ + V', '將會…', 'Mai tui sẽ đi Vũng Tàu.', '明天我會去頭頓。'],
+      ['muốn + V', '想要…', 'Tui muốn đi chợ Bến Thành.', '我想去濱城市場。'],
+      ['A + hơn + B', '比較級「A 比 B…」', 'Cái này rẻ hơn cái kia.', '這個比那個便宜。'],
+      ['V + thử', '試著…看看', 'Ăn thử đi!', '吃吃看嘛！'],
+      ['Hay là …', '「還是…」，提出建議', 'Hay là mình đi ăn hủ tiếu?', '還是我們去吃粿條？'],
+      ['Tại vì … nên …', '因為…所以…（南部常說 tại vì，北部 vì）', 'Tại vì kẹt xe nên tui tới trễ.', '因為塞車所以我遲到了。'],
+      ['… quá trời / quá xá', '南部口語的強調「超…」', 'Đẹp quá trời!', '超美的！'],
+    ],
+  },
+  B1: {
+    desc: '能理解工作、學校、休閒等熟悉話題的重點；能應付在越南旅行時大部分的狀況；能簡單描述經驗、事件、期望與意見，並說明理由。',
+    phrases: [
+      { name: '工作與同事', items: [
+        ['Hôm nay tui tăng ca', '今天我加班', ''],
+        ['Sếp kêu họp', '老闆叫大家開會', 'kêu 是南部的「叫」，北部 gọi'],
+        ['Deadline gấp quá', '期限好趕', ''],
+        ['Để tui coi lại rồi báo anh', '我再看一下再跟你回報', ''],
+        ['Xin nghỉ phép một ngày', '請一天假', ''],
+        ['Lương tháng này về chưa?', '這個月薪水入帳了沒？', ''],
+        ['Cứ từ từ, hông gấp đâu', '慢慢來，不急', ''],
+        ['Ca này ai trực?', '這班誰值班？', ''],
+        ['Tan ca đi nhậu hông?', '下班要去喝一杯嗎？', 'nhậu = 喝酒配小菜的聚會'],
+        ['Làm việc nhóm', '團隊合作', ''],
+      ] },
+      { name: '看病與身體', items: [
+        ['Tui thấy hơi mệt trong người', '我覺得身體有點不舒服', ''],
+        ['Bị cảm rồi', '感冒了', ''],
+        ['Nhức đầu quá', '頭好痛', '南部常說 nhức đầu；北部 đau đầu'],
+        ['Bị đau bụng', '肚子痛', ''],
+        ['Bị sốt', '發燒', ''],
+        ['Nhà thuốc gần nhất ở đâu?', '最近的藥局在哪？', ''],
+        ['Uống thuốc chưa?', '吃藥了沒？', '越南語吃藥用 uống（喝）'],
+        ['Ngày uống mấy lần?', '一天吃幾次？', ''],
+        ['Bị dị ứng hải sản', '對海鮮過敏', ''],
+        ['Đi khám bác sĩ đi', '去看醫生啦', ''],
+      ] },
+      { name: '租屋與生活', items: [
+        ['Tui muốn thuê phòng', '我想租房間', ''],
+        ['Tiền nhà một tháng bao nhiêu?', '房租一個月多少？', ''],
+        ['Có bao điện nước hông?', '有包水電嗎？', ''],
+        ['Đặt cọc mấy tháng?', '押金幾個月？', ''],
+        ['Máy lạnh bị hư rồi', '冷氣壞了', '南部 máy lạnh、hư；北部 điều hòa、hỏng'],
+        ['Kêu thợ tới sửa giùm', '叫師傅來修一下', ''],
+        ['Cúp điện rồi', '停電了', '南部 cúp điện；北部 mất điện'],
+        ['Hẻm này xe hơi vô được hông?', '這條巷子汽車進得去嗎？', '南部 hẻm、xe hơi；北部 ngõ、ô tô'],
+        ['Chủ nhà dễ tính lắm', '房東很好相處', ''],
+        ['Đổ rác ở đâu?', '垃圾倒在哪？', ''],
+      ] },
+      { name: '表達意見與感受', items: [
+        ['Theo tui thấy thì…', '依我看…', ''],
+        ['Tui đồng ý', '我同意', ''],
+        ['Tui hông nghĩ vậy', '我不這麼認為', ''],
+        ['Cũng được', '也可以／還行', ''],
+        ['Tùy anh', '隨你', ''],
+        ['Vui quá trời luôn', '超開心的', ''],
+        ['Tui lo quá', '我好擔心', ''],
+        ['Chán quá', '好無聊／好煩', ''],
+        ['Thiệt hả?', '真的嗎？', 'thiệt 是南部的 thật'],
+        ['Hèn chi!', '難怪！', '南部；北部 Thảo nào'],
+      ] },
+      { name: '旅行與訂房', items: [
+        ['Tui đặt phòng trước rồi', '我已經訂好房間了', ''],
+        ['Cho tui nhận phòng', '我要辦入住', ''],
+        ['Mấy giờ trả phòng?', '幾點退房？', ''],
+        ['Có bao ăn sáng hông?', '有含早餐嗎？', ''],
+        ['Đi tour miền Tây', '參加湄公河三角洲的旅遊團', '南部人稱湄公河三角洲為 miền Tây'],
+        ['Chợ nổi Cái Răng', '丐冷水上市場', '芹苴有名景點'],
+        ['Chụp giùm tui tấm hình', '幫我拍張照', ''],
+        ['Chỗ này có gì vui hông?', '這裡有什麼好玩的？', ''],
+        ['Mua vé ở đâu?', '在哪裡買票？', ''],
+        ['Phòng có cửa sổ hông?', '房間有窗戶嗎？', ''],
+      ] },
+      { name: '抱怨與處理問題', items: [
+        ['Món này hơi mặn', '這道菜有點鹹', ''],
+        ['Tui gọi lâu rồi mà chưa có', '我點很久了還沒來', ''],
+        ['Tính tiền sai rồi', '錢算錯了', ''],
+        ['Làm ơn kiểm tra lại giùm', '麻煩再確認一下', ''],
+        ['Cái này bị lỗi', '這個有瑕疵', ''],
+        ['Đổi cái khác được hông?', '可以換另一個嗎？', ''],
+        ['Tui muốn trả lại', '我想退貨', ''],
+        ['Kỳ vậy ta', '奇怪耶', '南部口語，句尾 ta 表自言自語'],
+      ] },
+    ],
+    grammar: [
+      ['Nếu … thì …', '如果…就…', 'Nếu mai mưa thì mình ở nhà.', '如果明天下雨，我們就待在家。'],
+      ['Mặc dù … nhưng …', '雖然…但是…', 'Mặc dù mệt nhưng tui vẫn đi làm.', '雖然累，但我還是去上班。'],
+      ['bị + V', '遭受（不好的事）的被動', 'Tui bị móc túi.', '我被扒了。'],
+      ['được + V', '得到（好的事）的被動', 'Tui được tăng lương.', '我被加薪了。'],
+      ['Càng … càng …', '越…越…', 'Càng ăn càng ghiền.', '越吃越上癮。（ghiền 南部；北部 nghiện）'],
+      ['Vừa … vừa …', '又…又…／一邊…一邊…', 'Quán này vừa ngon vừa rẻ.', '這家店又好吃又便宜。'],
+      ['Chắc là …', '大概、應該…', 'Chắc là ổng quên rồi.', '他大概忘了。'],
+      ['Hồi đó / hồi nhỏ', '以前／小時候（南部常用 hồi）', 'Hồi nhỏ tui ở Cần Thơ.', '我小時候住在芹苴。'],
+      ['Để + S + V', '「讓…來」，主動表示要做', 'Để tui trả cho.', '我來付。'],
+    ],
+  },
+  B2: {
+    desc: '能理解具體與抽象主題的複雜內容重點；能與母語者流暢自然地互動，雙方都不吃力；能就各種議題清楚表達觀點並說明利弊。',
+    phrases: [
+      { name: '職場會議與商務', items: [
+        ['Mình bắt đầu họp nha', '我們開始開會吧', ''],
+        ['Cho em trình bày sơ qua', '讓我簡單報告一下', ''],
+        ['Tiến độ dự án tới đâu rồi?', '專案進度到哪了？', ''],
+        ['Mình cần chốt trước thứ sáu', '我們要在星期五前定案', 'chốt = 敲定'],
+        ['Vấn đề nằm ở chỗ…', '問題在於…', ''],
+        ['Em xin phép bổ sung ý', '請容我補充一點', ''],
+        ['Để em ghi nhận rồi phản hồi sau', '我先記下，之後回覆', ''],
+        ['Chi phí vượt ngân sách', '費用超出預算', ''],
+        ['Bên mình có thể nhượng bộ chút', '我們這邊可以讓步一點', ''],
+        ['Mình chốt vậy nha', '那就這樣定案囉', ''],
+      ] },
+      { name: '委婉拒絕與客套', items: [
+        ['Để tui suy nghĩ thêm', '讓我再考慮一下', ''],
+        ['Tiếc quá, bữa đó tui kẹt rồi', '好可惜，那天我已經有事了', 'bữa = 那天；kẹt = 被事情卡住'],
+        ['Cảm ơn anh, nhưng chắc hông được', '謝謝你，但大概沒辦法', ''],
+        ['Lần sau nha', '下次吧', ''],
+        ['Tui sợ làm phiền anh', '怕麻煩你', ''],
+        ['Anh khách sáo quá', '你太客氣了', ''],
+        ['Có gì đâu mà', '沒什麼啦', ''],
+        ['Ngại quá', '真不好意思', ''],
+        ['Đâu dám', '不敢當', ''],
+        ['Thôi khỏi', '不用了啦', 'khỏi 是南部的「不必」'],
+      ] },
+      { name: '情緒與人際', items: [
+        ['Tức muốn xỉu', '氣到快昏倒', '南部誇張說法'],
+        ['Tui hết chịu nổi rồi', '我受不了了', ''],
+        ['Đừng giận nữa mà', '不要再生氣了嘛', ''],
+        ['Nói thiệt lòng', '說真心話', ''],
+        ['Tui hơi tủi thân', '我覺得有點委屈', ''],
+        ['Thấy thương ghê', '覺得好心疼／好可愛', 'thương 在南部也常表示「愛」'],
+        ['Nhớ quá trời', '好想念', ''],
+        ['Đừng có lo, có tui mà', '別擔心，有我在', ''],
+        ['Kệ đi', '隨他去／算了', ''],
+        ['Hai người giận nhau hả?', '你們兩個吵架了？', ''],
+      ] },
+      { name: '時事與社會', items: [
+        ['Giá cả leo thang', '物價飛漲', ''],
+        ['Kẹt xe giờ cao điểm', '尖峰時段塞車', ''],
+        ['Ngập nước', '淹水', '西貢雨季常見'],
+        ['Ô nhiễm không khí', '空氣污染', ''],
+        ['Tỷ lệ thất nghiệp', '失業率', ''],
+        ['Thị trường chứng khoán', '股票市場', ''],
+        ['Lạm phát', '通貨膨脹', ''],
+        ['Kinh tế phục hồi', '經濟復甦', ''],
+        ['Theo báo đưa tin…', '據報導…', ''],
+        ['Vấn đề này gây tranh cãi', '這個議題有爭議', ''],
+      ] },
+      { name: '南部語氣詞', items: [
+        ['Nhớ nghen!', '記得喔！', 'nghen、nha：叮嚀'],
+        ['Đẹp hen!', '很美吧！', 'hen：徵求同意，很柔和'],
+        ['Coi chừng đó!', '小心喔！', 'đó：提醒、強調'],
+        ['Tui nói rồi mà!', '我說過了嘛！', 'mà：解釋、撒嬌'],
+        ['Vậy hả?', '這樣喔？', 'hả：驚訝確認'],
+        ['Ủa?', '咦？', '表示疑惑，南部極常用'],
+        ['Trời đất ơi!', '天啊！', ''],
+        ['Vậy đi', '就這樣吧', ''],
+        ['Thì vậy đó', '就是這樣囉', ''],
+      ] },
+      { name: '意見與論證', items: [
+        ['Một mặt thì…, mặt khác thì…', '一方面…另一方面…', ''],
+        ['Nói chung là…', '總之…', ''],
+        ['Tui thấy cái này có lý', '我覺得這有道理', ''],
+        ['Chưa chắc đâu', '不一定喔', ''],
+        ['Cái đó còn tùy', '那要看情況', ''],
+        ['Quan trọng là…', '重要的是…', ''],
+        ['Lấy ví dụ như…', '舉例來說…', ''],
+        ['Nói vậy cũng đúng, nhưng…', '這樣說也對，但是…', ''],
+      ] },
+    ],
+    grammar: [
+      ['Không những … mà còn …', '不但…而且…', 'Ổng không những giỏi mà còn khiêm tốn.', '他不但厲害而且謙虛。'],
+      ['Thà … còn hơn …', '寧可…也不要…', 'Thà đi bộ còn hơn kẹt xe.', '寧可走路也不要塞車。'],
+      ['Dù sao thì …', '無論如何…', 'Dù sao thì cũng cảm ơn anh.', '無論如何還是謝謝你。'],
+      ['Hóa ra …', '原來…', 'Hóa ra anh là người Huế.', '原來你是順化人。'],
+      ['Lỡ … thì sao?', '萬一…怎麼辦？', 'Lỡ trễ chuyến bay thì sao?', '萬一趕不上班機怎麼辦？'],
+      ['Đâu có … đâu', '哪有…（反駁）', 'Đâu có mắc đâu!', '哪有貴！'],
+      ['Riết rồi …', '久而久之就…（南部）', 'Ở Sài Gòn riết rồi quen.', '在西貢待久了就習慣了。'],
+      ['Coi bộ …', '看樣子…（南部）', 'Coi bộ sắp mưa.', '看樣子快下雨了。'],
+      ['… chứ bộ', '「不然咧」，表示理所當然（南部）', 'Đi chứ bộ!', '當然去啊！'],
+    ],
+  },
+  C1: {
+    desc: '能理解各類長篇、高難度內容並掌握言外之意；能流暢自然地表達，不需刻意找詞；能在社交、學術與職場中靈活有效地運用語言。',
+    phrases: [
+      { name: '西貢俚語', items: [
+        ['Xỉu ngang', '傻眼、無言到昏倒', '年輕人常用'],
+        ['Hết sẩy', '讚到不行', '南部俚語'],
+        ['Ngon dữ thần!', '好吃到誇張！', 'dữ thần = 很猛、很誇張'],
+        ['Quá đã', '超爽、超過癮', ''],
+        ['Chảnh', '跩、愛擺架子', ''],
+        ['Sến', '俗氣、太煽情', ''],
+        ['Đừng xạo!', '別唬爛！', 'xạo = 說謊、唬爛'],
+        ['Ổng hay nổ lắm', '他很愛吹牛', 'nổ = 吹牛'],
+        ['Quê muốn độn thổ', '糗到想鑽地洞', 'quê = 丟臉'],
+        ['Cà chớn', '不正經、吊兒郎當', ''],
+        ['Bá cháy', '超強、超讚', '網路流行語'],
+        ['Bữa nay tui bao!', '今天我請客！', 'bao = 請客'],
+      ] },
+      { name: '常用成語', items: [
+        ['Nước đổ đầu vịt', '對牛彈琴', '字面：水倒在鴨頭上'],
+        ['Ăn cháo đá bát', '忘恩負義', '字面：喝完粥踢碗'],
+        ['Đứng núi này trông núi nọ', '這山望著那山高', ''],
+        ['Có công mài sắt có ngày nên kim', '鐵杵磨成針', ''],
+        ['Mất bò mới lo làm chuồng', '亡羊補牢（丟了牛才修牛棚）', ''],
+        ['Nói như rồng leo, làm như mèo mửa', '說得天花亂墜，做得一塌糊塗', ''],
+        ['Tốt gỗ hơn tốt nước sơn', '內在比外表重要', '字面：木頭好勝過油漆好'],
+        ['Gần mực thì đen, gần đèn thì sáng', '近朱者赤，近墨者黑', ''],
+        ['Chậm mà chắc', '慢而穩', ''],
+        ['Đâu vào đấy', '井井有條、一切就緒', ''],
+      ] },
+      { name: '職場進階用語', items: [
+        ['Mình cần nhìn nhận lại vấn đề', '我們需要重新檢視問題', ''],
+        ['Phương án này khả thi hơn', '這個方案比較可行', ''],
+        ['Em xin phép phản biện', '請容我提出不同看法', ''],
+        ['Rủi ro tiềm ẩn', '潛在風險', ''],
+        ['Tối ưu hóa quy trình', '流程最佳化', ''],
+        ['Ưu tiên việc gấp trước', '先處理急件', ''],
+        ['Đôi bên cùng có lợi', '雙贏', ''],
+        ['Giữ chữ tín', '守信用', ''],
+        ['Xin lỗi vì sự bất tiện này', '造成不便，敬請見諒', ''],
+        ['Trân trọng', '敬上', '書信結尾'],
+      ] },
+      { name: '幽默與反諷', items: [
+        ['Giỏi quá ha!', '你好厲害喔（反諷）', '真心或反諷看語調'],
+        ['Ừ, tin anh liền', '嗯，馬上相信你（才怪）', ''],
+        ['Rảnh quá ha', '很閒喔', '嫌對方多事'],
+        ['Hay dữ ta', '真行耶', '可褒可貶'],
+        ['Nói vậy mà cũng nói', '這種話也說得出口', ''],
+        ['Ai mượn?', '誰要你多事？', '語氣很衝，熟人間才用'],
+        ['Thôi đi ông nội', '算了吧老兄', 'ông nội 原意是爺爺，口語拿來吐槽'],
+      ] },
+      { name: '細緻表達', items: [
+        ['Nói khéo', '說話得體、圓滑', ''],
+        ['Nói bóng nói gió', '拐彎抹角地暗示', ''],
+        ['Vòng vo tam quốc', '繞圈子不講重點', ''],
+        ['Thẳng thắn mà nói', '坦白說', ''],
+        ['Nói gì thì nói…', '不管怎麼說…', ''],
+        ['Đành vậy', '只好這樣', ''],
+        ['Biết đâu được', '誰知道呢', ''],
+        ['Cũng tại tui', '也怪我', ''],
+        ['Hông phải dạng vừa đâu', '不是省油的燈', ''],
+      ] },
+    ],
+    grammar: [
+      ['Chẳng lẽ …?', '難道…？', 'Chẳng lẽ anh không biết?', '難道你不知道？'],
+      ['… huống chi …', '…何況…', 'Người lớn còn sợ, huống chi con nít.', '大人都怕了，何況小孩。（con nít 南部；北部 trẻ con）'],
+      ['… kẻo …', '…免得…', 'Đi sớm kẻo kẹt xe.', '早點走免得塞車。'],
+      ['Hèn gì …', '難怪…（南部）', 'Hèn gì ổng giận.', '難怪他生氣。'],
+      ['Đã … lại còn …', '已經…還…（加重抱怨）', 'Đã trễ lại còn nói nhiều.', '已經遲到了還那麼多話。'],
+      ['Phải chi …', '要是…就好了（南部）', 'Phải chi hồi đó tui học tiếng Việt sớm hơn.', '要是當初早點學越南文就好了。'],
+      ['… nói chi tới …', '…更別說…', 'Tiếng Anh còn chưa giỏi, nói chi tới tiếng Pháp.', '英文都還不好，更別說法文。'],
+      ['Có điều là …', '只不過…', 'Quán ngon, có điều là hơi đông.', '店很好吃，只不過有點擠。'],
+    ],
+  },
+  C2: {
+    desc: '能輕鬆理解幾乎所有聽到或讀到的內容；能整合不同來源的資訊並連貫重述；能非常流暢精準地表達，在複雜情境中分辨細微的語意與語氣差異。',
+    phrases: [
+      { name: '諺語與俗語', items: [
+        ['Uống nước nhớ nguồn', '飲水思源', ''],
+        ['Lá lành đùm lá rách', '互相扶持', '字面：好葉子包住破葉子'],
+        ['Một con ngựa đau cả tàu bỏ cỏ', '同甘共苦', '字面：一匹馬病了，整個馬廄都不吃草'],
+        ['Ăn quả nhớ kẻ trồng cây', '吃果子拜樹頭', ''],
+        ['Cái khó ló cái khôn', '困境激發智慧', ''],
+        ['Đi một ngày đàng học một sàng khôn', '行萬里路勝讀萬卷書', ''],
+        ['Muốn ăn thì lăn vào bếp', '想要就自己動手', '字面：想吃就滾進廚房'],
+        ['Của rẻ là của ôi', '便宜沒好貨', ''],
+        ['Nhập gia tùy tục', '入境隨俗', ''],
+        ['Thương cho roi cho vọt, ghét cho ngọt cho bùi', '疼他就要嚴教', '字面：疼就給棍子，恨才給甜頭'],
+      ] },
+      { name: '南部特有詞彙', items: [
+        ['Hủ tiếu Nam Vang', '金邊粿條', '南部代表麵食'],
+        ['Cơm tấm sườn bì chả', '碎米飯配排骨、豬皮絲、蛋餅', '西貢經典早餐'],
+        ['Lẩu mắm', '魚露火鍋', '湄公河三角洲名菜'],
+        ['Bông điên điển', '田菁花', '水季才有的西南部食材'],
+        ['Ghe xuồng', '小船', '水鄉生活'],
+        ['Miệt vườn', '果園鄉下', ''],
+        ['Dân Sài Gòn chính hiệu', '道地西貢人', ''],
+        ['Dân xứ nào?', '哪裡人？', 'xứ = 地方、家鄉'],
+        ['Bà con cô bác', '鄉親父老', ''],
+        ['Xài hoang quá', '花錢太兇', '南部 xài；北部 tiêu、dùng'],
+      ] },
+      { name: '正式與書面', items: [
+        ['Kính gửi', '敬啟者', ''],
+        ['Căn cứ vào…', '根據…', ''],
+        ['Nhằm mục đích…', '以…為目的', ''],
+        ['Trên tinh thần hợp tác', '本著合作精神', ''],
+        ['Xin chân thành cảm ơn', '衷心感謝', ''],
+        ['Rất mong nhận được phản hồi', '期待您的回覆', ''],
+        ['Thay mặt công ty', '代表公司', ''],
+        ['Vô cùng biết ơn', '無比感激', ''],
+      ] },
+      { name: '細微語氣差異', items: [
+        ['Dạ, em hiểu rồi', '是，我明白了', '對長輩或上司，最禮貌'],
+        ['Ờ, biết rồi', '喔，知道了', '對平輩或晚輩，隨意'],
+        ['Ừ hử', '嗯哼', '敷衍'],
+        ['Dạ thưa', '是的，稟告', '非常正式'],
+        ['Bộ anh hông biết hả?', '你難道不知道嗎？', 'bộ 表示驚訝、質疑（南部）'],
+        ['Chớ sao', '不然咧、當然啊', '南部的 chứ sao'],
+        ['Ai biểu hông nghe!', '誰叫你不聽！', 'biểu 是南部的「叫、說」'],
+        ['Hổng chừng', '說不定', '南部'],
+        ['Nói thiệt tình', '說實在的', '南部'],
+      ] },
+      { name: '文化與觀念', items: [
+        ['Ăn Tết', '過年', '越南語「過年」用 ăn（吃）'],
+        ['Lì xì', '紅包', ''],
+        ['Đám giỗ', '忌日家祭', '南部人很重視，親友齊聚'],
+        ['Cúng ông Táo', '祭灶神', '農曆 12/23'],
+        ['Có hiếu', '孝順', ''],
+        ['Giữ thể diện', '顧面子', ''],
+        ['Nể nang', '顧及情面', ''],
+        ['Có duyên', '有緣、有魅力', ''],
+        ['Nhân hậu', '仁厚', ''],
+      ] },
+    ],
+    grammar: [
+      ['Chưa … đã …', '還沒…就…', 'Chưa nói hết câu đã bỏ đi.', '話還沒說完就走了。'],
+      ['Hễ … là …', '只要一…就…', 'Hễ mưa là kẹt xe.', '一下雨就塞車。'],
+      ['Giá mà …', '要是…該多好', 'Giá mà có thêm thời gian.', '要是能再多一點時間該多好。'],
+      ['Không … thì thôi, đã … thì …', '不做就算了，要做就…', 'Không làm thì thôi, đã làm thì làm cho tới.', '不做就算了，要做就做到底。'],
+      ['… đến nỗi …', '…到…的地步', 'Mệt đến nỗi ngủ quên luôn.', '累到直接睡著。'],
+      ['Bất quá thì …', '大不了…', 'Bất quá thì làm lại.', '大不了重做。'],
+      ['Có … đâu mà …', '哪有…可以…', 'Có tiền đâu mà đi du lịch.', '哪有錢去旅行。'],
+      ['… cho rồi', '乾脆…算了（南部）', 'Nghỉ cho rồi.', '乾脆不做算了。'],
+    ],
+  },
+};
+
 </script>
 <script>
 // ===== 開發選項：作者訊息頁的按鈕，用密碼開啟後左側多出 財務紀錄 / 我獨自升級 / 日文學習 =====
@@ -3717,6 +4250,73 @@ const JP_DATA = {
   });
   $('jpExpand').addEventListener('click', () => { const ds = document.querySelectorAll('#v-jp details'); const any = [...ds].some(d => !d.open); ds.forEach(d => d.open = any); });
   document.addEventListener('viewchange', e => { if (e.detail === 'jp') render(); });
+})();
+
+// ===== 越南文學習（南越口語）：A1–C2，口語與句型，標記已學會，可朗讀 =====
+(() => {
+  const KEY = 'hexlab-vn', LKEY = 'hexlab-vn-level';
+  const learned = new Set(store.get(KEY, []));
+  let level = store.get(LKEY, 'A1'), quiz = false;
+  if (!VN_DATA[level]) level = 'A1';
+  const saveL = () => store.set(KEY, [...learned]);
+  const SPK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
+  function counts(lv) {
+    const L = VN_DATA[lv]; const ids = [...L.phrases.flatMap(g => g.items.map(v => `${lv}:p:${v[0]}`)), ...L.grammar.map(g => `${lv}:g:${g[0]}`)];
+    return { all: ids.length, done: ids.filter(i => learned.has(i)).length };
+  }
+  // 朗讀：優先挑越南語語音（名稱含南部字樣者優先）
+  let voice = null;
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const vs = speechSynthesis.getVoices().filter(v => /^vi/i.test(v.lang));
+    voice = vs.find(v => /south|nam|sài gòn|saigon|hcm/i.test(v.name)) || vs[0] || null;
+  }
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', pickVoice); }
+  function say(text) {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/[…/]/g, ', '));
+    u.lang = 'vi-VN'; if (voice) u.voice = voice; u.rate = 0.85;
+    speechSynthesis.speak(u);
+  }
+  function render() {
+    const L = VN_DATA[level], q = val('vnSearch').trim().toLowerCase();
+    document.querySelectorAll('#vnLevels button').forEach(b => {
+      const c = counts(b.dataset.lv);
+      b.setAttribute('aria-pressed', b.dataset.lv === level);
+      b.querySelector('small').textContent = `${c.done}/${c.all}`;
+    });
+    const c = counts(level);
+    $('vnTitle').textContent = `${level} 級`; $('vnDesc').textContent = L.desc;
+    $('vnProg').textContent = `已學會 ${c.done} / ${c.all}`; $('vnBar').style.width = `${c.done / c.all * 100}%`;
+    const match = arr => !q || arr.some(s => String(s).toLowerCase().includes(q));
+    const phHtml = L.phrases.map(g => {
+      const items = g.items.filter(match); if (!items.length) return '';
+      const d = items.filter(v => learned.has(`${level}:p:${v[0]}`)).length;
+      return `<details class="jgroup" data-k="p:${escHtml(g.name)}" ${q ? 'open' : ''}><summary><span>${escHtml(g.name)}</span><small>${d}/${items.length}</small></summary>
+        <table class="jtab"><tbody>${items.map(v => { const id = `${level}:p:${v[0]}`; return `<tr class="${learned.has(id) ? 'got' : ''}"><td><input type="checkbox" data-id="${escHtml(id)}" ${learned.has(id) ? 'checked' : ''} aria-label="已學會 ${escHtml(v[0])}"></td><td class="vsp"><button type="button" class="say" data-say="${escHtml(v[0])}" aria-label="朗讀 ${escHtml(v[0])}">${SPK}</button></td><td><span class="jw vw" lang="vi">${escHtml(v[0])}</span></td><td class="jm"><span class="hid">${escHtml(v[1])}</span>${v[2] ? `<span class="vnote hid">${escHtml(v[2])}</span>` : ''}</td></tr>`; }).join('')}</tbody></table></details>`;
+    }).join('');
+    const gram = L.grammar.filter(match);
+    const gramHtml = gram.map(g => { const id = `${level}:g:${g[0]}`; return `<div class="jgram${learned.has(id) ? ' got' : ''}"><input type="checkbox" data-id="${escHtml(id)}" ${learned.has(id) ? 'checked' : ''} aria-label="已學會 ${escHtml(g[0])}"><details data-k="g:${escHtml(g[0])}"><summary><b lang="vi">${escHtml(g[0])}</b><span class="hid">${escHtml(g[1])}</span></summary>
+      <div class="jex"><p lang="vi">${escHtml(g[2])} <button type="button" class="say" data-say="${escHtml(g[2])}" aria-label="朗讀例句">${SPK}</button></p><p class="tr hid">${escHtml(g[3])}</p></div></details></div>`; }).join('');
+    const n = L.phrases.reduce((a, g) => a + g.items.filter(match).length, 0);
+    $('vnPhrases').innerHTML = phHtml || '<p class="note">沒有符合的句子。</p>';
+    $('vnGrammar').innerHTML = gramHtml || '<p class="note">沒有符合的句型。</p>';
+    $('vnPhN').textContent = `${n} 句`; $('vnGramN').textContent = `${gram.length} 條`;
+    $('v-vn').classList.toggle('quiz', quiz);
+  }
+  $('vnLevels').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; level = b.dataset.lv; store.set(LKEY, level); render(); });
+  $('vnSearch').addEventListener('input', render);
+  $('vnQuiz').addEventListener('click', () => { quiz = !quiz; $('vnQuiz').setAttribute('aria-pressed', quiz); render(); });
+  $('v-vn').addEventListener('click', e => {
+    const sp = e.target.closest('button.say'); if (sp) { e.preventDefault(); say(sp.dataset.say); return; }
+    const cb = e.target.closest('input[type=checkbox][data-id]');
+    if (cb) { cb.checked ? learned.add(cb.dataset.id) : learned.delete(cb.dataset.id); saveL(); const keep = [...document.querySelectorAll('#v-vn details[open]')].map(d => d.dataset.k); render(); document.querySelectorAll('#v-vn details[data-k]').forEach(d => { if (keep.includes(d.dataset.k)) d.open = true; }); return; }
+    const h = e.target.closest('.quiz .hid'); if (h) h.classList.toggle('show');
+  });
+  $('vnExpand').addEventListener('click', () => { const ds = document.querySelectorAll('#vnPhrases details, #vnGrammar details'); const any = [...ds].some(d => !d.open); ds.forEach(d => d.open = any); });
+  document.addEventListener('hexsync', e => { if (e.detail.includes(KEY) || e.detail.includes(LKEY)) { learned.clear(); for (const i of store.get(KEY, [])) learned.add(i); level = VN_DATA[store.get(LKEY, level)] ? store.get(LKEY, level) : level; render(); } });
+  document.addEventListener('viewchange', e => { if (e.detail === 'vn') render(); });
 })();
 
 </script>
