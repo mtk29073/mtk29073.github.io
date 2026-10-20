@@ -396,6 +396,9 @@ table.jtab td.jm { min-width: 7em; }
 .verdict.v-sell { border-color: var(--k-dn); } .verdict.v-sell > b { color: var(--k-dn); }
 .verdict.v-hold > b { color: var(--accent); } .verdict.v-wait > b { color: var(--fg); }
 ul.checks { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px; }
+.skstrat { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--well); }
+.skstrat .ck { color: var(--fg); font-size: 0.9rem; }
+ul.checks li.head { grid-column: 1 / -1; background: transparent; padding: 4px 2px 0; font-size: 0.88rem; }
 ul.checks li { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border-radius: 6px; background: var(--well); font-size: 0.84rem; }
 ul.checks .mk { font-weight: 700; width: 1.2em; flex: none; }
 ul.checks li.ok .mk { color: var(--ok); } ul.checks li.no .mk { color: var(--err); }
@@ -1119,7 +1122,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
 
 <!-- ============ 台股策略回測 ============ -->
 <div class="view" id="v-stock" hidden>
-  <header class="vhead"><h1>台股策略回測：2560 戰法 + MACD</h1><p>用 Fugle 免費版抓日 K，回測最近 2 年，並依最新收盤判斷策略目前是買進、賣出、續抱還是觀望。這是規則算出來的訊號，不是投資建議。</p></header>
+  <header class="vhead"><h1>台股策略回測：2560 / MACD / KD</h1><p>用 Fugle 免費版抓日 K，回測最近 2 年，並依最新收盤判斷策略目前是買進、賣出、續抱還是觀望。這是規則算出來的訊號，不是投資建議。</p></header>
   <div class="card">
     <div class="row" style="align-items:flex-end">
       <div class="f" style="flex:0 1 160px"><label for="skSym">股票代號</label><input id="skSym" type="text" placeholder="2330" autocomplete="off" inputmode="numeric"></div>
@@ -1129,21 +1132,33 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
         <div class="row" style="flex-wrap:nowrap"><input id="skKey" type="password" placeholder="貼上金鑰後按儲存" autocomplete="off"><button class="b" id="skKeySave">儲存</button><button class="b ghost" id="skKeyClear">移除</button></div></div>
     </div>
     <p class="st" id="skSt">輸入股票代號後按「回測」。還沒有金鑰的話，可以先用模擬資料看看功能。</p>
+    <div class="skstrat">
+      <span class="note">使用策略（可複選）：</span>
+      <label class="ck"><input id="skUse2560" type="checkbox" checked> 2560 戰法</label>
+      <label class="ck"><input id="skUseMacd" type="checkbox" checked> MACD</label>
+      <label class="ck"><input id="skUseKd" type="checkbox"> KD 指標</label>
+      <label class="ck">組合方式 <select id="skMode" style="width:auto"><option value="all">全部同意才買</option><option value="maj">過半同意就買</option><option value="any">任一同意就買</option></select></label>
+      <p class="note" id="skStratNote" style="flex-basis:100%"></p>
+    </div>
     <details class="skparams"><summary>策略參數（改了會立即重算）</summary>
       <div class="pgrid">
-        <div class="f"><label for="skMa">股價均線（日）</label><input id="skMa" type="number" min="5" value="25"></div>
-        <div class="f"><label for="skVs">短均量（日）</label><input id="skVs" type="number" min="2" value="5"></div>
-        <div class="f"><label for="skVl">長均量（日）</label><input id="skVl" type="number" min="10" value="60"></div>
-        <div class="f"><label for="skLook">量能交叉回看（日）</label><input id="skLook" type="number" min="1" value="5"></div>
-        <div class="f"><label for="skNear">距均線上限（%）</label><input id="skNear" type="number" min="0" step="0.5" value="3"></div>
+        <div class="f" data-strat="s2560"><label for="skMa">股價均線（日）</label><input id="skMa" type="number" min="5" value="25"></div>
+        <div class="f" data-strat="s2560"><label for="skVs">短均量（日）</label><input id="skVs" type="number" min="2" value="5"></div>
+        <div class="f" data-strat="s2560"><label for="skVl">長均量（日）</label><input id="skVl" type="number" min="10" value="60"></div>
+        <div class="f"><label for="skLook">交叉回看（日）</label><input id="skLook" type="number" min="1" value="5"></div>
+        <div class="f" data-strat="s2560"><label for="skNear">距均線上限（%）</label><input id="skNear" type="number" min="0" step="0.5" value="3"></div>
         <div class="f"><label for="skStop">停損（%）</label><input id="skStop" type="number" min="1" step="0.5" value="8"></div>
         <div class="f"><label for="skDisc">手續費折數</label><input id="skDisc" type="number" min="1" max="10" step="0.1" value="10"></div>
-        <label class="ck"><input id="skZero" type="checkbox"> MACD 要在零軸以上</label>
+        <label class="ck" data-strat="macd"><input id="skZero" type="checkbox"> MACD 要在零軸以上</label>
+        <div class="f" data-strat="kd"><label for="skKdN">KD 週期（日）</label><input id="skKdN" type="number" min="3" value="9"></div>
+        <div class="f" data-strat="kd"><label for="skKdLow">KD 低檔（黃金交叉）</label><input id="skKdLow" type="number" min="0" max="100" value="30"></div>
+        <div class="f" data-strat="kd"><label for="skKdHigh">KD 高檔（死亡交叉）</label><input id="skKdHigh" type="number" min="0" max="100" value="70"></div>
       </div>
       <div class="exits"><span class="note">出場條件（任一成立就出場）：</span>
-        <label class="ck"><input id="skExMa" type="checkbox" checked> 收盤跌破均線</label>
-        <label class="ck"><input id="skExVol" type="checkbox" checked> 均量死亡交叉</label>
-        <label class="ck"><input id="skExMacd" type="checkbox" checked> MACD 死亡交叉</label>
+        <label class="ck" data-strat="s2560"><input id="skExMa" type="checkbox" checked> 收盤跌破均線</label>
+        <label class="ck" data-strat="s2560"><input id="skExVol" type="checkbox" checked> 均量死亡交叉</label>
+        <label class="ck" data-strat="macd"><input id="skExMacd" type="checkbox" checked> MACD 死亡交叉</label>
+        <label class="ck" data-strat="kd"><input id="skExKd" type="checkbox" checked> KD 高檔死亡交叉</label>
         <label class="ck"><input id="skExStop" type="checkbox" checked> 停損</label>
       </div>
       <div class="btns"><button class="b ghost" id="skReset">恢復預設</button></div>
@@ -1158,7 +1173,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
     </div>
     <div class="tiles six" id="skStats"></div>
     <div class="card">
-      <div class="row" style="align-items:center"><h2 style="flex:1">K 線、成交量、MACD <span>（虛線右邊是回測區間）</span></h2><button class="b ghost" id="skAll">顯示整個回測區間</button></div>
+      <div class="row" style="align-items:center"><h2 style="flex:1">K 線、成交量與指標 <span>（虛線右邊是回測區間）</span></h2><button class="b ghost" id="skAll">顯示整個回測區間</button></div>
       <canvas id="skCanvas" class="kchart"></canvas>
       <p class="note" id="skTip"></p>
     </div>
@@ -4358,35 +4373,66 @@ const STK = (() => {
     const dif = c.map((_, i) => e12[i] - e26[i]);
     const dea = ema(dif, 9);
     const osc = dif.map((x, i) => x - dea[i]);
-    return { ma, vs, vl, dif, dea, osc, ready: Math.max(P.ma, P.vl, 35) };
+    // KD（台灣常用 9,3,3）：RSV → K = ⅔K + ⅓RSV，D = ⅔D + ⅓K，起始 50
+    const n = P.kdN || 9, K = new Array(c.length).fill(null), D = new Array(c.length).fill(null);
+    let k = 50, d = 50;
+    for (let i = 0; i < c.length; i++) {
+      if (i < n - 1) continue;
+      let hi = -Infinity, lo = Infinity; for (let j = i - n + 1; j <= i; j++) { hi = Math.max(hi, bars[j].high); lo = Math.min(lo, bars[j].low); }
+      const rsv = hi > lo ? (c[i] - lo) / (hi - lo) * 100 : 50;
+      k = k * 2 / 3 + rsv / 3; d = d * 2 / 3 + k / 3; K[i] = k; D[i] = d;
+    }
+    return { ma, vs, vl, dif, dea, osc, K, D, ready: Math.max(P.ma, P.vl, 35, n + 10) };
   }
 
-  // ---------- 策略 ----------
-  // 進場（收盤判斷、隔日開盤成交）：
-  //  ① 25 日線上揚 ② 近 N 日內 5 日均量上穿 60 日均量且仍在上方 ③ 收盤在 25 日線之上且距離不超過 X%
-  //  ④ MACD：DIF > DEA（可選：DIF 也要 > 0）
-  // 出場（任一成立）：收盤跌破 25 日線、5 日均量下穿 60 日均量、DIF 下穿 DEA、跌破停損
-  function entryChecks(bars, I, t, P) {
-    const ma = I.ma[t], c = bars[t].close;
-    let crossAt = -1;
-    for (let k = t; k > t - P.look && k > 0; k--) if (I.vs[k] > I.vl[k] && I.vs[k - 1] <= I.vl[k - 1]) { crossAt = k; break; }
-    const dist = (c - ma) / ma * 100;
-    return [
-      { key: 'maUp', label: `${P.ma} 日均線上揚`, ok: I.ma[t] > I.ma[t - 1], val: `${f2(I.ma[t - 1])} → ${f2(ma)}` },
-      { key: 'volX', label: `${P.look} 日內 ${P.vs} 日均量上穿 ${P.vl} 日均量，且仍在上方`, ok: crossAt >= 0 && I.vs[t] > I.vl[t], val: crossAt >= 0 ? `${t - crossAt === 0 ? '今天' : (t - crossAt) + ' 天前'}交叉；${lots(I.vs[t])} / ${lots(I.vl[t])} 張` : `${lots(I.vs[t])} / ${lots(I.vl[t])} 張，近期沒有交叉` },
-      { key: 'near', label: `收盤在 ${P.ma} 日線上方 ${P.near}% 以內（回檔不破）`, ok: c >= ma && dist <= P.near, val: `收盤 ${f2(c)}，距 ${P.ma} 日線 ${dist >= 0 ? '+' : ''}${dist.toFixed(2)}%` },
-      { key: 'macd', label: P.zero ? 'MACD：DIF > DEA 且 DIF > 0' : 'MACD：DIF > DEA（多方）', ok: I.dif[t] > I.dea[t] && (!P.zero || I.dif[t] > 0), val: `DIF ${I.dif[t].toFixed(2)}，DEA ${I.dea[t].toFixed(2)}` },
-    ];
+  // ---------- 策略（可複選組合） ----------
+  // 2560 戰法：① 25 日線上揚 ② 近 N 日內 5 日均量上穿 60 日均量且仍在上方 ③ 收盤在 25 日線之上、距離不超過 X%
+  //            出場：收盤跌破 25 日線、5 日均量下穿 60 日均量
+  // MACD：DIF > DEA（可選 DIF > 0）；出場：DIF 下穿 DEA
+  // KD：近 N 日內 K 在低檔上穿 D，且目前 K > D；出場：K 在高檔下穿 D
+  // 組合方式：買進要「全部 / 過半 / 任一」勾選的策略同意；賣出為任一勾選策略的出場條件或停損成立
+  const STRATS = [['s2560', '2560 戰法'], ['macd', 'MACD'], ['kd', 'KD 指標']];
+  const picked = P => STRATS.filter(([k]) => P.use[k]);
+  const need = P => { const n = picked(P).length; return P.mode === 'any' ? 1 : P.mode === 'maj' ? Math.floor(n / 2) + 1 : n; };
+  const MODE = { all: '全部同意', maj: '過半同意', any: '任一同意' };
+  function stratChecks(key, bars, I, t, P) {
+    const c = bars[t].close;
+    if (key === 's2560') {
+      const ma = I.ma[t]; let crossAt = -1;
+      for (let k = t; k > t - P.look && k > 0; k--) if (I.vs[k] > I.vl[k] && I.vs[k - 1] <= I.vl[k - 1]) { crossAt = k; break; }
+      const dist = (c - ma) / ma * 100;
+      return [
+        { key: 'maUp', label: `${P.ma} 日均線上揚`, ok: I.ma[t] > I.ma[t - 1], val: `${f2(I.ma[t - 1])} → ${f2(ma)}` },
+        { key: 'volX', label: `${P.look} 日內 ${P.vs} 日均量上穿 ${P.vl} 日均量，且仍在上方`, ok: crossAt >= 0 && I.vs[t] > I.vl[t], val: crossAt >= 0 ? `${t - crossAt === 0 ? '今天' : (t - crossAt) + ' 天前'}交叉；${lots(I.vs[t])} / ${lots(I.vl[t])} 張` : `${lots(I.vs[t])} / ${lots(I.vl[t])} 張，近期沒有交叉` },
+        { key: 'near', label: `收盤在 ${P.ma} 日線上方 ${P.near}% 以內`, ok: c >= ma && dist <= P.near, val: `收盤 ${f2(c)}，距 ${P.ma} 日線 ${dist >= 0 ? '+' : ''}${dist.toFixed(2)}%` },
+      ];
+    }
+    if (key === 'macd') return [{ key: 'macd', label: P.zero ? 'DIF > DEA 且 DIF > 0' : 'DIF > DEA（多方）', ok: I.dif[t] > I.dea[t] && (!P.zero || I.dif[t] > 0), val: `DIF ${I.dif[t].toFixed(2)}，DEA ${I.dea[t].toFixed(2)}` }];
+    if (key === 'kd') {
+      let crossAt = -1;
+      for (let k = t; k > t - P.look && k > 0; k--) if (I.K[k] > I.D[k] && I.K[k - 1] <= I.D[k - 1] && Math.min(I.K[k - 1], I.K[k]) <= P.kdLow) { crossAt = k; break; }
+      return [
+        { key: 'kdX', label: `${P.look} 日內 K 在 ${P.kdLow} 以下上穿 D（低檔黃金交叉）`, ok: crossAt >= 0, val: crossAt >= 0 ? `${t - crossAt === 0 ? '今天' : (t - crossAt) + ' 天前'}交叉，當時 K ${f2(I.K[crossAt])}` : `近期沒有低檔交叉` },
+        { key: 'kdUp', label: 'K > D（多方）', ok: I.K[t] > I.D[t], val: `K ${f2(I.K[t])}，D ${f2(I.D[t])}` },
+      ];
+    }
+    return [];
+  }
+  function decide(bars, I, t, P) {
+    const groups = picked(P).map(([key, name]) => { const checks = stratChecks(key, bars, I, t, P); return { key, name, checks, ok: checks.every(x => x.ok) }; });
+    const okN = groups.filter(g => g.ok).length;
+    return { groups, okN, n: groups.length, need: need(P), buy: groups.length > 0 && okN >= need(P) };
   }
   function exitChecks(bars, I, t, P, entry) {
     const c = bars[t].close;
-    const on = P.exits || { belowMa: true, volDead: true, macdDead: true, stop: true };
+    const on = P.exits || { belowMa: true, volDead: true, macdDead: true, kdDead: true, stop: true };
     return [
-      { key: 'belowMa', label: `收盤跌破 ${P.ma} 日線`, hit: c < I.ma[t], val: `收盤 ${f2(c)}，${P.ma} 日線 ${f2(I.ma[t])}` },
-      { key: 'volDead', label: `${P.vs} 日均量下穿 ${P.vl} 日均量`, hit: I.vs[t] < I.vl[t] && I.vs[t - 1] >= I.vl[t - 1], val: `${lots(I.vs[t])} / ${lots(I.vl[t])} 張` },
-      { key: 'macdDead', label: 'MACD 死亡交叉（DIF 下穿 DEA）', hit: I.dif[t] < I.dea[t] && I.dif[t - 1] >= I.dea[t - 1], val: `DIF ${I.dif[t].toFixed(2)}，DEA ${I.dea[t].toFixed(2)}` },
+      { key: 'belowMa', s: 's2560', label: `［2560］收盤跌破 ${P.ma} 日線`, hit: c < I.ma[t], val: `收盤 ${f2(c)}，${P.ma} 日線 ${f2(I.ma[t])}` },
+      { key: 'volDead', s: 's2560', label: `［2560］${P.vs} 日均量下穿 ${P.vl} 日均量`, hit: I.vs[t] < I.vl[t] && I.vs[t - 1] >= I.vl[t - 1], val: `${lots(I.vs[t])} / ${lots(I.vl[t])} 張` },
+      { key: 'macdDead', s: 'macd', label: '［MACD］死亡交叉（DIF 下穿 DEA）', hit: I.dif[t] < I.dea[t] && I.dif[t - 1] >= I.dea[t - 1], val: `DIF ${I.dif[t].toFixed(2)}，DEA ${I.dea[t].toFixed(2)}` },
+      { key: 'kdDead', s: 'kd', label: `［KD］高檔死亡交叉（K 在 ${P.kdHigh} 以上下穿 D）`, hit: I.K[t] < I.D[t] && I.K[t - 1] >= I.D[t - 1] && Math.max(I.K[t - 1], I.K[t]) >= P.kdHigh, val: `K ${f2(I.K[t])}，D ${f2(I.D[t])}` },
       { key: 'stop', label: `停損：跌破進場價 ${P.stop}%`, hit: entry ? c <= entry * (1 - P.stop / 100) : false, val: entry ? `進場 ${f2(entry)}，停損價 ${f2(entry * (1 - P.stop / 100))}` : '—' },
-    ].filter(x => on[x.key]);
+    ].filter(x => on[x.key] && (!x.s || P.use[x.s]));
   }
   function backtest(bars, P) {
     const I = indicators(bars, P);
@@ -4401,7 +4447,7 @@ const STK = (() => {
       peak = Math.max(peak, mtm); mdd = Math.min(mdd, mtm / peak - 1); curve.push({ date: bars[t].date, v: mtm });
       if (t === last) break;
       if (!pos) {
-        if (entryChecks(bars, I, t, P).every(x => x.ok)) pos = { i: t + 1, date: bars[t + 1].date, price: bars[t + 1].open };
+        if (decide(bars, I, t, P).buy) pos = { i: t + 1, date: bars[t + 1].date, price: bars[t + 1].open };
       } else {
         const ex = exitChecks(bars, I, t, P, pos.price).filter(x => x.hit);
         if (ex.length) {
@@ -4437,16 +4483,18 @@ const STK = (() => {
         sub: hit.length ? `策略出場條件成立：${hit.map(x => x.label).join('、')}。依規則會在下一個交易日開盤賣出。` : `策略在 ${R.pos.date} 以 ${f2(R.pos.price)} 進場，目前報酬 ${pct(R.openRet)}，出場條件都還沒成立。`,
         checks: ex.map(x => ({ label: x.label, ok: !x.hit, val: x.val, invert: true })) };
     }
-    const en = entryChecks(bars, R.I, t, P), okN = en.filter(x => x.ok).length;
-    return { kind: okN === en.length ? 'buy' : 'wait', title: okN === en.length ? '買進訊號' : `觀望（${okN} / ${en.length} 條件成立）`,
-      sub: okN === en.length ? '四個進場條件全部成立。依規則會在下一個交易日開盤買進。' : '進場條件還沒全部成立，策略目前不持有。',
-      checks: en };
+    const D = decide(bars, R.I, t, P), mode = MODE[P.mode] || MODE.all;
+    const checks = D.groups.flatMap(g => [{ head: true, label: `${g.name}：${g.ok ? '偏多（同意買進）' : '條件未全部成立'}`, ok: g.ok, val: '' }, ...g.checks.map(c => ({ ...c, label: c.label }))]);
+    const names = D.groups.filter(g => g.ok).map(g => g.name);
+    return { kind: D.buy ? 'buy' : 'wait', title: D.buy ? '買進訊號' : `觀望（${D.okN} / ${D.n} 個策略同意）`,
+      sub: (D.buy ? `組合方式「${mode}」：${names.join('、')} 同意買進。依規則會在下一個交易日開盤買進。` : `組合方式「${mode}」需要 ${D.need} 個策略同意，目前 ${D.okN} 個${names.length ? `（${names.join('、')}）` : ''}，策略目前不持有。`),
+      checks };
   }
   const f2 = x => x == null || isNaN(x) ? '—' : (+x).toFixed(2);
   const lots = x => x == null ? '—' : Math.round(x / 1000).toLocaleString('zh-TW');
   const pct = x => x == null ? '—' : `${x >= 0 ? '+' : ''}${(x * 100).toFixed(2)}%`;
 
-  return { setKey: k => apiKey = k, hasKey: () => !!apiKey, daily, quote, mock, backtest, verdict, f2, lots, pct, ymd };
+  return { setKey: k => apiKey = k, hasKey: () => !!apiKey, daily, quote, mock, backtest, verdict, f2, lots, pct, ymd, STRATS, MODE };
 })();
 
 // ---------- K 線圖（canvas，紅漲綠跌） ----------
@@ -4461,8 +4509,10 @@ function StockChart(canvas, tip) {
     const C = { fg: css('--fg'), mu: css('--muted'), line: css('--line'), up: css('--k-up'), dn: css('--k-dn'), ma: css('--accent'), vs: css('--k-vs'), vl: css('--k-vl'), bg: css('--panel') };
     ctx.clearRect(0, 0, W, H);
     const padR = 58, padB = 20, plotW = W - padR - 6;
-    const panes = [{ y: 4, h: (H - padB) * 0.58 }, { y: 0, h: (H - padB) * 0.18 }, { y: 0, h: (H - padB) * 0.24 - 8 }];
-    panes[1].y = panes[0].y + panes[0].h + 4; panes[2].y = panes[1].y + panes[1].h + 4;
+    const kdOn = !!(P.use && P.use.kd), hh = H - padB;
+    const panes = kdOn ? [{ y: 4, h: hh * 0.5 }, { y: 0, h: hh * 0.15 }, { y: 0, h: hh * 0.175 - 6 }, { y: 0, h: hh * 0.175 - 6 }] : [{ y: 4, h: hh * 0.58 }, { y: 0, h: hh * 0.18 }, { y: 0, h: hh * 0.24 - 8 }];
+    for (let k = 1; k < panes.length; k++) panes[k].y = panes[k - 1].y + panes[k - 1].h + 4;
+    const yK = v => kdOn ? panes[3].y + (100 - v) / 100 * panes[3].h : 0, bottom = panes[panes.length - 1];
     const n = i1 - i0 + 1, bw = plotW / n, x = i => 6 + (i - i0 + 0.5) * bw;
     const sl = (a, b) => bars.slice(a, b + 1);
     const I = R.I;
@@ -4485,7 +4535,7 @@ function StockChart(canvas, tip) {
     ctx.textAlign = 'center'; const step = Math.max(1, Math.ceil(n / 6));
     for (let i = i0; i <= i1; i += step) ctx.fillText(bars[i].date.slice(2), x(i), H - 5);
     // 回測區間起點
-    if (R.s >= i0 && R.s <= i1) { ctx.strokeStyle = C.mu; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(x(R.s), panes[0].y); ctx.lineTo(x(R.s), panes[2].y + panes[2].h); ctx.stroke(); ctx.setLineDash([]); }
+    if (R.s >= i0 && R.s <= i1) { ctx.strokeStyle = C.mu; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(x(R.s), panes[0].y); ctx.lineTo(x(R.s), bottom.y + bottom.h); ctx.stroke(); ctx.setLineDash([]); }
     // K 線
     const cw = Math.max(1, bw * 0.65);
     for (let i = i0; i <= i1; i++) {
@@ -4498,6 +4548,11 @@ function StockChart(canvas, tip) {
     }
     const line = (arr, y, color, w = 1.5) => { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.beginPath(); let st = false; for (let i = i0; i <= i1; i++) { if (arr[i] == null) continue; st ? ctx.lineTo(x(i), y(arr[i])) : ctx.moveTo(x(i), y(arr[i])); st = true; } ctx.stroke(); ctx.lineWidth = 1; };
     line(I.ma, yP, C.ma, 2); line(I.vs, yV, C.vs); line(I.vl, yV, C.vl); line(I.dif, yM, C.vs); line(I.dea, yM, C.vl);
+    if (kdOn) {
+      ctx.fillStyle = C.mu; ctx.textAlign = 'left'; ctx.font = '11px ' + css('--mono'); ctx.fillText('KD', plotW + 10, panes[3].y + 12);
+      for (const g of [P.kdLow, P.kdHigh]) { ctx.strokeStyle = C.line; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(6, yK(g)); ctx.lineTo(6 + plotW, yK(g)); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(String(g), plotW + 10, yK(g) + 4); }
+      line(I.K, yK, C.vs); line(I.D, yK, C.vl);
+    }
     // 買賣點
     const mark = (i, up) => { if (i < i0 || i > i1) return; const b = bars[i], X = x(i), Y = up ? yP(b.low) + 8 : yP(b.high) - 8; ctx.fillStyle = up ? C.up : C.dn; ctx.beginPath(); if (up) { ctx.moveTo(X, Y); ctx.lineTo(X - 6, Y + 10); ctx.lineTo(X + 6, Y + 10); } else { ctx.moveTo(X, Y); ctx.lineTo(X - 6, Y - 10); ctx.lineTo(X + 6, Y - 10); } ctx.fill(); };
     for (const t of R.trades) { mark(t.inI, true); mark(t.outI, false); }
@@ -4508,11 +4563,12 @@ function StockChart(canvas, tip) {
     for (const [c, t] of leg) { ctx.fillStyle = c; ctx.fillRect(lx, panes[0].y + 8, 10, 3); ctx.fillStyle = C.fg; ctx.fillText(t, lx + 14, panes[0].y + 13); lx += ctx.measureText(t).width + 28; }
     lx = 12; for (const [c, t] of [[C.vs, `${P.vs}日均量`], [C.vl, `${P.vl}日均量`]]) { ctx.fillStyle = c; ctx.fillRect(lx, panes[1].y + 8, 10, 3); ctx.fillStyle = C.fg; ctx.fillText(t, lx + 14, panes[1].y + 13); lx += ctx.measureText(t).width + 28; }
     lx = 12; for (const [c, t] of [[C.vs, 'DIF'], [C.vl, 'DEA'], [C.up, 'OSC']]) { ctx.fillStyle = c; ctx.fillRect(lx, panes[2].y + 8, 10, 3); ctx.fillStyle = C.fg; ctx.fillText(t, lx + 14, panes[2].y + 13); lx += ctx.measureText(t).width + 28; }
+    if (kdOn) { lx = 12; for (const [c, t] of [[C.vs, `K(${P.kdN})`], [C.vl, 'D']]) { ctx.fillStyle = c; ctx.fillRect(lx, panes[3].y + 8, 10, 3); ctx.fillStyle = C.fg; ctx.fillText(t, lx + 14, panes[3].y + 13); lx += ctx.measureText(t).width + 28; } }
     // 十字線
     if (hover >= i0 && hover <= i1) {
-      ctx.strokeStyle = C.mu; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(x(hover), panes[0].y); ctx.lineTo(x(hover), panes[2].y + panes[2].h); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = C.mu; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(x(hover), panes[0].y); ctx.lineTo(x(hover), bottom.y + bottom.h); ctx.stroke(); ctx.setLineDash([]);
       const b = bars[hover];
-      tip.innerHTML = `<b>${b.date}</b>　開 ${STK.f2(b.open)}　高 ${STK.f2(b.high)}　低 ${STK.f2(b.low)}　收 <b>${STK.f2(b.close)}</b>　量 ${STK.lots(b.volume)} 張<br>MA${P.ma} ${STK.f2(I.ma[hover])}　均量 ${STK.lots(I.vs[hover])} / ${STK.lots(I.vl[hover])}　DIF ${STK.f2(I.dif[hover])}　DEA ${STK.f2(I.dea[hover])}`;
+      tip.innerHTML = `<b>${b.date}</b>　開 ${STK.f2(b.open)}　高 ${STK.f2(b.high)}　低 ${STK.f2(b.low)}　收 <b>${STK.f2(b.close)}</b>　量 ${STK.lots(b.volume)} 張<br>MA${P.ma} ${STK.f2(I.ma[hover])}　均量 ${STK.lots(I.vs[hover])} / ${STK.lots(I.vl[hover])}　DIF ${STK.f2(I.dif[hover])}　DEA ${STK.f2(I.dea[hover])}` + (kdOn ? `　K ${STK.f2(I.K[hover])}　D ${STK.f2(I.D[hover])}` : '');
     } else tip.textContent = '滑鼠移到圖上看當日數值；滾輪縮放、拖曳平移。';
     x0 = x; bwNow = bw;
   }
@@ -4549,7 +4605,20 @@ function StockChart(canvas, tip) {
   let chart = null, cur = null;
   const P = () => ({ ma: +val('skMa') || 25, vs: +val('skVs') || 5, vl: +val('skVl') || 60, look: +val('skLook') || 5, near: +val('skNear') || 3,
     zero: $('skZero').checked, stop: +val('skStop') || 8, fee: 0.1425, disc: (+val('skDisc') || 10) / 10, tax: 0.3, years: 2,
-    exits: { belowMa: $('skExMa').checked, volDead: $('skExVol').checked, macdDead: $('skExMacd').checked, stop: $('skExStop').checked } });
+    kdN: +val('skKdN') || 9, kdLow: +val('skKdLow') || 30, kdHigh: +val('skKdHigh') || 70,
+    use: { s2560: $('skUse2560').checked, macd: $('skUseMacd').checked, kd: $('skUseKd').checked }, mode: val('skMode') || 'all',
+    exits: { belowMa: $('skExMa').checked, volDead: $('skExVol').checked, macdDead: $('skExMacd').checked, kdDead: $('skExKd').checked, stop: $('skExStop').checked } });
+  // 記住策略勾選與參數（會跟著雲端同步）
+  const PREF = 'hexlab-stock-prefs';
+  const FIELDS = ['skMa', 'skVs', 'skVl', 'skLook', 'skNear', 'skStop', 'skDisc', 'skKdN', 'skKdLow', 'skKdHigh', 'skMode'];
+  const CHECKS = ['skUse2560', 'skUseMacd', 'skUseKd', 'skZero', 'skExMa', 'skExVol', 'skExMacd', 'skExKd', 'skExStop'];
+  function savePrefs() { const o = {}; FIELDS.forEach(k => o[k] = $(k).value); CHECKS.forEach(k => o[k] = $(k).checked); store.set(PREF, o); }
+  function loadPrefs() { const o = store.get(PREF, null); if (!o) return; FIELDS.forEach(k => { if (o[k] != null) $(k).value = o[k]; }); CHECKS.forEach(k => { if (typeof o[k] === 'boolean') $(k).checked = o[k]; }); showStrats(); }
+  function showStrats() {
+    const u = { s2560: $('skUse2560').checked, macd: $('skUseMacd').checked, kd: $('skUseKd').checked }, n = Object.values(u).filter(Boolean).length;
+    document.querySelectorAll('[data-strat]').forEach(el => el.hidden = !u[el.dataset.strat]);
+    $('skMode').disabled = n < 2; $('skStratNote').textContent = n === 0 ? '至少要勾選一個策略' : n === 1 ? '只勾一個策略時，就照那個策略的訊號買賣' : `買進：${{ all: `${n} 個策略都同意`, maj: `至少 ${Math.floor(n / 2) + 1} 個策略同意`, any: '任一策略同意' }[val('skMode') || 'all']}；賣出：任一勾選策略的出場條件或停損成立`;
+  }
 
   async function loadKey() {
     const b = store.get(KEY, null);
@@ -4582,7 +4651,7 @@ function StockChart(canvas, tip) {
     $('skMockTag').hidden = !mock;
     const vc = $('skVerdict'); vc.className = 'card verdict v-' + V.kind;
     $('skVTitle').textContent = V.title; $('skVSub').textContent = V.sub;
-    $('skChecks').innerHTML = V.checks.map(c => `<li class="${c.ok ? 'ok' : 'no'}"><span class="mk">${c.ok ? '✓' : '✗'}</span><div><b>${escHtml(c.label)}</b>${c.invert ? `<em>${c.ok ? '未觸發' : '已觸發'}</em>` : ''}<small>${escHtml(c.val)}</small></div></li>`).join('');
+    $('skChecks').innerHTML = V.checks.map(c => c.head ? `<li class="head ${c.ok ? 'ok' : 'no'}"><span class="mk">${c.ok ? '✓' : '✗'}</span><div><b>${escHtml(c.label)}</b></div></li>` : `<li class="${c.ok ? 'ok' : 'no'}"><span class="mk">${c.ok ? '✓' : '✗'}</span><div><b>${escHtml(c.label)}</b>${c.invert ? `<em>${c.ok ? '未觸發' : '已觸發'}</em>` : ''}<small>${escHtml(c.val)}</small></div></li>`).join('');
     const S = R.stats;
     const tile = (l, v, cls = '', sub = '') => `<div class="tile"><span>${l}</span><b class="num ${cls}">${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
     $('skStats').innerHTML =
@@ -4594,7 +4663,7 @@ function StockChart(canvas, tip) {
       tile('平均持有', S.avgDays == null ? '—' : S.avgDays.toFixed(1) + ' 天', '', `${S.from} ～ ${S.to}`);
     $('skTrades').innerHTML = (R.pos ? `<tr class="open"><td>${R.pos.date}</td><td>${STK.f2(R.pos.price)}</td><td>持有中</td><td>${STK.f2(last.close)}</td><td class="amt ${R.openRet >= 0 ? 'in' : 'out'}">${STK.pct(R.openRet)}</td><td>${bars.length - 1 - R.pos.i}</td><td>—</td></tr>` : '') +
       R.trades.slice().reverse().map(t => `<tr><td>${t.inDate}</td><td>${STK.f2(t.inPx)}</td><td>${t.outDate}</td><td>${STK.f2(t.outPx)}</td><td class="amt ${t.ret >= 0 ? 'in' : 'out'}">${STK.pct(t.ret)}</td><td>${t.days}</td><td class="why">${escHtml(t.why)}</td></tr>`).join('') ||
-      '<tr><td colspan="7" class="note" style="padding:12px 8px">兩年內沒有符合條件的交易。可以試著放寬「距 25 日線」或「交叉回看天數」。</td></tr>';
+      '<tr><td colspan="7" class="note" style="padding:12px 8px">兩年內沒有符合條件的交易。可以改用「過半同意 / 任一同意」，或放寬「距均線上限」「交叉回看天數」「KD 低檔」等參數。</td></tr>';
     if (!chart) chart = StockChart($('skCanvas'), $('skTip'));
     requestAnimationFrame(() => chart.set(bars, R, p));
   }
@@ -4602,6 +4671,7 @@ function StockChart(canvas, tip) {
   async function run(sym, mock = false) {
     sym = (sym || '').trim().toUpperCase(); if (!sym) return status('skSt', '請輸入股票代號', 'err');
     if (!mock && !STK.hasKey()) return status('skSt', '請先輸入 Fugle API 金鑰，或按「用模擬資料預覽」', 'err');
+    if (!Object.values(P().use).some(Boolean)) return status('skSt', '請至少勾選一個策略（2560、MACD 或 KD）', 'err');
     $('skRun').disabled = true;
     try {
       const bars = await getBars(sym, mock);
@@ -4618,12 +4688,16 @@ function StockChart(canvas, tip) {
   $('skSym').addEventListener('keydown', e => { if (e.key === 'Enter') run(val('skSym')); });
   $('skMock').addEventListener('click', () => run(val('skSym') || 'DEMO', true));
   $('skAll').addEventListener('click', () => chart && chart.showAll());
-  ['skMa', 'skVs', 'skVl', 'skLook', 'skNear', 'skZero', 'skStop', 'skDisc', 'skExMa', 'skExVol', 'skExMacd', 'skExStop'].forEach(id => $(id).addEventListener('change', () => {
-    if (!cur) return; const p = P(), R = STK.backtest(cur.bars, p), V = STK.verdict(cur.bars, R, p);
+  [...FIELDS, ...CHECKS].forEach(id => $(id).addEventListener('change', () => {
+    showStrats(); savePrefs();
+    if (!cur) return; const p = P(); if (!Object.values(p.use).some(Boolean)) return status('skSt', '請至少勾選一個策略', 'err');
+    const R = STK.backtest(cur.bars, p), V = STK.verdict(cur.bars, R, p);
     renderResult(cur.sym, $('skName').textContent.replace(/^\S+\s?/, ''), cur.bars, R, V, p, !$('skMockTag').hidden);
     status('skSt', '已用新參數重新回測', 'ok');
   }));
-  $('skReset').addEventListener('click', () => { Object.entries({ skMa: 25, skVs: 5, skVl: 60, skLook: 5, skNear: 3, skStop: 8, skDisc: 10 }).forEach(([k, v]) => $(k).value = v); $('skZero').checked = false; ['skExMa', 'skExVol', 'skExMacd', 'skExStop'].forEach(k => $(k).checked = true); $('skMa').dispatchEvent(new Event('change')); });
+  $('skReset').addEventListener('click', () => { Object.entries({ skMa: 25, skVs: 5, skVl: 60, skLook: 5, skNear: 3, skStop: 8, skDisc: 10, skKdN: 9, skKdLow: 30, skKdHigh: 70, skMode: 'all' }).forEach(([k, v]) => $(k).value = v); $('skZero').checked = false; $('skUseKd').checked = false; ['skUse2560', 'skUseMacd', 'skExMa', 'skExVol', 'skExMacd', 'skExKd', 'skExStop'].forEach(k => $(k).checked = true); $('skMa').dispatchEvent(new Event('change')); });
+  loadPrefs(); showStrats();
+  document.addEventListener('hexsync', e => { if (e.detail.includes(PREF)) loadPrefs(); });
 
   // 批次回測
   $('skBatch').addEventListener('click', async () => {
