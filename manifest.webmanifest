@@ -1,0 +1,17 @@
+{
+  "name": "mtk29073 工具箱",
+  "short_name": "mtk29073",
+  "description": "加密測試台、HKDF、Key Ladder、MPEG-TS 解析、Script 紀錄、待辦與股市籌碼",
+  "lang": "zh-Hant",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef0f3",
+  "theme_color": "#2747c9",
+  "icons": [
+    { "src": "pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

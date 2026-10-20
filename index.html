@@ -2,7 +2,16 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="pwa/icon-192.png">
+<link rel="apple-touch-icon" href="pwa/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="mtk29073">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eef0f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1217" media="(prefers-color-scheme: dark)">
 </head>
 <body>
 <title>Hex 加密測試台</title>
@@ -154,17 +163,27 @@ body.dev-on .devnav { display: flex; }
 .main { min-width: 0; padding-inline: 24px; padding-block: 20px 48px; }
 .view { max-width: 1180px; margin: 0 auto; }
 @media (max-width: 800px) {
+  /* 手機：左側選單改成 App 式的底部分頁列（可左右滑動），並避開 iPhone 底部的橫條 */
   .shell { grid-template-columns: minmax(0, 1fr); }
-  .side { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; height: auto; flex-direction: row; align-items: center; gap: 4px; padding: 6px 16px; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .side { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 20; height: auto; flex-direction: row; align-items: stretch; gap: 0;
+    padding: 4px max(6px, env(safe-area-inset-left)) calc(4px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-right));
+    border-right: 0; border-top: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .side::-webkit-scrollbar { display: none; }
   .brand { display: none; }
-  .sidenav, body.dev-on .devnav { flex-direction: row; }
-  .devnav { margin: 0; padding: 0 0 0 4px; border-top: 0; border-left: 1px dashed var(--line); }
+  .sidenav, body.dev-on .devnav, .navsub, .navgrp { flex-direction: row; gap: 0; }
+  .devnav { margin: 0; padding: 0; border-top: 0; border-left: 1px solid var(--line); }
   .navlabel { display: none; }
-  .side a { white-space: nowrap; padding: 7px 10px; }
-  .side a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--accent); }
-  .side-bottom { margin: 0; border-top: 0; padding: 0; }
-  .main { padding-inline: 16px; }
+  .side a { flex-direction: column; gap: 3px; white-space: nowrap; padding: 6px 10px 4px; min-width: 64px; font-size: 0.68rem; border-radius: 8px; justify-content: center; }
+  .side a svg { width: 22px; height: 22px; }
+  .side a[aria-current="page"] { box-shadow: none; background: none; color: var(--accent); }
+  .side-bottom { margin: 0; border-top: 0; padding: 0; border-left: 1px solid var(--line); }
+  .main { padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); padding-top: calc(14px + env(safe-area-inset-top)); padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
 }
+@media (display-mode: standalone) { body { -webkit-user-select: none; user-select: none; } input, textarea, [contenteditable], pre, code, td, .hx { -webkit-user-select: text; user-select: text; } }
+.a2hs { position: fixed; left: 12px; right: 12px; bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 30; display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 6px 24px rgba(0,0,0,.18); font-size: 0.85rem; }
+.a2hs img { width: 40px; height: 40px; border-radius: 9px; flex: none; }
+.a2hs p { margin: 0; flex: 1; line-height: 1.45; } .a2hs b { color: var(--accent); }
+.a2hs button { border: 0; background: none; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 4px 6px; }
 .vhead { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
 .vhead h1 { font-family: var(--sans); font-size: 1.4rem; }
 .vhead p { margin: 0; color: var(--muted); font-size: 0.9rem; max-width: 65ch; }
@@ -496,6 +515,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
+<div class="a2hs" id="a2hs" hidden role="dialog" aria-label="安裝成 App"><img src="pwa/apple-touch-icon.png" alt=""><p>可以裝成 App：點下方 <b>分享</b> 按鈕 <span aria-hidden="true">⎙</span>，再選 <b>加入主畫面</b>。</p><button id="a2hsX" aria-label="不再提示">✕</button></div>
 <div class="shell">
 <aside class="side">
   <div class="brand">mtk29073.github.io</div>
@@ -3281,6 +3301,17 @@ const showView = (() => {
   render();
 })();
 
+// ===== PWA：註冊 Service Worker（離線開啟）＋ iPhone 安裝提示 =====
+(() => {
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  let off = false; try { off = localStorage.getItem('hexlab-a2hs-off') === '1'; } catch {}
+  if (ios && !standalone && !off && (location.protocol === 'https:' || location.hostname === 'localhost')) setTimeout(() => { $('a2hs').hidden = false; }, 1500);
+  $('a2hsX').addEventListener('click', () => { $('a2hs').hidden = true; try { localStorage.setItem('hexlab-a2hs-off', '1'); } catch {} });
+  if (standalone) document.documentElement.classList.add('pwa');
+})();
+
 </script>
 <script>
 // ===== 日文學習書資料（JLPT N5–N1） =====
@@ -4686,7 +4717,7 @@ function ChipChart(canvas, infoEl) {
 // 伺服器只拿到密文與一個由金鑰算出的通行碼雜湊，看不到內容。同步碼只存在各台電腦的瀏覽器裡，不在網頁原始碼中。
 const HEXSYNC = (() => {
   const CFG = 'hexlab-sync-cfg', META = 'hexlab-sync-meta', LAST = 'hexlab-sync-last';
-  const LOCAL_ONLY = ['hexlab-view', 'hexlab-tab', 'hexlab-twlist', 'hexlab-chip-last', 'hexlab-stock-last'];
+  const LOCAL_ONLY = ['hexlab-view', 'hexlab-tab', 'hexlab-twlist', 'hexlab-chip-last', 'hexlab-stock-last', 'hexlab-a2hs-off'];
   const synced = k => k.startsWith('hexlab-') && !k.startsWith('hexlab-sync') && !LOCAL_ONLY.includes(k);
   const enc = new TextEncoder(), dec = new TextDecoder();
   let cfg = store.get(CFG, null), aes = null, timer = null, busy = null, applying = false;
