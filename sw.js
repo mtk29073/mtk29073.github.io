@@ -1,5 +1,5 @@
 // Service Worker：讓主畫面 App 可以離線開啟。版本號由 build.py 依網頁內容自動產生，網頁一更新就換新快取。
-const VERSION = 'a5677bb53709';
+const VERSION = 'cd6bb2f3ff9d';
 const CACHE = 'hexlab-' + VERSION;
 const SHELL = ['./', 'index.html', 'config.js', 'owner_info.txt', 'manifest.webmanifest', 'pwa/icon-192.png', 'pwa/icon-512.png', 'pwa/apple-touch-icon.png'];
 

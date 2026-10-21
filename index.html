@@ -397,6 +397,9 @@ a.b { text-decoration: none; display: inline-flex; align-items: center; }
 .skilist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .skilist button { width: 100%; display: flex; gap: 10px; align-items: center; text-align: left; padding: 7px 8px; border-radius: 7px; border: 1px solid transparent; background: none; color: var(--fg); cursor: pointer; font: inherit; }
 .skilist button:hover { background: var(--well); }
+.skilist .skigrp { margin: 8px 0 2px; padding: 0 8px; font-size: 0.78rem; font-weight: 700; color: var(--muted); }
+.skilist .skigrp:first-child { margin-top: 0; }
+#skiAreas { margin-bottom: 8px; }
 .skilist button[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .skinm { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .skinm small, .skimeta small { color: var(--muted); font-size: 0.76rem; }
@@ -1343,17 +1346,18 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
 
 <!-- ============ 滑雪場地圖 ============ -->
 <div class="view" id="v-ski" hidden>
-  <header class="vhead"><h1>日本滑雪場地圖</h1><p>先收錄長野縣白馬 Hakuba Valley 的 10 個雪場。點圖釘或右側清單看雪場資料，再按「3D 卡通俯瞰」從空中看整座雪山。</p></header>
+  <header class="vhead"><h1>日本滑雪場地圖</h1><p>收錄白馬 Hakuba Valley、二世古、北海道、東北、新潟湯澤、北信州・妙高的雪場。按地區按鈕跳到該地區，點圖釘或右側清單看雪場資料，再按「3D 卡通俯瞰」從空中看整座雪山。</p></header>
   <p class="st" id="skiSt">地圖載入中…</p>
   <div class="skigrid">
     <div class="card skimapcard">
       <div class="btns"><button class="b ghost" id="skiFit">顯示全部雪場</button><button class="b ghost" id="skiJapan">日本全圖</button>
         <span class="skikey"><span><i style="background:var(--ok)"></i>初級多</span><span><i style="background:var(--accent)"></i>各程度</span><span><i style="background:var(--err)"></i>上級多</span></span></div>
+      <div class="btns" id="skiAreas" aria-label="跳到地區"></div>
       <div id="skiMap" class="skimap toon"></div>
     </div>
     <div class="skiside">
       <div class="card" id="skiCard"></div>
-      <div class="card"><h2>白馬 10 大雪場（由北到南）</h2><ul class="skilist" id="skiList"></ul></div>
+      <div class="card"><h2>全部雪場（依地區）</h2><ul class="skilist" id="skiList"></ul></div>
     </div>
   </div>
   <div class="ski3d" id="ski3d" hidden role="dialog" aria-label="3D 空中俯瞰">
@@ -1374,7 +1378,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
     </div>
     <p class="ski3d-tip">拖曳旋轉、雙指或滾輪縮放、右鍵拖曳平移。山的形狀來自真實地形（高度放大 1.5 倍），樹、雲、纜車車廂是卡通裝飾。</p>
   </div>
-  <p class="note" style="margin-top:12px">雪場數據來自 <a href="https://www.hakubavalley.com/ski_resort_info/" target="_blank" rel="noopener">Hakuba Valley 官方網站</a>；交通時間為大約值，出發前請以各雪場與接駁巴士最新公告為準。地圖是示意圖，山峰、湖泊、鐵路位置為大致位置。3D 地形：AWS Terrain Tiles；雪道與纜車：© OpenStreetMap。</p>
+  <p class="note" style="margin-top:12px">白馬雪場數據來自 <a href="https://www.hakubavalley.com/ski_resort_info/" target="_blank" rel="noopener">Hakuba Valley 官方網站</a>；其他地區來自各雪場官網與 <a href="https://www.skiresort.com/" target="_blank" rel="noopener">skiresort.com</a>（2026 年 10 月查詢，部分數字為大約值）；交通時間為大約值，出發前請以各雪場與接駁巴士最新公告為準。地圖是示意圖，山峰、湖泊、鐵路位置為大致位置。3D 地形：AWS Terrain Tiles；雪道與纜車：© OpenStreetMap。</p>
 </div>
 
 <!-- ============ 日文學習 ============ -->
@@ -5621,8 +5625,21 @@ const HEXSYNC = (() => {
 // ================= 滑雪場地圖（卡通風格：日本輪廓 + 手繪裝飾；3D 卡通雪山） =================
 // 雪場數據：Hakuba Valley 官方「Ski Resort Info」（hakubavalley.com/ski_resort_info）
 // 座標：OpenStreetMap；交通時間為大約值，實際以各雪場與 Hakuba Valley 接駁巴士公告為準
+// 其他地區：各雪場官網與 skiresort.com（2026-10 查詢）；座標為大約位置
+// prefs：都道府縣代碼（地圖上加深顏色）；bus：卡片「交通」欄下方的地區共通說明
 const SKI_AREAS = [
-  { id: 'hakuba', name: '白馬 Hakuba Valley', center: [36.665, 137.85], zoom: 11 },
+  { id: 'hakuba', name: '白馬 Hakuba Valley', center: [36.665, 137.85], zoom: 11, prefs: [20],
+    bus: 'Hakuba Valley 接駁巴士 V 線各雪場都有停（成人 800 円，持 Hakuba Valley 季票或 HV 券免費）。' },
+  { id: 'niseko', name: '二世古 Niseko United', center: [42.855, 140.69], zoom: 12, prefs: [1],
+    bus: '四個雪場可用「Niseko United All Mountain Pass」互滑，持券搭 NISEKO UNITED 接駁巴士免費。新千歲機場有滑雪巴士（需預約）。' },
+  { id: 'hokkaido', name: '北海道其他', center: [43.05, 141.7], zoom: 8, prefs: [1],
+    bus: '各雪場交通不同：冬季從新千歲機場、札幌有直達巴士或度假村接駁車，出發前請查各雪場官網。' },
+  { id: 'tohoku', name: '東北', center: [39.1, 140.7], zoom: 8, prefs: [3, 6],
+    bus: '藏王從山形站搭巴士；安比從盛岡站（新幹線）搭接駁巴士，需事先預約。' },
+  { id: 'yuzawa', name: '新潟 湯澤', center: [36.87, 138.80], zoom: 10.5, prefs: [15],
+    bus: '越後湯澤站是上越新幹線車站（東京最快約 66 分鐘），各雪場有自己的接駁巴士；苗場和神樂用 Dragondola 相連。' },
+  { id: 'hokushin', name: '北信州・妙高', center: [36.86, 138.33], zoom: 9.5, prefs: [15, 20],
+    bus: '北陸新幹線飯山站（野澤、斑尾）、上越妙高站（新井）、長野站（志賀高原）都有巴士到雪場。' },
 ];
 // [lat, lon]、top/base/vert 公尺、courses 條、longest 公尺、gondola 座、lifts 座、[初, 中, 上] %
 const SKI = [
@@ -5656,7 +5673,64 @@ const SKI = [
   { id: 'jigatake', area: 'hakuba', ja: '爺ガ岳スキー場', en: 'Jiigatake', zh: '爺岳', ll: [36.5604, 137.8013], top: 1200, base: 940, vert: 260, courses: 7, longest: 1500, gondola: 0, lifts: 4, lv: [70, 30, 0],
     station: 'JR 信濃大町站', access: '信濃大町站開車約 20 分鐘', url: 'http://www.jiigatake.com/',
     note: '山谷最南端的小型雪場，七成是初級雪道、沒有上級雪道，適合第一次滑雪或帶小孩。', good: '第一次滑雪、小朋友' },
+  // ---- 二世古 Niseko United（由北到南） ----
+  { id: 'hanazono', area: 'niseko', ja: 'ニセコHANAZONOリゾート', en: 'Niseko HANAZONO Resort', zh: '二世古花園', ll: [42.8915, 140.6993], top: 1180, base: 308, vert: 872, courses: 12, longest: 2700, gondola: 1, lifts: 3, lv: [25, 67, 8],
+    station: 'JR 倶知安站', access: '倶知安站開車約 15 分鐘；比羅夫有接駁巴士', url: 'https://hanazononiseko.com/en/winter',
+    note: '二世古最東北側的雪場，粉雪碗形坡（Bowl）和樹林區很有名，有 10 人座的 Symphony 纜車；兒童設施完整。', good: '樹林、粉雪、親子' },
+  { id: 'hirafu', area: 'niseko', ja: 'ニセコ東急 グラン・ヒラフ', en: 'Niseko Tokyu Grand Hirafu', zh: '二世古比羅夫', ll: [42.8620, 140.7010], top: 1200, base: 260, vert: 940, courses: 23, longest: 5600, gondola: 2, lifts: 12, lv: [40, 40, 20],
+    station: 'JR 倶知安站', access: '倶知安站搭巴士約 10–15 分鐘；新千歲機場搭滑雪巴士約 3 小時（需預約）', url: 'https://www.grand-hirafu.jp/',
+    note: '二世古四個雪場裡最大的一個，乾爽的粉雪（Japow）世界有名。山腳比羅夫村餐廳、酒吧很多，也有夜滑。', good: '各程度、夜滑、餐廳多' },
+  { id: 'village', area: 'niseko', ja: 'ニセコビレッジスキーリゾート', en: 'Niseko Village', zh: '二世古村', ll: [42.8460, 140.6840], top: 1170, base: 250, vert: 920, courses: 27, longest: 5600, gondola: 2, lifts: 6, lv: [30, 40, 30],
+    station: 'JR 二世古站／倶知安站', access: '新千歲機場搭滑雪巴士約 3 小時（Hilton 站下車）；比羅夫、安努普利有接駁巴士', url: 'https://www.niseko-village.com/en/',
+    note: '四個雪場中陡坡最多，山腳有 Hilton 和麗思卡爾頓，可以直接滑進滑出。', good: '中上級、陡坡、住在雪場' },
+  { id: 'annupuri', area: 'niseko', ja: 'ニセコアンヌプリ国際スキー場', en: 'Niseko Annupuri', zh: '二世古安努普利', ll: [42.8478, 140.6478], top: 1160, base: 300, vert: 860, courses: 13, longest: 4000, gondola: 1, lifts: 5, lv: [23, 46, 31],
+    station: 'JR 二世古站', access: '二世古站搭巴士或計程車約 10 分鐘；新千歲機場搭滑雪巴士約 3 小時', url: 'https://annupuri.info/en/',
+    note: '四個雪場中最西邊、人比較少，雪道寬、看得到羊蹄山；有夜滑和 34 度的 Deep Snow Forest 雪道。', good: '人少、寬雪道、羊蹄山景' },
+  // ---- 北海道其他 ----
+  { id: 'kiroro', area: 'hokkaido', ja: 'キロロリゾート', en: 'Kiroro Resort', zh: '喜樂樂', ll: [43.0740, 140.9865], top: 1180, base: 520, vert: 660, courses: 22, longest: 4050, gondola: 1, lifts: 8, lv: [29, 35, 36],
+    station: 'JR 小樽站', access: '小樽站搭巴士約 1 小時；札幌開車約 1.5 小時', url: 'https://www.kiroro.co.jp/en/',
+    note: '降雪量是北海道數一數二，粉雪又深又乾；離札幌、小樽近，另有 14 個樹林區。', good: '粉雪、樹林、札幌出發' },
+  { id: 'rusutsu', area: 'hokkaido', ja: 'ルスツリゾート', en: 'Rusutsu Resort', zh: '留壽都', ll: [42.7475, 140.9000], top: 994, base: 400, vert: 594, courses: 37, longest: 3500, gondola: 4, lifts: 14, lv: [31, 40, 29],
+    station: '新千歲機場', access: '新千歲機場搭巴士約 1.5–2 小時；二世古開車約 40 分鐘', url: 'https://rusutsu.com/en/',
+    note: '由 West、East、Isola 三座山組成，雪道兩旁的樹林滑行很有名，排隊時間短；山頂看得到洞爺湖和羊蹄山。', good: '樹林滑行、中上級、度假村' },
+  { id: 'furano', area: 'hokkaido', ja: '富良野スキー場', en: 'Furano Ski Resort', zh: '富良野', ll: [43.3300, 142.3600], top: 1074, base: 235, vert: 839, courses: 27, longest: 4000, gondola: 2, lifts: 7, lv: [41, 37, 22],
+    station: 'JR 富良野站', access: '富良野站搭巴士或計程車約 10 分鐘；旭川機場開車約 1 小時', url: 'https://www.princehotels.com/en/ski/furano/',
+    note: '北海道正中央的內陸雪場，氣溫低、雪很乾；曾經舉辦世界盃，壓雪雪道很漂亮，還有 101 人座的空中纜車。', good: '壓雪雪道、初中級、親子' },
+  { id: 'tomamu', area: 'hokkaido', ja: '星野リゾート トマム', en: 'Hoshino Resorts Tomamu', zh: '星野 TOMAMU', ll: [43.0640, 142.6330], top: 1171, base: 586, vert: 585, courses: 29, longest: 4200, gondola: 1, lifts: 5, lv: [48, 38, 14],
+    station: 'JR トマム站', access: 'トマム站有免費接駁車，約 5 分鐘；新千歲機場開車約 1.5 小時', url: 'https://www.snowtomamu.jp/winter/en/',
+    note: '星野集團的度假村，有雲海平台、冰之村和室內海浪池 Mina-Mina Beach，不滑雪的家人也有很多事可以做。', good: '親子、初學者、度假村' },
+  // ---- 東北 ----
+  { id: 'appi', area: 'tohoku', ja: '安比高原スキー場', en: 'APPI Kogen', zh: '安比高原', ll: [40.0030, 140.9660], top: 1328, base: 620, vert: 708, courses: 21, longest: 5500, gondola: 1, lifts: 10, lv: [30, 40, 30],
+    station: 'JR 安比高原站／盛岡站', access: '盛岡站搭接駁巴士約 1 小時（需預約）', url: 'https://www.appi.co.jp/en/',
+    note: '東北最大的雪場，雪質乾得像「阿斯匹靈粉雪」，又長又寬的壓雪雪道很適合巡航。', good: '各程度、長距離巡航' },
+  { id: 'zao', area: 'tohoku', ja: '蔵王温泉スキー場', en: 'Zao Onsen Ski Resort', zh: '藏王溫泉', ll: [38.1665, 140.3960], top: 1661, base: 780, vert: 881, courses: 26, longest: 10000, gondola: 4, lifts: 24, lv: [40, 40, 20],
+    station: 'JR 山形站', access: '山形站搭巴士約 40 分鐘；仙台開車約 1.5 小時', url: 'https://zaomountainresort.com/',
+    note: '山頂附近的「樹冰」（雪怪）非常有名，晚上還會點燈；山腳是硫磺溫泉街，最長滑走約 10 公里。', good: '看樹冰、溫泉、長距離滑行' },
+  // ---- 新潟 湯澤（由北到南） ----
+  { id: 'gala', area: 'yuzawa', ja: 'GALA湯沢スキー場', en: 'GALA Yuzawa', zh: 'GALA 湯澤', ll: [36.9500, 138.8055], top: 1181, base: 358, vert: 823, courses: 16, longest: 2500, gondola: 2, lifts: 9, lv: [35, 45, 20],
+    station: 'JR GALA 湯澤站', access: '新幹線 GALA 湯澤站就在雪場大樓裡（東京最快約 71 分鐘）；越後湯澤站有免費接駁車約 10 分鐘', url: 'https://gala.co.jp/winter/',
+    note: '新幹線直達雪場，從東京當天來回最方便；和石打丸山相連。2026–27 雪季南區（South）不營業。', good: '東京當天來回、初學者' },
+  { id: 'kagura', area: 'yuzawa', ja: 'かぐらスキー場', en: 'Kagura Ski Resort', zh: '神樂', ll: [36.8470, 138.7900], top: 1845, base: 620, vert: 1225, courses: 32, longest: 3362, gondola: 4, lifts: 14, lv: [38, 44, 18],
+    station: 'JR 越後湯澤站', access: '越後湯澤站搭巴士約 25–30 分鐘到三俣', url: 'https://www.princehotels.com/en/ski/kagura/index.html',
+    note: '標高高、雪季長，可以滑到 5 月；樹林與非壓雪區很多，粉雪日很受進階玩家歡迎。', good: '粉雪、春雪、中上級' },
+  { id: 'naeba', area: 'yuzawa', ja: '苗場スキー場', en: 'Naeba Ski Resort', zh: '苗場', ll: [36.7905, 138.7825], top: 1789, base: 900, vert: 889, courses: 24, longest: 4000, gondola: 3, lifts: 9, lv: [42, 25, 33],
+    station: 'JR 越後湯澤站', access: '越後湯澤站搭接駁巴士約 40 分鐘；月夜野 IC 開車約 35 分鐘', url: 'https://www.princehotels.com/en/ski/naeba/',
+    note: '山腳就是苗場王子大飯店，搭 5.5 公里長的 Dragondola 可以到神樂；東京出發的週末行程最熱門。', good: '親子、住在雪場、東京出發' },
+  // ---- 北信州・妙高 ----
+  { id: 'arai', area: 'hokushin', ja: 'ロッテアライリゾート', en: 'Lotte Arai Resort', zh: '樂天新井', ll: [37.0195, 138.1740], top: 1280, base: 329, vert: 951, courses: 14, longest: 4200, gondola: 1, lifts: 4, lv: [42, 32, 26],
+    station: 'JR 上越妙高站', access: '上越妙高站搭接駁巴士約 30 分鐘', url: 'https://www.lottehotel.com/arai-resort/en.html',
+    note: '雪量極深，陡坡和非壓雪區很多，有大片可以合法滑的 off-piste 區域；山腳是度假飯店。', good: '粉雪、陡坡、上級' },
+  { id: 'nozawa', area: 'hokushin', ja: '野沢温泉スキー場', en: 'Nozawa Onsen', zh: '野澤溫泉', ll: [36.9270, 138.4495], top: 1650, base: 565, vert: 1085, courses: 44, longest: 10000, gondola: 2, lifts: 13, lv: [50, 29, 21],
+    station: 'JR 飯山站', access: '飯山站搭 Nozawa Onsen Liner 巴士約 25 分鐘', url: 'https://www.nozawaski.com/',
+    note: '有百年歷史的溫泉村，村裡有 13 個免費外湯；1 月 15 日的道祖神火祭很有名。', good: '溫泉街、各程度、文化體驗' },
+  { id: 'madarao', area: 'hokushin', ja: '斑尾高原スキー場', en: 'Madarao Mountain', zh: '斑尾高原', ll: [36.8535, 138.3035], top: 1340, base: 800, vert: 540, courses: 31, longest: 2100, gondola: 0, lifts: 11, lv: [30, 35, 35],
+    station: 'JR 飯山站', access: '飯山站搭接駁巴士約 30 分鐘', url: 'https://www.madarao.jp/ski/',
+    note: '號稱日本樹林雪道最多的雪場，全部是天然雪，很多不壓雪的粉雪區；和 Tangram 相連。', good: '樹林、粉雪、中上級' },
+  { id: 'shiga', area: 'hokushin', ja: '志賀高原スキー場', en: 'Shiga Kogen', zh: '志賀高原', ll: [36.7220, 138.5170], top: 2307, base: 1340, vert: 967, courses: 80, longest: 6000, gondola: 6, lifts: 41, lv: [50, 36, 14],
+    station: 'JR 長野站', access: '長野站東口搭直達巴士約 70 分鐘；或搭長野電鐵到湯田中站再轉巴士約 40 分鐘', url: 'https://www.shigakogen-ski.or.jp/',
+    note: '日本最大的連結雪場，十幾個雪場一張券就能滑；標高高、雪很乾，雪季也很長。', good: '各程度、雪場多、乾雪' },
 ];
+const skiArea = r => SKI_AREAS.find(a => a.id === r.area) || SKI_AREAS[0];
 
 // ---- 卡通風格地圖：不用真實底圖，用日本都道府縣輪廓 + 手繪風裝飾 ----
 // 輪廓資料：dataofjapan/land（國土數值情報），經 jsDelivr 載入
@@ -5713,13 +5787,13 @@ function skiFont() {
     map.on('zoomend', zcls); zcls();
     // 日本輪廓（失敗也不影響雪場標記）
     fetch('https://cdn.jsdelivr.net/gh/dataofjapan/land@master/japan.topojson').then(r => r.json()).then(t => {
-      const fs = topoFeatures(t);
-      L.geoJSON(fs, { interactive: false, style: f => f.properties.id === 20
+      const fs = topoFeatures(t), hot = new Set(SKI_AREAS.flatMap(a => a.prefs));
+      L.geoJSON(fs, { interactive: false, style: f => hot.has(f.properties.id)
         ? { fillColor: '#fff3d6', fillOpacity: 1, color: '#d9964a', weight: 2.5 }
         : { fillColor: '#fdf6e6', fillOpacity: 1, color: '#e4bf8c', weight: 1.2 } }).addTo(map).bringToBack();
       for (const f of fs) {
         const lyr = L.geoJSON(f), c = lyr.getBounds().getCenter();
-        L.marker(f.properties.id === 20 ? [36.1, 138.1] : c, { interactive: false, icon: L.divIcon({ className: 'tpref' + (f.properties.id === 20 ? ' nagano' : ''), html: f.properties.nam_ja, iconSize: [80, 18], iconAnchor: [40, 9] }) }).addTo(map);
+        L.marker(f.properties.id === 20 ? [36.1, 138.1] : c, { interactive: false, icon: L.divIcon({ className: 'tpref' + (hot.has(f.properties.id) ? ' nagano' : ''), html: f.properties.nam_ja, iconSize: [80, 18], iconAnchor: [40, 9] }) }).addTo(map);
       }
     }).catch(() => {});
     // 河川、鐵道、湖泊、山峰、車站
@@ -5738,7 +5812,7 @@ function skiFont() {
     pick(store.get('hexlab-ski-sel', 'happo'), true);
   }
   function renderList() {
-    $('skiList').innerHTML = SKI.map((r, i) => `<li><button type="button" data-id="${r.id}" aria-pressed="${sel === r.id}"><span class="skino" style="--c:var(${toneVar(r)})">${i + 1}</span><span class="skinm"><b>${escHtml(r.zh)}</b><small>${escHtml(r.ja)}</small></span><span class="skimeta">${fmt(r.vert)} m<br><small>${r.courses} 條</small></span></button></li>`).join('');
+    $('skiList').innerHTML = SKI.map((r, i) => (i && SKI[i - 1].area === r.area ? '' : `<li class="skigrp">${escHtml(skiArea(r).name)}</li>`) + `<li><button type="button" data-id="${r.id}" aria-pressed="${sel === r.id}"><span class="skino" style="--c:var(${toneVar(r)})">${i + 1}</span><span class="skinm"><b>${escHtml(r.zh)}</b><small>${escHtml(r.ja)}</small></span><span class="skimeta">${fmt(r.vert)} m<br><small>${r.courses} 條</small></span></button></li>`).join('');
   }
   function pick(id, quiet) {
     const r = SKI.find(x => x.id === id) || SKI[0], i = SKI.indexOf(r); sel = r.id; store.set('hexlab-ski-sel', sel);
@@ -5757,13 +5831,15 @@ function skiFont() {
         <div><span>適合</span><b class="skigood">${escHtml(r.good)}</b></div>
       </div>
       <div class="skilv"><div class="skibar">${bar}</div><div class="skilegend">${r.lv.map((v, k) => `<span><i style="background:var(${LV[k][1]})"></i>${LV[k][0]} ${v}%</span>`).join('')}</div></div>
-      <div class="skiacc"><b>交通</b><p>最近車站：${escHtml(r.station)}<br>${escHtml(r.access)}<br><span class="note">Hakuba Valley 接駁巴士 V 線各雪場都有停（成人 800 円，持 Hakuba Valley 季票或 HV 券免費）。</span></p></div>
+      <div class="skiacc"><b>交通</b><p>最近車站：${escHtml(r.station)}<br>${escHtml(r.access)}<br><span class="note">${escHtml(skiArea(r).bus)}</span></p></div>
       <div class="btns"><button class="b pri" type="button" id="ski3dOpen">3D 卡通俯瞰</button><a class="b" href="${r.url}" target="_blank" rel="noopener">官方網站</a><a class="b ghost" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.ja)}" target="_blank" rel="noopener">Google 地圖導航</a></div>`;
   }
   $('skiCard').addEventListener('click', e => { if (e.target.closest('#ski3dOpen')) SKI3D.open(SKI.find(x => x.id === sel)); });
   $('skiList').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) pick(b.dataset.id, false); });
   $('skiFit').addEventListener('click', () => { if (map) map.flyToBounds(L.latLngBounds(SKI.map(r => r.ll)).pad(0.15), { duration: 0.6 }); });
   $('skiJapan').addEventListener('click', () => { if (map) map.flyTo([37.4, 137.6], 5.5, { duration: 0.8 }); });
+  $('skiAreas').innerHTML = SKI_AREAS.map(a => `<button class="b ghost" type="button" data-area="${a.id}">${escHtml(a.name)}</button>`).join('');
+  $('skiAreas').addEventListener('click', e => { const b = e.target.closest('button[data-area]'); if (!b || !map) return; const a = SKI_AREAS.find(x => x.id === b.dataset.area); map.flyTo(a.center, a.zoom, { duration: 0.8 }); });
   renderList();
   document.addEventListener('viewchange', e => { if (e.detail === 'ski') setTimeout(init, 0); });
   if (!$('v-ski').hidden) setTimeout(init, 0);   // 直接用 #ski 網址開啟時，切換事件比這段程式更早發生
@@ -5789,9 +5865,19 @@ const SKI3D = (() => {
   // ---------- 資料：雪道與纜車（OSM） ----------
   // 每個雪場在 OpenStreetMap 上的雪場範圍名稱（landuse=winter_sports），用來只留下這個雪場自己的雪道與纜車
   const KW = { cortina: /コルチナ|Cortina/i, norikura: /乗鞍|Norikura/i, tsugaike: /栂池|つがいけ|Tsugaike/i, iwatake: /岩岳|Iwatake/i, happo: /八方|Happo/i,
-    hakuba47: /47/, goryu: /五竜|Goryu|いいもり|Iimori/i, sanosaka: /さのさか|佐野坂|Sanosaka/i, kashimayari: /鹿島槍|Kashimayari/i, jigatake: /爺ガ岳|爺ヶ岳|Ji+gatake/i };
+    hakuba47: /47/, goryu: /五竜|Goryu|いいもり|Iimori/i, sanosaka: /さのさか|佐野坂|Sanosaka/i, kashimayari: /鹿島槍|Kashimayari/i, jigatake: /爺ガ岳|爺ヶ岳|Ji+gatake/i,
+    hanazono: /花園|HANAZONO/i, hirafu: /ひらふ|ヒラフ|Hirafu/i, village: /ビレッジ|Village|東山/i, annupuri: /アンヌプリ|Annupuri/i,
+    kiroro: /キロロ|Kiroro/i, rusutsu: /ルスツ|Rusutsu/i, furano: /富良野|Furano/i, tomamu: /トマム|Tomamu/i, appi: /安比|APPI/i, zao: /蔵王|Zao/i,
+    gala: /ガーラ|GALA/i, kagura: /かぐら|神楽|Kagura|みつまた|三俣|Mitsumata|田代|Tashiro/i, naeba: /苗場|Naeba/i,
+    arai: /アライ|Arai/i, nozawa: /野沢|Nozawa/i, madarao: /斑尾|Madarao/i, shiga: /志賀|Shiga/i };
+  // 涵蓋好幾個雪場的大範圍（例如整個 Hakuba Valley），不能拿來當單一雪場的範圍
+  const UMBRELLA = /Hakuba Valley|Niseko United|ニセコユナイテッド/i;
+  // OSM 上沒有自己範圍的雪場（二世古四個雪場共用一座山）：改用纜車名稱分辨，再留下靠近這些纜車的雪道
+  const LIFTKW = { hanazono: /花園|HANAZONO/i, hirafu: /エース|キング|King|Ace|スインギングモンキー|Swinging/i,
+    village: /ニセコゴンドラ|Niseko Gondola|ビレッジ|Village|バンザイ|コミュニティ|カントリーロード|森のチェア|ワンダーランド/i, annupuri: /アンヌプリ|Annupuri|ジャンボ|Jumbo|ドリーム|Dream/i };
+  const segDist = (p, a, b) => { const k = Math.cos(p[1] * Math.PI / 180), dx = (b[0] - a[0]) * k, dy = b[1] - a[1], L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * k * dx + (p[1] - a[1]) * dy) / L)) : 0; return Math.hypot((p[0] - a[0]) * k - t * dx, p[1] - a[1] - t * dy) * 111; };   // 公里
   async function fetchOSM(r) {
-    const key = 'ski3dv3-' + r.id;
+    const key = 'ski3dv4-' + r.id;   // 改過篩選方式就換版本，舊的快取才不會繼續用
     try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < 30 * 864e5 && Array.isArray(c.pistes)) return c; } catch {}
     const [la, lo] = r.ll, dy = 0.045, dx = 0.055, bb = `${la - dy},${lo - dx},${la + dy},${lo + dx}`;
     const q = `[out:json][timeout:40];(way["landuse"="winter_sports"](around:4500,${la},${lo});relation["landuse"="winter_sports"](around:4500,${la},${lo}););out tags geom;(way["piste:type"="downhill"](${bb});way["aerialway"~"gondola|cable_car|chair_lift|mixed_lift|drag_lift|t-bar|j-bar|platter|magic_carpet"](${bb}););out tags geom;`;
@@ -5813,12 +5899,15 @@ const SKI3D = (() => {
     // 射線法：線段不必依序排列，奇數次相交就在範圍內
     const inArea = (A, [x, y]) => { let c = false; for (const [x1, y1, x2, y2] of A.segs) if ((y1 > y) !== (y2 > y) && x < (x2 - x1) * (y - y1) / (y2 - y1) + x1) c = !c; return c; };
     const base = [lo, la], kw = KW[r.id];
-    let area = areas.find(A => kw && kw.test(A.name) && !/Hakuba Valley/i.test(A.name));
-    if (!area) area = areas.filter(A => !/Hakuba Valley/i.test(A.name)).find(A => inArea(A, base));
+    let area = areas.find(A => kw && kw.test(A.name) && !UMBRELLA.test(A.name));
+    if (!area) area = areas.filter(A => !UMBRELLA.test(A.name)).find(A => inArea(A, base));
     const mine = f => { const n = f.pts.filter(p => inArea(area, p)).length; return n / f.pts.length >= 0.4; };
     const near = f => dist(f.pts[Math.floor(f.pts.length / 2)], base) <= 2.5;
-    const keep = area ? mine : near;
-    const out = { t: Date.now(), area: area ? area.name : '', pistes: pistes.filter(keep), lifts: lifts.filter(keep) };
+    const lk = !area && LIFTKW[r.id], myLifts = lk ? lifts.filter(l => lk.test(l.name)) : [];
+    const segs = myLifts.flatMap(l => l.pts.slice(1).map((p, i) => [l.pts[i], p]));
+    const byLift = f => f.pts.filter(p => segs.some(([a, b]) => segDist(p, a, b) <= 0.35)).length / f.pts.length >= 0.5;
+    const keep = area ? mine : myLifts.length ? byLift : near;
+    const out = { t: Date.now(), area: area ? area.name : '', pistes: pistes.filter(keep), lifts: myLifts.length ? myLifts : lifts.filter(keep) };
     try { localStorage.setItem(key, JSON.stringify(out)); } catch {}
     return out;
   }
