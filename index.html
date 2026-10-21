@@ -401,6 +401,22 @@ a.b { text-decoration: none; display: inline-flex; align-items: center; }
 .skinm { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .skinm small, .skimeta small { color: var(--muted); font-size: 0.76rem; }
 .skimeta { text-align: right; font: 0.82rem var(--mono); white-space: nowrap; }
+.ski3d { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: flex; flex-direction: column; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); gap: 8px; }
+body.ski3d-on { overflow: hidden; }
+.ski3d-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ski3d-name { font-size: 1.05rem; margin-right: auto; }
+.ski3d-mapwrap { position: relative; flex: 1; min-height: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: #1d2a35; }
+#ski3dMap { position: absolute; inset: 0; }
+.ski3d-legend { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,.88); color: #222; font-size: 0.78rem; }
+.ski3d-legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin-right: 4px; vertical-align: 2px; }
+.ski3d-legend i.lift { background: repeating-linear-gradient(90deg, #ffd43b 0 5px, #1b1b1b 5px 8px); }
+.ski3d-st { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); margin: 0; padding: 6px 14px; border-radius: 999px; background: rgba(20,24,32,.82); color: #fff; font-size: 0.84rem; max-width: 90%; text-align: center; }
+.ski3d-st.err { background: rgba(160,30,40,.9); }
+.ski3d-tip { margin: 0; font-size: 0.76rem; color: var(--muted); }
+.ski3d-pin { display: flex; flex-direction: column; align-items: center; padding: 4px 9px; border-radius: 8px; background: rgba(255,255,255,.92); color: #1a1d24; font: 600 12px var(--sans); box-shadow: 0 2px 8px rgba(0,0,0,.35); pointer-events: none; white-space: nowrap; }
+.ski3d-pin small { font: 500 10px var(--mono); color: #555; }
+.ski3d-pin.top { background: #2747c9; color: #fff; } .ski3d-pin.top small { color: #dfe6ff; }
+@media (max-width: 560px) { .ski3d-name { flex-basis: 100%; } .ski3d-tip { display: none; } }
 .leaflet-container { font-family: var(--sans); }
 @media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) .skimap .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); } }
 :root[data-theme="dark"] .skimap .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); }
@@ -1314,6 +1330,22 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
       <div class="card" id="skiCard"></div>
       <div class="card"><h2>白馬 10 大雪場（由北到南）</h2><ul class="skilist" id="skiList"></ul></div>
     </div>
+  </div>
+  <div class="ski3d" id="ski3d" hidden role="dialog" aria-label="3D 空中俯瞰">
+    <div class="ski3d-bar">
+      <b id="ski3dName" class="ski3d-name"></b>
+      <div class="segbtns" id="ski3dStyle"><button type="button" data-s="real" aria-pressed="true">寫實衛星</button><button type="button" data-s="anime" aria-pressed="false">插畫雪景</button></div>
+      <button class="b" type="button" id="ski3dTour">飛行導覽</button>
+      <button class="b ghost" type="button" id="ski3dOrbit" aria-pressed="true">暫停環繞</button>
+      <button class="b ghost" type="button" id="ski3dView">回到全景</button>
+      <label class="ck"><input type="checkbox" id="ski3dPiste" checked> 雪道與纜車</label>
+      <button class="b ghost" type="button" id="ski3dClose">關閉</button>
+    </div>
+    <div class="ski3d-mapwrap"><div id="ski3dMap"></div>
+      <div class="ski3d-legend"><span><i style="background:#2fb36b"></i>初級</span><span><i style="background:#e8363d"></i>中級</span><span><i style="background:#15171c"></i>上級</span><span><i class="lift"></i>纜車／吊椅</span></div>
+      <p class="ski3d-st" id="ski3dSt" hidden></p>
+    </div>
+    <p class="ski3d-tip">拖曳旋轉、雙指縮放；右鍵（或兩指）拖曳可以改變俯視角度。地形高度放大約 1.4 倍，看起來比實際陡。</p>
   </div>
   <p class="note" style="margin-top:12px">雪場數據來自 <a href="https://www.hakubavalley.com/ski_resort_info/" target="_blank" rel="noopener">Hakuba Valley 官方網站</a>；交通時間為大約值，出發前請以各雪場與接駁巴士最新公告為準。地圖 © OpenStreetMap。</p>
 </div>
@@ -5658,14 +5690,158 @@ const SKI = [
       </div>
       <div class="skilv"><div class="skibar">${bar}</div><div class="skilegend">${r.lv.map((v, k) => `<span><i style="background:var(${LV[k][1]})"></i>${LV[k][0]} ${v}%</span>`).join('')}</div></div>
       <div class="skiacc"><b>交通</b><p>最近車站：${escHtml(r.station)}<br>${escHtml(r.access)}<br><span class="note">Hakuba Valley 接駁巴士 V 線各雪場都有停（成人 800 円，持 Hakuba Valley 季票或 HV 券免費）。</span></p></div>
-      <div class="btns"><a class="b pri" href="${r.url}" target="_blank" rel="noopener">官方網站</a><a class="b ghost" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.ja)}" target="_blank" rel="noopener">Google 地圖導航</a></div>`;
+      <div class="btns"><button class="b pri" type="button" id="ski3dOpen">3D 空中俯瞰</button><a class="b" href="${r.url}" target="_blank" rel="noopener">官方網站</a><a class="b ghost" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.ja)}" target="_blank" rel="noopener">Google 地圖導航</a></div>`;
   }
+  $('skiCard').addEventListener('click', e => { if (e.target.closest('#ski3dOpen')) SKI3D.open(SKI.find(x => x.id === sel)); });
   $('skiList').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) pick(b.dataset.id, false); });
   $('skiFit').addEventListener('click', () => { if (map) map.flyToBounds(L.latLngBounds(SKI.map(r => r.ll)).pad(0.15), { duration: 0.6 }); });
   $('skiJapan').addEventListener('click', () => { if (map) map.flyTo([37.6, 138.3], 6, { duration: 0.8 }); });
   renderList();
   document.addEventListener('viewchange', e => { if (e.detail === 'ski') requestAnimationFrame(init); });
   if (!$('v-ski').hidden) requestAnimationFrame(init);   // 直接用 #ski 網址開啟時，切換事件比這段程式更早發生
+})();
+
+// ================= 3D 空中俯瞰（MapLibre GL：地形 + 衛星／插畫雪景 + OSM 雪道與纜車） =================
+// 地形：AWS Terrain Tiles（Terrarium）；衛星影像：Esri World Imagery；雪道與纜車：OpenStreetMap（Overpass API）
+const SKI3D = (() => {
+  const V = '4.7.1', CDN = `https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/${V}/`;
+  const EMPTY = { type: 'FeatureCollection', features: [] };
+  const DEM = { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], tileSize: 256, encoding: 'terrarium', maxzoom: 14, attribution: 'Terrain: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank">AWS Terrain Tiles</a>' };
+  const SAT = { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18, attribution: 'Imagery © Esri' };
+  // 日本雪場慣例：初級綠、中級紅、上級黑
+  const PCOL = ['match', ['get', 'd'], 'novice', '#2fb36b', 'easy', '#2fb36b', 'intermediate', '#e8363d', 'advanced', '#15171c', 'expert', '#15171c', 'freeride', '#f08c00', '#3d7be0'];
+  let gl = null, loading = null, cur = null, kind = 'real', orbit = true, raf = 0, touring = false, data = { pistes: EMPTY, lifts: EMPTY }, center = null, top = null, base = null;
+  const $$ = id => document.getElementById(id);
+  const st = (m, k = '') => { const e = $$('ski3dSt'); e.textContent = m; e.className = 'ski3d-st ' + k; e.hidden = !m; };
+  function load() {
+    if (window.maplibregl) return Promise.resolve();
+    if (loading) return loading;
+    loading = new Promise((ok, bad) => {
+      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = CDN + 'maplibre-gl.min.css'; document.head.appendChild(l);
+      const s = document.createElement('script'); s.src = CDN + 'maplibre-gl.min.js'; s.onload = ok; s.onerror = () => { loading = null; bad(new Error('3D 地圖元件載入失敗，請確認網路連線')); }; document.head.appendChild(s);
+    });
+    return loading;
+  }
+  function style(k) {
+    const anime = k === 'anime';
+    return {
+      version: 8,
+      sources: { dem: DEM, shade: { ...DEM }, sat: SAT, pistes: { type: 'geojson', data: data.pistes, attribution: '雪道 © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>' }, lifts: { type: 'geojson', data: data.lifts } },
+      terrain: { source: 'dem', exaggeration: anime ? 1.6 : 1.35 },
+      layers: [
+        { id: 'bg', type: 'background', paint: { 'background-color': anime ? '#eef3fb' : '#1d2a35' } },
+        anime
+          ? { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-saturation': -1, 'raster-brightness-min': 0.62, 'raster-contrast': 0.25, 'raster-opacity': 0.55 } }
+          : { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-saturation': 0.05, 'raster-contrast': 0.08 } },
+        { id: 'shade', type: 'hillshade', source: 'shade', paint: anime
+          ? { 'hillshade-shadow-color': '#5b6fae', 'hillshade-highlight-color': '#ffffff', 'hillshade-accent-color': '#8ea3d8', 'hillshade-exaggeration': 0.85, 'hillshade-illumination-direction': 300 }
+          : { 'hillshade-shadow-color': '#000', 'hillshade-highlight-color': '#fff', 'hillshade-exaggeration': 0.18 } },
+        { id: 'piste-case', type: 'line', source: 'pistes', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2.5, 16, 7], 'line-opacity': 0.75 } },
+        { id: 'piste', type: 'line', source: 'pistes', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': PCOL, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.4, 16, 4.5] } },
+        { id: 'lift-case', type: 'line', source: 'lifts', paint: { 'line-color': '#1b1b1b', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 2, 16, 4] } },
+        { id: 'lift', type: 'line', source: 'lifts', paint: { 'line-color': '#ffd43b', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 16, 2.2], 'line-dasharray': [2, 1.2] } },
+      ],
+    };
+  }
+  // 從 OpenStreetMap 抓這一帶的雪道與纜車（同一個雪場只抓一次）
+  async function fetchOSM(r) {
+    const key = 'ski3d-' + r.id;
+    try { const c = sessionStorage.getItem(key); if (c) return JSON.parse(c); } catch {}
+    const [la, lo] = r.ll, dy = 0.04, dx = 0.05, bb = `${la - dy},${lo - dx},${la + dy},${lo + dx}`;
+    const q = `[out:json][timeout:25];(way["piste:type"="downhill"](${bb});way["aerialway"~"gondola|cable_car|chair_lift|mixed_lift|drag_lift|t-bar|j-bar|platter|magic_carpet"](${bb}););out tags geom;`;
+    const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(q) });
+    if (!res.ok) throw new Error('雪道資料暫時抓不到（OpenStreetMap 伺服器忙碌），地形仍可瀏覽');
+    const j = await res.json(), pistes = [], lifts = [];
+    for (const e of j.elements || []) {
+      if (!e.geometry) continue;
+      const coords = e.geometry.map(p => [p.lon, p.lat]);
+      const f = { type: 'Feature', properties: { name: e.tags.name || '', d: e.tags['piste:difficulty'] || '', kind: e.tags.aerialway || '' }, geometry: { type: 'LineString', coordinates: coords } };
+      (e.tags.aerialway ? lifts : pistes).push(f);
+    }
+    const out = { pistes: { type: 'FeatureCollection', features: pistes }, lifts: { type: 'FeatureCollection', features: lifts } };
+    try { sessionStorage.setItem(key, JSON.stringify(out)); } catch {}
+    return out;
+  }
+  const dist = (a, b) => { const k = Math.cos(a[1] * Math.PI / 180); return Math.hypot((a[0] - b[0]) * k, a[1] - b[1]) * 111; };   // 公里
+  const bearing = (a, b) => { const k = Math.cos(a[1] * Math.PI / 180); return Math.atan2((b[0] - a[0]) * k, b[1] - a[1]) * 180 / Math.PI; };
+  // 算出畫面中心與「山頂」：只看離雪場 3.5 公里內的雪道與纜車
+  function frame(r) {
+    base = [r.ll[1], r.ll[0]];
+    const pts = [], ends = [];
+    for (const f of [...data.pistes.features, ...data.lifts.features]) {
+      const c = f.geometry.coordinates; const mid = c[Math.floor(c.length / 2)];
+      if (dist(mid, base) > 3.5) continue;
+      pts.push(...c); if (f.properties.kind) ends.push(c[0], c[c.length - 1]);
+    }
+    if (pts.length) {
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      center = [(x0 + x1) / 2, (y0 + y1) / 2];
+    } else center = [base[0] - 0.012, base[1]];   // 沒有雪道資料：雪場多在山腳西側
+    // 山頂：纜車端點中地形最高的一點（地形還沒載入就取離山腳最遠的）
+    const cand = ends.length ? ends : pts;
+    let best = null, bh = -Infinity;
+    for (const p of cand) { const h = gl && gl.queryTerrainElevation ? gl.queryTerrainElevation(p) : null; const score = h != null ? h : dist(p, base) * 1000; if (score > bh) { bh = score; best = p; } }
+    top = best || [base[0] - 0.03, base[1]];
+  }
+  function marks(r) {
+    document.querySelectorAll('.ski3d-pin').forEach(m => m.remove());
+    const add = (ll, html, cls) => { const el = document.createElement('div'); el.className = 'ski3d-pin ' + cls; el.innerHTML = html; new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat(ll).addTo(gl); };
+    add(base, `<span>${escHtml(r.zh)}</span><small>山腳 ${r.base} m</small>`, 'base');
+    if (top) add(top, `<span>山頂一帶</span><small>最高 ${r.top} m</small>`, 'top');
+  }
+  function spin() {
+    cancelAnimationFrame(raf);
+    const step = () => { if (orbit && !touring && gl) gl.setBearing(gl.getBearing() + 0.07); raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }
+  function setOrbit(on) { orbit = on; $$('ski3dOrbit').textContent = on ? '暫停環繞' : '繼續環繞'; $$('ski3dOrbit').setAttribute('aria-pressed', on); }
+  function overview(dur = 3500) { gl.flyTo({ center, zoom: 13.6, pitch: 68, bearing: bearing(base, top) - 30, duration: dur, essential: true }); }
+  async function tour() {
+    if (!gl || touring) return; touring = true; setOrbit(false); st('飛行導覽中：從山腳沿著纜車飛上山頂…');
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const b = bearing(base, top);
+    gl.flyTo({ center: base, zoom: 15.2, pitch: 76, bearing: b, duration: 3000, essential: true }); await wait(3200);
+    gl.easeTo({ center: top, zoom: 15, pitch: 74, bearing: b, duration: Math.min(16000, 4000 + dist(base, top) * 2500), easing: t => t * (2 - t), essential: true });
+    await new Promise(r => gl.once('moveend', r));
+    st('抵達山頂，回頭看整個山谷'); gl.easeTo({ bearing: b + 180, pitch: 70, zoom: 14.3, duration: 5000, essential: true }); await wait(5200);
+    overview(4000); await wait(4200);
+    touring = false; setOrbit(true); st('');
+  }
+  async function open(r) {
+    cur = r; touring = false; $$('ski3d').hidden = false; document.body.classList.add('ski3d-on');
+    $$('ski3dName').textContent = `${r.zh}（${r.ja}）`; st('載入 3D 地形與雪道資料…');
+    try { await load(); } catch (e) { return st(e.message, 'err'); }
+    data = { pistes: EMPTY, lifts: EMPTY };
+    if (!gl) {
+      gl = new maplibregl.Map({ container: 'ski3dMap', style: style(kind), center: [r.ll[1] - 0.01, r.ll[0]], zoom: 11, pitch: 40, bearing: 0, maxPitch: 85, attributionControl: { compact: true }, antialias: true });
+      gl.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+      ['mousedown', 'touchstart', 'wheel'].forEach(ev => gl.getCanvas().addEventListener(ev, () => { if (!touring) setOrbit(false); }, { passive: true }));
+      await new Promise(res => gl.once('load', res));
+    } else { gl.resize(); gl.jumpTo({ center: [r.ll[1] - 0.01, r.ll[0]], zoom: 11.5, pitch: 40 }); }
+    frame(r); marks(r); overview(4500); setOrbit(true); spin();
+    try {
+      data = await fetchOSM(r); if (cur !== r) return;
+      gl.getSource('pistes').setData(data.pistes); gl.getSource('lifts').setData(data.lifts);
+      frame(r); marks(r); if (!touring) overview(2500);
+      const n = data.pistes.features.length, m = data.lifts.features.length;
+      st(n || m ? `已標出 ${n} 段雪道、${m} 條纜車／吊椅（附近雪場的也會一起顯示）` : 'OpenStreetMap 沒有這裡的雪道資料，只顯示地形', n || m ? 'ok' : '');
+      setTimeout(() => { if (cur === r && $$('ski3dSt').classList.contains('ok')) st(''); }, 6000);
+    } catch (e) { st(e.message, 'err'); }
+  }
+  function close() { $$('ski3d').hidden = true; document.body.classList.remove('ski3d-on'); cancelAnimationFrame(raf); touring = false; }
+  $$('ski3dClose').addEventListener('click', close);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$$('ski3d').hidden) close(); });
+  $$('ski3dOrbit').addEventListener('click', () => { if (touring) return; setOrbit(!orbit); });
+  $$('ski3dTour').addEventListener('click', tour);
+  $$('ski3dView').addEventListener('click', () => { if (gl && !touring) { overview(2500); setOrbit(true); } });
+  $$('ski3dStyle').addEventListener('click', e => {
+    const b = e.target.closest('button[data-s]'); if (!b || !gl || b.dataset.s === kind) return; kind = b.dataset.s;
+    document.querySelectorAll('#ski3dStyle button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    const cam = { center: gl.getCenter(), zoom: gl.getZoom(), pitch: gl.getPitch(), bearing: gl.getBearing() };
+    gl.setStyle(style(kind)); gl.once('styledata', () => gl.jumpTo(cam));
+  });
+  $$('ski3dPiste').addEventListener('change', e => { if (!gl) return; const v = e.target.checked ? 'visible' : 'none'; ['piste-case', 'piste', 'lift-case', 'lift'].forEach(id => gl.getLayer(id) && gl.setLayoutProperty(id, 'visibility', v)); });
+  return { open, close };
 })();
 
 </script>
