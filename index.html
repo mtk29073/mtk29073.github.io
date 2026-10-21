@@ -5816,7 +5816,7 @@ const SKI3D = (() => {
       gl = new maplibregl.Map({ container: 'ski3dMap', style: style(kind), center: [r.ll[1] - 0.01, r.ll[0]], zoom: 11, pitch: 40, bearing: 0, maxPitch: 85, attributionControl: { compact: true }, antialias: true });
       gl.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
       ['mousedown', 'touchstart', 'wheel'].forEach(ev => gl.getCanvas().addEventListener(ev, () => { if (!touring) setOrbit(false); }, { passive: true }));
-      await new Promise(res => { gl.once('load', res); gl.once('style.load', () => setTimeout(res, 1500)); });
+      await new Promise(res => { if (gl.isStyleLoaded()) return setTimeout(res, 300); gl.once('load', res); gl.once('style.load', () => setTimeout(res, 800)); setTimeout(res, 5000); });
     } else { gl.resize(); gl.jumpTo({ center: [r.ll[1] - 0.01, r.ll[0]], zoom: 11.5, pitch: 40 }); }
     frame(r); marks(r); overview(4500); setOrbit(true); spin();
     try {
