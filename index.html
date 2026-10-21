@@ -1362,6 +1362,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
       <div class="segbtns" id="ski3dStyle"><button type="button" data-s="day" aria-pressed="true">晴天</button><button type="button" data-s="sunset" aria-pressed="false">夕陽</button></div>
       <button class="b" type="button" id="ski3dTour">飛行導覽</button>
       <button class="b ghost" type="button" id="ski3dOrbit" aria-pressed="true">暫停旋轉</button>
+      <button class="b ghost" type="button" id="ski3dNear">近看雪道</button>
       <button class="b ghost" type="button" id="ski3dView">回到全景</button>
       <label class="ck"><input type="checkbox" id="ski3dPiste" checked> 雪道</label>
       <label class="ck"><input type="checkbox" id="ski3dSnow" checked> 下雪</label>
@@ -5911,10 +5912,10 @@ const SKI3D = (() => {
     // 雪道：壓雪過的白色雪面（有壓雪紋路）＋兩側程度色邊線＋邊界標桿
     const mask = new Set(), cell = 2.5, key = (x, z) => Math.round(x / cell) + ',' + Math.round(z / cell);
     const inside = (x, z) => x * x + z * z < (RU * 0.985) ** 2;
-    const W = 2.2 * Math.max(0.8, S), lines = [];
+    const W = 2.6 * Math.max(0.9, S), lines = [], groomMats = {};
     const cordTex = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#f9fcff'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#e3edf8'; for (let y = 0; y < 64; y += 8) g.fillRect(0, y, 64, 3); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; return t; })();
-    const groomMat = new THREE.MeshBasicMaterial({ map: cordTex, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-    const markMats = {};
+    const markMats = {}, bankMat = new THREE.MeshToonMaterial({ color: 0xf4f8ff, gradientMap: toon, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+    const groomFor = color => groomMats[color] || (groomMats[color] = new THREE.MeshBasicMaterial({ map: cordTex, color: new THREE.Color(0xffffff).lerp(new THREE.Color(color), 0.16), side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
     for (const p of osm.pistes) {
       const pts = p.pts.map(q => toXZ(q[0], q[1]));
       const res = []; for (let i = 0; i < pts.length - 1; i++) { const [ax, az] = pts[i], [bx, bz] = pts[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / 1.2)); for (let k = 0; k < n; k++) res.push([ax + (bx - ax) * k / n, az + (bz - az) * k / n]); }
@@ -5939,8 +5940,10 @@ const SKI3D = (() => {
     }
     function piste(pts, d) {
       const color = PCOL[d] ?? 0x3d7be0, edge = markMats[color] || (markMats[color] = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
-      strip(pts, -W, W, 0.3, groomMat, true);
-      strip(pts, W - 0.5, W, 0.36, edge); strip(pts, -W, -W + 0.5, 0.36, edge);
+      strip(pts, -W, W, 0.3, groomFor(color), true);
+      const ew = 0.45 + 0.35 * S; strip(pts, W - ew, W, 0.36, edge); strip(pts, -W, -W + ew, 0.36, edge);
+      // 雪道旁的雪堆（壓雪機推出的雪牆）
+      strip(pts, W, W + 1.2 * S, 0.5, bankMat); strip(pts, -W - 1.2 * S, -W, 0.5, bankMat);
       // 邊界標桿：每隔一段距離左右交替插一根
       const pole = new THREE.CylinderGeometry(0.09, 0.09, 1.7 * S, 4), top = new THREE.MeshBasicMaterial({ color });
       for (let i = 4; i < pts.length - 2; i += 14) {
@@ -5962,9 +5965,13 @@ const SKI3D = (() => {
       const x = L.pts[i][0] - dz / len * d * side + (rnd() - 0.5), z = L.pts[i][1] + dx / len * d * side + (rnd() - 0.5), y = okTree(x, z);
       if (y != null) trees.push([x, y, z, (0.55 + rnd() * 0.6) * S]);
     }
-    for (let t = 0; t < 14000 && trees.length < 9000; t++) {
+    // 森林成片：用低頻雜訊決定哪裡是樹林、哪裡是空曠雪原
+    const gN = Math.max(8, RU / 22), hash = (i, j) => { const h = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return h - Math.floor(h); };
+    const noise = (x, z) => { const u = x / gN, v = z / gN, i = Math.floor(u), j = Math.floor(v), fu = u - i, fv = v - j, sm = t => t * t * (3 - 2 * t), a = hash(i, j), b = hash(i + 1, j), c = hash(i, j + 1), d = hash(i + 1, j + 1); return a + (b - a) * sm(fu) + (c - a) * sm(fv) + (a - b - c + d) * sm(fu) * sm(fv); };
+    for (let t = 0; t < 30000 && trees.length < 9500; t++) {
       const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * RU * 0.95, x = Math.cos(a) * rr, z = Math.sin(a) * rr, y = okTree(x, z);
-      if (y == null || rnd() > 0.35 + 0.45 * (1 - y / treeH)) continue;
+      if (y == null) continue; const f = noise(x, z) * 0.7 + noise(x * 2.3 + 50, z * 2.3) * 0.3;
+      if (f < 0.42 || rnd() > (f - 0.42) * 2.6 * (0.5 + 0.5 * (1 - y / treeH))) continue;
       trees.push([x, y, z, (0.55 + rnd() * 0.7) * S]);
     }
     const cone = new THREE.ConeGeometry(1.5, 4.2, 6), cap = new THREE.ConeGeometry(0.95, 1.7, 6), trunk = new THREE.CylinderGeometry(0.28, 0.32, 1.1, 5);
@@ -5974,7 +5981,7 @@ const SKI3D = (() => {
     // 滑雪的小人：沿雪道往下滑，左右小幅擺動
     const jackets = [0xff5d5d, 0x3d7be0, 0xffc93c, 0x8e5bd9, 0x2fb36b, 0xff8fb1], skin = new THREE.MeshToonMaterial({ color: 0xffd9b8, gradientMap: toon });
     const skiGeo = new THREE.BoxGeometry(0.16, 0.06, 1.5), bodyGeo = new THREE.CapsuleGeometry(0.32, 0.55, 3, 6), headGeo = new THREE.SphereGeometry(0.27, 8, 6), hatGeo = new THREE.SphereGeometry(0.29, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
-    const skiers = Math.min(40, lines.length * 2), skiMat = new THREE.MeshToonMaterial({ color: 0x2b2f3a, gradientMap: toon });
+    const skiers = Math.min(60, lines.length * 2), skiMat = new THREE.MeshToonMaterial({ color: 0x2b2f3a, gradientMap: toon });
     for (let k = 0; k < skiers; k++) {
       const L = lines[k % lines.length]; if (L.p3.length < 4) continue;
       const g = new THREE.Group(), jc = new THREE.MeshToonMaterial({ color: jackets[k % jackets.length], gradientMap: toon });
@@ -6043,7 +6050,7 @@ const SKI3D = (() => {
       const cg = new THREE.Group(); for (let b = 0; b < 5; b++) { const s = new THREE.Mesh(new THREE.SphereGeometry(4 + rnd() * 4, 10, 8), cloudMat); s.position.set((b - 2) * 5 + rnd() * 2, rnd() * 3, rnd() * 4); cg.add(s); }
       const a = rnd() * Math.PI * 2, rr = RU * (0.5 + rnd() * 0.7); cg.position.set(Math.cos(a) * rr, Y(hmax) + 25 + rnd() * 25, Math.sin(a) * rr); cg.userData = { a, rr, sp: 0.0006 + rnd() * 0.0008 }; grp.add(cg); anims.push({ cloud: cg });
     }
-    return { grp, RU, topY: Y(hmax), midY: (Y(hmin) + Y(hmax)) / 2, base: inB, top: topPt, hy, mainLift };
+    return { grp, RU, topY: Y(hmax), midY: (Y(hmin) + Y(hmax)) / 2, base: inB, top: topPt, hy, mainLift, lines };
   }
   function makeSnow(RU, H) {
     const n = 1400, g = new THREE.BufferGeometry(), p = new Float32Array(n * 3);
@@ -6078,7 +6085,7 @@ const SKI3D = (() => {
       else if (a.cloud) { const u = a.cloud.userData; u.a += u.sp; a.cloud.position.x = Math.cos(u.a) * u.rr; a.cloud.position.z = Math.sin(u.a) * u.rr; }
     }
     if (snow && snow.visible) { const p = snow.geometry.attributes.position, H = snow.userData.H; for (let i = 0; i < p.count; i++) { let y = p.getY(i) - dt * 6; if (y < 0) y += H; p.setY(i, y); p.setX(i, p.getX(i) + Math.sin(t + i) * dt * 0.6); } p.needsUpdate = true; }
-    if (tour) stepTour(t); else if (tweenT) { const k = Math.min(1, (t - tweenT.t0) / tweenT.d); controls.target.lerpVectors(tweenT.a, tweenT.b, k * k * (3 - 2 * k)); if (k >= 1) tweenT = null; }
+    if (tour) stepTour(t); else if (tweenT) { const k = Math.min(1, (t - tweenT.t0) / tweenT.d); const e = k * k * (3 - 2 * k); controls.target.lerpVectors(tweenT.a, tweenT.b, e); if (tweenT.ca) camera.position.lerpVectors(tweenT.ca, tweenT.cb, e); if (k >= 1) tweenT = null; }
     controls.autoRotate = auto && !tour; controls.update();
     renderer.render(scene, camera);
   }
@@ -6106,9 +6113,19 @@ const SKI3D = (() => {
     }
   }
   function syncAuto() { $$('ski3dOrbit').textContent = auto ? '暫停旋轉' : '自動旋轉'; $$('ski3dOrbit').setAttribute('aria-pressed', auto); }
+  // 近看雪道：輪流把鏡頭拉到某條雪道旁邊，看清楚壓雪紋路、標桿、樹林和滑雪的人
+  let nearI = 0;
+  function nearPiste() {
+    if (!world || tour || !world.lines.length) return;
+    const ls = world.lines.filter(l => l.p3.length > 8), L = ls.length ? ls[nearI++ % ls.length] : world.lines[0], m = L.p3[Math.floor(L.p3.length / 2)], a = L.p3[Math.max(0, Math.floor(L.p3.length / 2) - 4)];
+    const dir = m.clone().sub(a).setY(0).normalize(), side = new THREE.Vector3(-dir.z, 0, dir.x);
+    const to = m.clone().addScaledVector(side, 34).addScaledVector(dir, -18); to.y = m.y + 30;
+    auto = false; syncAuto(); tweenT = { t0: clock.elapsedTime, d: 1.6, a: controls.target.clone(), b: m.clone(), ca: camera.position.clone(), cb: to };
+    st(`近看雪道（${{ novice: '初級', easy: '初級', intermediate: '中級', advanced: '上級', expert: '上級', freeride: '自由滑' }[L.d] || '雪道'}）— 再按一次換下一條`); setTimeout(() => st(''), 2500);
+  }
   function home(dur = 0) {
     const R = world.RU;
-    const f = 1.9 * Math.max(1, 1.0 / camera.aspect); camera.position.set(R * f * 0.9, world.topY + R * f * 0.6, R * f * 0.9); controls.target.set(0, world.midY, 0); controls.update();
+    const f = 1.5 * Math.max(1, 1.0 / camera.aspect); camera.position.set(R * f * 0.9, world.topY + R * f * 0.6, R * f * 0.9); controls.target.set(0, world.midY, 0); controls.update();
   }
 
   async function open(r) {
@@ -6132,7 +6149,7 @@ const SKI3D = (() => {
     const base = [r.ll[1], r.ll[0]], pts = [];
     for (const f of [...osm.pistes, ...osm.lifts]) pts.push(...f.pts);
     let lon0 = base[0] - 0.012, lat0 = base[1], rad = 3800;
-    if (pts.length) { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } lon0 = (x0 + x1) / 2; lat0 = (y0 + y1) / 2; rad = Math.min(4500, Math.max(1600, Math.hypot((x1 - x0) * 111320 * Math.cos(lat0 * Math.PI / 180), (y1 - y0) * 110540) / 2 + 450)); }
+    if (pts.length) { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } lon0 = (x0 + x1) / 2; lat0 = (y0 + y1) / 2; rad = Math.min(4500, Math.max(1400, Math.hypot((x1 - x0) * 111320 * Math.cos(lat0 * Math.PI / 180), (y1 - y0) * 110540) / 2 + 280)); }
     let dem; try { dem = await loadDEM(lon0, lat0, rad); } catch (e) { return st(e.message + '，請稍後再試', 'err'); }
     if (cur !== r) return;
     try { await document.fonts.load('800 44px "M PLUS Rounded 1c"'); } catch {}
@@ -6142,7 +6159,7 @@ const SKI3D = (() => {
     world = build(r, osm, dem, lon0, lat0, rad); scene.add(world.grp);
     snow = makeSnow(world.RU, world.topY + 60); snow.visible = snowOn; scene.add(snow);
     applyTheme();
-    controls.minDistance = world.RU * 0.25; controls.maxDistance = world.RU * 7;
+    controls.minDistance = 8; controls.maxDistance = world.RU * 7;
     home(); auto = true; syncAuto();
     cancelAnimationFrame(raf); loop();
     st(osm.pistes.length || osm.lifts.length ? '拖曳可以轉動雪山，雙指或滾輪縮放；按「飛行導覽」坐著纜車上山！' : 'OpenStreetMap 沒有這裡的雪道資料，只顯示地形', 'ok');
@@ -6153,6 +6170,7 @@ const SKI3D = (() => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$$('ski3d').hidden) close(); });
   $$('ski3dOrbit').addEventListener('click', () => { if (tour) return; auto = !auto; syncAuto(); });
   $$('ski3dTour').addEventListener('click', () => { if (!tour) startTour(); });
+  $$('ski3dNear').addEventListener('click', nearPiste);
   $$('ski3dView').addEventListener('click', () => { if (world && !tour) { home(); auto = true; syncAuto(); } });
   $$('ski3dSnow').addEventListener('change', e => { snowOn = e.target.checked; if (snow) snow.visible = snowOn; });
   $$('ski3dPiste').addEventListener('change', e => { if (world) world.grp.children.forEach(c => { if (c.name === 'piste') c.visible = e.target.checked; }); });
