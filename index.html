@@ -5697,8 +5697,8 @@ const SKI = [
   $('skiFit').addEventListener('click', () => { if (map) map.flyToBounds(L.latLngBounds(SKI.map(r => r.ll)).pad(0.15), { duration: 0.6 }); });
   $('skiJapan').addEventListener('click', () => { if (map) map.flyTo([37.6, 138.3], 6, { duration: 0.8 }); });
   renderList();
-  document.addEventListener('viewchange', e => { if (e.detail === 'ski') requestAnimationFrame(init); });
-  if (!$('v-ski').hidden) requestAnimationFrame(init);   // 直接用 #ski 網址開啟時，切換事件比這段程式更早發生
+  document.addEventListener('viewchange', e => { if (e.detail === 'ski') setTimeout(init, 0); });
+  if (!$('v-ski').hidden) setTimeout(init, 0);   // 直接用 #ski 網址開啟時，切換事件比這段程式更早發生
 })();
 
 // ================= 3D 空中俯瞰（MapLibre GL：地形 + 衛星／插畫雪景 + OSM 雪道與纜車） =================
@@ -5791,7 +5791,7 @@ const SKI3D = (() => {
   }
   function spin() {
     cancelAnimationFrame(raf);
-    const step = () => { if (orbit && !touring && gl) gl.setBearing(gl.getBearing() + 0.07); raf = requestAnimationFrame(step); };
+    const step = () => { if (orbit && !touring && gl && !gl.isEasing() && !gl.isMoving()) gl.setBearing(gl.getBearing() + 0.07); raf = requestAnimationFrame(step); };
     raf = requestAnimationFrame(step);
   }
   function setOrbit(on) { orbit = on; $$('ski3dOrbit').textContent = on ? '暫停環繞' : '繼續環繞'; $$('ski3dOrbit').setAttribute('aria-pressed', on); }
@@ -5816,12 +5816,12 @@ const SKI3D = (() => {
       gl = new maplibregl.Map({ container: 'ski3dMap', style: style(kind), center: [r.ll[1] - 0.01, r.ll[0]], zoom: 11, pitch: 40, bearing: 0, maxPitch: 85, attributionControl: { compact: true }, antialias: true });
       gl.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
       ['mousedown', 'touchstart', 'wheel'].forEach(ev => gl.getCanvas().addEventListener(ev, () => { if (!touring) setOrbit(false); }, { passive: true }));
-      await new Promise(res => gl.once('load', res));
+      await new Promise(res => { gl.once('load', res); gl.once('style.load', () => setTimeout(res, 1500)); });
     } else { gl.resize(); gl.jumpTo({ center: [r.ll[1] - 0.01, r.ll[0]], zoom: 11.5, pitch: 40 }); }
     frame(r); marks(r); overview(4500); setOrbit(true); spin();
     try {
       data = await fetchOSM(r); if (cur !== r) return;
-      gl.getSource('pistes').setData(data.pistes); gl.getSource('lifts').setData(data.lifts);
+      const ps = gl.getSource('pistes'), ls = gl.getSource('lifts'); if (ps) ps.setData(data.pistes); if (ls) ls.setData(data.lifts);
       frame(r); marks(r); if (!touring) overview(2500);
       const n = data.pistes.features.length, m = data.lifts.features.length;
       st(n || m ? `已標出 ${n} 段雪道、${m} 條纜車／吊椅（附近雪場的也會一起顯示）` : 'OpenStreetMap 沒有這裡的雪道資料，只顯示地形', n || m ? 'ok' : '');
