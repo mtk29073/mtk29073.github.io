@@ -1346,7 +1346,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
 
 <!-- ============ 滑雪場地圖 ============ -->
 <div class="view" id="v-ski" hidden>
-  <header class="vhead"><h1>日本滑雪場地圖</h1><p>收錄白馬 Hakuba Valley、二世古、北海道、東北、新潟湯澤、北信州・妙高的雪場。按地區按鈕跳到該地區，點圖釘或右側清單看雪場資料，再按「3D 卡通俯瞰」從空中看整座雪山。</p></header>
+  <header class="vhead"><h1>日本滑雪場地圖</h1><p>收錄白馬 Hakuba Valley、二世古、北海道各地、東北、新潟湯澤、北信州・妙高共 41 個雪場。按地區按鈕跳到該地區，點圖釘或右側清單看雪場資料，再按「3D 卡通俯瞰」從空中看整座雪山。</p></header>
   <p class="st" id="skiSt">地圖載入中…</p>
   <div class="skigrid">
     <div class="card skimapcard">
@@ -5632,12 +5632,16 @@ const SKI_AREAS = [
     bus: 'Hakuba Valley 接駁巴士 V 線各雪場都有停（成人 800 円，持 Hakuba Valley 季票或 HV 券免費）。' },
   { id: 'niseko', name: '二世古 Niseko United', center: [42.855, 140.69], zoom: 12, prefs: [1],
     bus: '四個雪場可用「Niseko United All Mountain Pass」互滑，持券搭 NISEKO UNITED 接駁巴士免費。新千歲機場有滑雪巴士（需預約）。' },
-  { id: 'hokkaido', name: '北海道其他', center: [43.05, 141.7], zoom: 8, prefs: [1],
+  { id: 'hokkaido', name: '北海道度假村', center: [43.05, 141.7], zoom: 8, prefs: [1],
     bus: '各雪場交通不同：冬季從新千歲機場、札幌有直達巴士或度假村接駁車，出發前請查各雪場官網。' },
+  { id: 'sapporo', name: '札幌・小樽・函館近郊', center: [42.7, 141.0], zoom: 7.5, prefs: [1],
+    bus: '都可以從市區當天來回：札幌、小樽市區有路線巴士或滑雪巴士，函館從車站搭巴士或開車。' },
+  { id: 'dohoku', name: '道央・道北', center: [43.55, 142.6], zoom: 8.5, prefs: [1],
+    bus: '內陸雪場以旭川為中心：旭川機場、旭川站出發開車或搭巴士約 30 分鐘～1.5 小時。' },
   { id: 'tohoku', name: '東北', center: [39.1, 140.7], zoom: 8, prefs: [3, 6],
     bus: '藏王從山形站搭巴士；安比從盛岡站（新幹線）搭接駁巴士，需事先預約。' },
   { id: 'yuzawa', name: '新潟 湯澤', center: [36.87, 138.80], zoom: 10.5, prefs: [15],
-    bus: '越後湯澤站是上越新幹線車站（東京最快約 66 分鐘），各雪場有自己的接駁巴士；苗場和神樂用 Dragondola 相連。' },
+    bus: '越後湯澤站是上越新幹線車站（東京最快約 66 分鐘），各雪場大多有免費接駁車。湯澤高原、GALA、石打丸山可用共通券「YUZAWA SNOW LINK」互滑；苗場和神樂用 Dragondola 相連。' },
   { id: 'hokushin', name: '北信州・妙高', center: [36.86, 138.33], zoom: 9.5, prefs: [15, 20],
     bus: '北陸新幹線飯山站（野澤、斑尾）、上越妙高站（新井）、長野站（志賀高原）都有巴士到雪場。' },
 ];
@@ -5687,49 +5691,96 @@ const SKI = [
     station: 'JR 二世古站', access: '二世古站搭巴士或計程車約 10 分鐘；新千歲機場搭滑雪巴士約 3 小時', url: 'https://annupuri.info/en/',
     note: '四個雪場中最西邊、人比較少，雪道寬、看得到羊蹄山；有夜滑和 34 度的 Deep Snow Forest 雪道。', good: '人少、寬雪道、羊蹄山景' },
   // ---- 北海道其他 ----
-  { id: 'kiroro', area: 'hokkaido', ja: 'キロロリゾート', en: 'Kiroro Resort', zh: '喜樂樂', ll: [43.0740, 140.9865], top: 1180, base: 520, vert: 660, courses: 22, longest: 4050, gondola: 1, lifts: 8, lv: [29, 35, 36],
+  { id: 'kiroro', area: 'hokkaido', ja: 'キロロリゾート', en: 'Kiroro Resort', zh: '喜樂樂', ll: [43.0675, 140.9907], top: 1180, base: 520, vert: 660, courses: 22, longest: 4050, gondola: 1, lifts: 8, lv: [29, 35, 36],
     station: 'JR 小樽站', access: '小樽站搭巴士約 1 小時；札幌開車約 1.5 小時', url: 'https://www.kiroro.co.jp/en/',
     note: '降雪量是北海道數一數二，粉雪又深又乾；離札幌、小樽近，另有 14 個樹林區。', good: '粉雪、樹林、札幌出發' },
-  { id: 'rusutsu', area: 'hokkaido', ja: 'ルスツリゾート', en: 'Rusutsu Resort', zh: '留壽都', ll: [42.7475, 140.9000], top: 994, base: 400, vert: 594, courses: 37, longest: 3500, gondola: 4, lifts: 14, lv: [31, 40, 29],
+  { id: 'rusutsu', area: 'hokkaido', ja: 'ルスツリゾート', en: 'Rusutsu Resort', zh: '留壽都', ll: [42.7492, 140.8996], top: 994, base: 400, vert: 594, courses: 37, longest: 3500, gondola: 4, lifts: 14, lv: [31, 40, 29],
     station: '新千歲機場', access: '新千歲機場搭巴士約 1.5–2 小時；二世古開車約 40 分鐘', url: 'https://rusutsu.com/en/',
     note: '由 West、East、Isola 三座山組成，雪道兩旁的樹林滑行很有名，排隊時間短；山頂看得到洞爺湖和羊蹄山。', good: '樹林滑行、中上級、度假村' },
-  { id: 'furano', area: 'hokkaido', ja: '富良野スキー場', en: 'Furano Ski Resort', zh: '富良野', ll: [43.3300, 142.3600], top: 1074, base: 235, vert: 839, courses: 27, longest: 4000, gondola: 2, lifts: 7, lv: [41, 37, 22],
+  { id: 'furano', area: 'dohoku', ja: '富良野スキー場', en: 'Furano Ski Resort', zh: '富良野', ll: [43.3255, 142.3534], top: 1074, base: 235, vert: 839, courses: 27, longest: 4000, gondola: 2, lifts: 7, lv: [41, 37, 22],
     station: 'JR 富良野站', access: '富良野站搭巴士或計程車約 10 分鐘；旭川機場開車約 1 小時', url: 'https://www.princehotels.com/en/ski/furano/',
     note: '北海道正中央的內陸雪場，氣溫低、雪很乾；曾經舉辦世界盃，壓雪雪道很漂亮，還有 101 人座的空中纜車。', good: '壓雪雪道、初中級、親子' },
-  { id: 'tomamu', area: 'hokkaido', ja: '星野リゾート トマム', en: 'Hoshino Resorts Tomamu', zh: '星野 TOMAMU', ll: [43.0640, 142.6330], top: 1171, base: 586, vert: 585, courses: 29, longest: 4200, gondola: 1, lifts: 5, lv: [48, 38, 14],
+  { id: 'tomamu', area: 'hokkaido', ja: '星野リゾート トマム', en: 'Hoshino Resorts Tomamu', zh: '星野 TOMAMU', ll: [43.0650, 142.6233], top: 1171, base: 586, vert: 585, courses: 29, longest: 4200, gondola: 1, lifts: 5, lv: [48, 38, 14],
     station: 'JR トマム站', access: 'トマム站有免費接駁車，約 5 分鐘；新千歲機場開車約 1.5 小時', url: 'https://www.snowtomamu.jp/winter/en/',
     note: '星野集團的度假村，有雲海平台、冰之村和室內海浪池 Mina-Mina Beach，不滑雪的家人也有很多事可以做。', good: '親子、初學者、度假村' },
   // ---- 東北 ----
-  { id: 'appi', area: 'tohoku', ja: '安比高原スキー場', en: 'APPI Kogen', zh: '安比高原', ll: [40.0030, 140.9660], top: 1328, base: 620, vert: 708, courses: 21, longest: 5500, gondola: 1, lifts: 10, lv: [30, 40, 30],
+  { id: 'appi', area: 'tohoku', ja: '安比高原スキー場', en: 'APPI Kogen', zh: '安比高原', ll: [40.0006, 140.9714], top: 1328, base: 620, vert: 708, courses: 21, longest: 5500, gondola: 1, lifts: 10, lv: [30, 40, 30],
     station: 'JR 安比高原站／盛岡站', access: '盛岡站搭接駁巴士約 1 小時（需預約）', url: 'https://www.appi.co.jp/en/',
     note: '東北最大的雪場，雪質乾得像「阿斯匹靈粉雪」，又長又寬的壓雪雪道很適合巡航。', good: '各程度、長距離巡航' },
-  { id: 'zao', area: 'tohoku', ja: '蔵王温泉スキー場', en: 'Zao Onsen Ski Resort', zh: '藏王溫泉', ll: [38.1665, 140.3960], top: 1661, base: 780, vert: 881, courses: 26, longest: 10000, gondola: 4, lifts: 24, lv: [40, 40, 20],
+  { id: 'zao', area: 'tohoku', ja: '蔵王温泉スキー場', en: 'Zao Onsen Ski Resort', zh: '藏王溫泉', ll: [38.1649, 140.3957], top: 1661, base: 780, vert: 881, courses: 26, longest: 10000, gondola: 4, lifts: 24, lv: [40, 40, 20],
     station: 'JR 山形站', access: '山形站搭巴士約 40 分鐘；仙台開車約 1.5 小時', url: 'https://zaomountainresort.com/',
     note: '山頂附近的「樹冰」（雪怪）非常有名，晚上還會點燈；山腳是硫磺溫泉街，最長滑走約 10 公里。', good: '看樹冰、溫泉、長距離滑行' },
   // ---- 新潟 湯澤（由北到南） ----
-  { id: 'gala', area: 'yuzawa', ja: 'GALA湯沢スキー場', en: 'GALA Yuzawa', zh: 'GALA 湯澤', ll: [36.9500, 138.8055], top: 1181, base: 358, vert: 823, courses: 16, longest: 2500, gondola: 2, lifts: 9, lv: [35, 45, 20],
+  { id: 'gala', area: 'yuzawa', ja: 'GALA湯沢スキー場', en: 'GALA Yuzawa', zh: 'GALA 湯澤', ll: [36.9511, 138.7993], top: 1181, base: 358, vert: 823, courses: 16, longest: 2500, gondola: 2, lifts: 9, lv: [35, 45, 20],
     station: 'JR GALA 湯澤站', access: '新幹線 GALA 湯澤站就在雪場大樓裡（東京最快約 71 分鐘）；越後湯澤站有免費接駁車約 10 分鐘', url: 'https://gala.co.jp/winter/',
     note: '新幹線直達雪場，從東京當天來回最方便；和石打丸山相連。2026–27 雪季南區（South）不營業。', good: '東京當天來回、初學者' },
-  { id: 'kagura', area: 'yuzawa', ja: 'かぐらスキー場', en: 'Kagura Ski Resort', zh: '神樂', ll: [36.8470, 138.7900], top: 1845, base: 620, vert: 1225, courses: 32, longest: 3362, gondola: 4, lifts: 14, lv: [38, 44, 18],
+  { id: 'kagura', area: 'yuzawa', ja: 'かぐらスキー場', en: 'Kagura Ski Resort', zh: '神樂', ll: [36.8931, 138.7750], top: 1845, base: 620, vert: 1225, courses: 32, longest: 3362, gondola: 4, lifts: 14, lv: [38, 44, 18],
     station: 'JR 越後湯澤站', access: '越後湯澤站搭巴士約 25–30 分鐘到三俣', url: 'https://www.princehotels.com/en/ski/kagura/index.html',
     note: '標高高、雪季長，可以滑到 5 月；樹林與非壓雪區很多，粉雪日很受進階玩家歡迎。', good: '粉雪、春雪、中上級' },
-  { id: 'naeba', area: 'yuzawa', ja: '苗場スキー場', en: 'Naeba Ski Resort', zh: '苗場', ll: [36.7905, 138.7825], top: 1789, base: 900, vert: 889, courses: 24, longest: 4000, gondola: 3, lifts: 9, lv: [42, 25, 33],
+  { id: 'naeba', area: 'yuzawa', ja: '苗場スキー場', en: 'Naeba Ski Resort', zh: '苗場', ll: [36.7932, 138.7841], top: 1789, base: 900, vert: 889, courses: 24, longest: 4000, gondola: 3, lifts: 9, lv: [42, 25, 33],
     station: 'JR 越後湯澤站', access: '越後湯澤站搭接駁巴士約 40 分鐘；月夜野 IC 開車約 35 分鐘', url: 'https://www.princehotels.com/en/ski/naeba/',
     note: '山腳就是苗場王子大飯店，搭 5.5 公里長的 Dragondola 可以到神樂；東京出發的週末行程最熱門。', good: '親子、住在雪場、東京出發' },
   // ---- 北信州・妙高 ----
-  { id: 'arai', area: 'hokushin', ja: 'ロッテアライリゾート', en: 'Lotte Arai Resort', zh: '樂天新井', ll: [37.0195, 138.1740], top: 1280, base: 329, vert: 951, courses: 14, longest: 4200, gondola: 1, lifts: 4, lv: [42, 32, 26],
+  { id: 'arai', area: 'hokushin', ja: 'ロッテアライリゾート', en: 'Lotte Arai Resort', zh: '樂天新井', ll: [36.9908, 138.1802], top: 1280, base: 329, vert: 951, courses: 14, longest: 4200, gondola: 1, lifts: 4, lv: [42, 32, 26],
     station: 'JR 上越妙高站', access: '上越妙高站搭接駁巴士約 30 分鐘', url: 'https://www.lottehotel.com/arai-resort/en.html',
     note: '雪量極深，陡坡和非壓雪區很多，有大片可以合法滑的 off-piste 區域；山腳是度假飯店。', good: '粉雪、陡坡、上級' },
-  { id: 'nozawa', area: 'hokushin', ja: '野沢温泉スキー場', en: 'Nozawa Onsen', zh: '野澤溫泉', ll: [36.9270, 138.4495], top: 1650, base: 565, vert: 1085, courses: 44, longest: 10000, gondola: 2, lifts: 13, lv: [50, 29, 21],
+  { id: 'nozawa', area: 'hokushin', ja: '野沢温泉スキー場', en: 'Nozawa Onsen', zh: '野澤溫泉', ll: [36.9201, 138.4526], top: 1650, base: 565, vert: 1085, courses: 44, longest: 10000, gondola: 2, lifts: 13, lv: [50, 29, 21],
     station: 'JR 飯山站', access: '飯山站搭 Nozawa Onsen Liner 巴士約 25 分鐘', url: 'https://www.nozawaski.com/',
     note: '有百年歷史的溫泉村，村裡有 13 個免費外湯；1 月 15 日的道祖神火祭很有名。', good: '溫泉街、各程度、文化體驗' },
-  { id: 'madarao', area: 'hokushin', ja: '斑尾高原スキー場', en: 'Madarao Mountain', zh: '斑尾高原', ll: [36.8535, 138.3035], top: 1340, base: 800, vert: 540, courses: 31, longest: 2100, gondola: 0, lifts: 11, lv: [30, 35, 35],
+  { id: 'madarao', area: 'hokushin', ja: '斑尾高原スキー場', en: 'Madarao Mountain', zh: '斑尾高原', ll: [36.8504, 138.2848], top: 1340, base: 800, vert: 540, courses: 31, longest: 2100, gondola: 0, lifts: 11, lv: [30, 35, 35],
     station: 'JR 飯山站', access: '飯山站搭接駁巴士約 30 分鐘', url: 'https://www.madarao.jp/ski/',
     note: '號稱日本樹林雪道最多的雪場，全部是天然雪，很多不壓雪的粉雪區；和 Tangram 相連。', good: '樹林、粉雪、中上級' },
-  { id: 'shiga', area: 'hokushin', ja: '志賀高原スキー場', en: 'Shiga Kogen', zh: '志賀高原', ll: [36.7220, 138.5170], top: 2307, base: 1340, vert: 967, courses: 80, longest: 6000, gondola: 6, lifts: 41, lv: [50, 36, 14],
+  { id: 'shiga', area: 'hokushin', ja: '志賀高原スキー場', en: 'Shiga Kogen', zh: '志賀高原', ll: [36.7246, 138.5072], top: 2307, base: 1340, vert: 967, courses: 80, longest: 6000, gondola: 6, lifts: 41, lv: [50, 36, 14],
     station: 'JR 長野站', access: '長野站東口搭直達巴士約 70 分鐘；或搭長野電鐵到湯田中站再轉巴士約 40 分鐘', url: 'https://www.shigakogen-ski.or.jp/',
     note: '日本最大的連結雪場，十幾個雪場一張券就能滑；標高高、雪很乾，雪季也很長。', good: '各程度、雪場多、乾雪' },
+  // ---- 札幌・小樽・函館近郊 ----
+  { id: 'teine', area: 'sapporo', ja: 'サッポロテイネ', en: 'Sapporo Teine', zh: '札幌手稻', ll: [43.0951, 141.2111], top: 1023, base: 340, vert: 683, courses: 15, longest: 6000, gondola: 1, lifts: 9, lv: [35, 40, 25],
+    station: 'JR 手稻站', access: '手稻站搭巴士約 16 分鐘；札幌市區開車約 45 分鐘', url: 'https://www.sapporo-teine.com/snow/',
+    note: '1972 年札幌冬奧的高山滑雪比賽場地，分成 Highland 和 Olympia 兩區；從山上可以看到札幌市區和海。', good: '中高階、看海景、札幌當天來回' },
+  { id: 'kokusai', area: 'sapporo', ja: '札幌国際スキー場', en: 'Sapporo Kokusai', zh: '札幌國際', ll: [43.0716, 141.0822], top: 1100, base: 630, vert: 470, courses: 7, longest: 3600, gondola: 1, lifts: 3, lv: [31, 41, 28],
+    station: '沒有鐵路（札幌市區搭巴士）', access: '札幌市區搭預約制巴士，經過定山溪溫泉；開車約 60 分鐘，小樽約 40 分鐘', url: 'https://www.sapporo-kokusai.jp/',
+    note: '雪量很多、雪季很長，可以滑到 5 月初；租借和初學者雪道都很完善，離定山溪溫泉不遠。', good: '當天來回、新手、春雪' },
+  { id: 'tenguyama', area: 'sapporo', ja: '小樽天狗山スキー場', en: 'Otaru Tenguyama', zh: '小樽天狗山', ll: [43.1779, 140.9752], top: 532, base: 205, vert: 327, courses: 5, longest: 1247, gondola: 0, lifts: 1, lv: [20, 40, 40],
+    station: 'JR 小樽站', access: '小樽站搭中央巴士到「天狗山ロープウエイ」站約 15–20 分鐘', url: 'https://tenguyama.ckk.chuo-bus.co.jp/winter/',
+    note: '小型雪場，白天可以邊滑邊看小樽市區和石狩灣；山頂夜景是「北海道三大夜景」之一。雪場沒有夜滑，空中纜車只供觀光、不能帶雪具。', good: '看小樽港景、輕鬆滑一下' },
+  { id: 'moiwa', area: 'sapporo', ja: '札幌藻岩山スキー場', en: 'Sapporo Moiwayama', zh: '札幌藻岩山', ll: [43.0134, 141.3330], top: 531, base: 173, vert: 358, courses: 11, longest: 2620, gondola: 0, lifts: 5, lv: [40, 40, 20],
+    station: '地下鐵 真駒內站', access: '真駒內站搭接駁巴士約 15 分鐘；札幌站開車約 30 分鐘', url: 'https://sapporo-moiwa.jp/',
+    note: '離札幌市中心開車約 30 分鐘，有夜滑（16:00–21:00）。以前只能雙板，2025–26 雪季起全部雪道開放單板。', good: '輕鬆體驗、夜滑、市區出發' },
+  { id: 'nanae', area: 'sapporo', ja: '函館七飯スノーパーク', en: 'Hakodate Nanae Snowpark', zh: '函館七飯', ll: [41.9864, 140.7469], top: 950, base: 261, vert: 689, courses: 8, longest: 4000, gondola: 1, lifts: 2, lv: [62, 25, 13],
+    station: 'JR 新函館北斗站', access: '新函館北斗站開車約 25 分鐘（有免費接駁車）；函館市區開車約 50 分鐘', url: 'https://hakodate-nanae.jp/',
+    note: '北海道南部的代表雪場，搭 3.3 公里長的纜車到山頂，可以看霧凇、駒之岳和大沼。', good: '函館順遊、新手、看風景' },
+  // ---- 道央・道北 ----
+  { id: 'kamui', area: 'dohoku', ja: 'カムイスキーリンクス', en: 'Kamui Ski Links', zh: '神居', ll: [43.7049, 142.1876], top: 751, base: 150, vert: 601, courses: 26, longest: 4000, gondola: 1, lifts: 5, lv: [35, 31, 34],
+    station: 'JR 旭川站', access: '旭川站搭道北巴士約 40 分鐘；開車約 30 分鐘', url: 'https://www.kamui-skilinks.com/',
+    note: '旭川近郊的在地人愛用雪場，內陸粉雪品質好，票價比大型度假村便宜（成人一日券約 5,300 円）。', good: '小資、中高階、避開觀光人潮' },
+  { id: 'kurodake', area: 'dohoku', ja: '大雪山層雲峡・黒岳スキー場', en: 'Kurodake Ski Area', zh: '大雪山黑岳', ll: [43.7240, 142.9470], top: 1520, base: 1300, vert: 220, courses: 3, longest: 1500, gondola: 1, lifts: 1, lv: [56, 44, 0],
+    station: 'JR 上川站', access: '上川站搭道北巴士約 30 分鐘到層雲峽；旭川開車約 1.5 小時', url: 'https://www.rinyu.co.jp/kurodake/',
+    note: '在層雲峽，先搭空中纜車上到 1,300 公尺才開始滑，海拔高、雪季從 12 月初到 5 月初。壓雪雪道很少，主要是野雪，進入野雪區要先填登山計畫。', good: '野雪（backcountry）高手' },
+  // ---- 新潟 湯澤（其他） ----
+  { id: 'maiko', area: 'yuzawa', ja: '舞子スノーリゾート', en: 'Maiko Snow Resort', zh: '舞子', ll: [36.9876, 138.8322], top: 920, base: 260, vert: 660, courses: 26, longest: 6000, gondola: 1, lifts: 11, lv: [40, 40, 20],
+    station: 'JR 越後湯澤站／石打站', access: '越後湯澤站搭免費接駁車約 20–30 分鐘；鹽澤石打 IC 開車約 1 分鐘', url: 'https://www.maiko-resort.com/winter/',
+    note: '由舞子、長峰、奧添地三區組成，有 2.8 公里長的纜車；舞子高原飯店就在雪道旁邊。', good: '一站式度假、家庭、中級' },
+  { id: 'ishiuchi', area: 'yuzawa', ja: '石打丸山スキー場', en: 'Ishiuchi Maruyama', zh: '石打丸山', ll: [36.9785, 138.8026], top: 920, base: 255, vert: 665, courses: 27, longest: 3000, gondola: 1, lifts: 12, lv: [39, 39, 22],
+    station: 'JR 越後湯澤站／石打站', access: '越後湯澤站搭免費接駁車約 10 分鐘', url: 'https://ishiuchi.or.jp/',
+    note: '有透明的暖氣圓頂帳篷，可以邊吃邊看雪景，是熱門打卡點；夜滑景色很美（12/27–2/28 每天，之後週五、六）。和 GALA 湯澤相連。', good: '拍照打卡、夜滑、中級' },
+  { id: 'yuzawakogen', area: 'yuzawa', ja: '湯沢高原スキー場', en: 'Yuzawa Kogen', zh: '湯澤高原', ll: [36.9401, 138.8040], top: 1170, base: 330, vert: 840, courses: 8, longest: 6000, gondola: 2, lifts: 4, lv: [43, 35, 22],
+    station: 'JR 越後湯澤站', access: '越後湯澤站步行約 8 分鐘', url: 'https://www.yuzawakogen.com/winter/',
+    note: '搭 166 人座、世界最大級的湯澤高原纜車直上山頂，山頂風景很好；有雪地遊樂園，也可以搭纜車接到 GALA 湯澤。', good: '觀光兼滑雪、親子' },
+  { id: 'iwappara', area: 'yuzawa', ja: '岩原スキー場', en: 'Iwappara', zh: '岩原', ll: [36.9325, 138.8408], top: 985, base: 400, vert: 585, courses: 20, longest: 4000, gondola: 0, lifts: 9, lv: [40, 40, 20],
+    station: 'JR 越後湯澤站', access: '越後湯澤站搭免費接駁車約 6–15 分鐘', url: 'https://iwa-ppara.com/',
+    note: '主雪道最寬約 200 公尺，緩坡視野開闊、沒有障礙物，練習轉彎很有安全感，也是中文滑雪教學的熱門地點。', good: '新手、第一次滑雪' },
+  { id: 'naspa', area: 'yuzawa', ja: 'NASPAスキーガーデン', en: 'NASPA Ski Garden', zh: 'NASPA 滑雪花園', ll: [36.9263, 138.8097], top: 690, base: 430, vert: 260, courses: 8, longest: 2200, gondola: 0, lifts: 5, lv: [50, 33, 17],
+    station: 'JR 越後湯澤站', access: '越後湯澤站西口搭免費接駁車幾分鐘', url: 'https://www.naspanewotani.com/',
+    note: '日本少數「只限雙板（Ski）」的雪場，禁止單板，雪道上不會有人坐著休息，環境單純；有兒童區 Kids Garden。', good: '雙板、帶長輩或小孩' },
+  { id: 'kandatsu', area: 'yuzawa', ja: '神立スノーリゾート', en: 'Kandatsu Snow Resort', zh: '神立', ll: [36.9108, 138.8128], top: 969, base: 471, vert: 498, courses: 16, longest: 2900, gondola: 0, lifts: 5, lv: [31, 31, 38],
+    station: 'JR 越後湯澤站', access: '越後湯澤站搭免費接駁車約 7 分鐘', url: 'https://www.kandatsu.com/',
+    note: '湯澤的夜滑聖地：週五、週六和連假前一晚夜滑到凌晨 2 點；有好幾座地形公園（Park），很受年輕人歡迎。', good: '夜滑、地形公園、年輕族群' },
+  { id: 'nakazato', area: 'yuzawa', ja: '湯沢中里スノーリゾート', en: 'Yuzawa Nakazato', zh: '湯澤中里', ll: [36.9088, 138.8497], top: 702, base: 458, vert: 244, courses: 16, longest: 2000, gondola: 0, lifts: 6, lv: [47, 21, 32],
+    station: 'JR 越後中里站', access: '越後中里站出站就到；越後湯澤站搭免費接駁車約 25 分鐘', url: 'https://yuzawa-nakazato.com/',
+    note: '山腳有用退役藍色列車（ブルートレイン）改建的休息室，很有特色；初學者區寬敞，適合帶小朋友。', good: '親子、新手' },
 ];
+// 依地區排好，同地區內由北到南；清單分組和圖釘編號都照這個順序
+SKI.sort((a, b) => SKI_AREAS.findIndex(x => x.id === a.area) - SKI_AREAS.findIndex(x => x.id === b.area) || b.ll[0] - a.ll[0]);
 const skiArea = r => SKI_AREAS.find(a => a.id === r.area) || SKI_AREAS[0];
 
 // ---- 卡通風格地圖：不用真實底圖，用日本都道府縣輪廓 + 手繪風裝飾 ----
@@ -5839,7 +5890,7 @@ function skiFont() {
   $('skiFit').addEventListener('click', () => { if (map) map.flyToBounds(L.latLngBounds(SKI.map(r => r.ll)).pad(0.15), { duration: 0.6 }); });
   $('skiJapan').addEventListener('click', () => { if (map) map.flyTo([37.4, 137.6], 5.5, { duration: 0.8 }); });
   $('skiAreas').innerHTML = SKI_AREAS.map(a => `<button class="b ghost" type="button" data-area="${a.id}">${escHtml(a.name)}</button>`).join('');
-  $('skiAreas').addEventListener('click', e => { const b = e.target.closest('button[data-area]'); if (!b || !map) return; const a = SKI_AREAS.find(x => x.id === b.dataset.area); map.flyTo(a.center, a.zoom, { duration: 0.8 }); });
+  $('skiAreas').addEventListener('click', e => { const b = e.target.closest('button[data-area]'); if (!b || !map) return; const lls = SKI.filter(r => r.area === b.dataset.area).map(r => r.ll); map.flyToBounds(L.latLngBounds(lls).pad(0.3), { maxZoom: 12, duration: 0.8 }); });
   renderList();
   document.addEventListener('viewchange', e => { if (e.detail === 'ski') setTimeout(init, 0); });
   if (!$('v-ski').hidden) setTimeout(init, 0);   // 直接用 #ski 網址開啟時，切換事件比這段程式更早發生
@@ -5869,7 +5920,10 @@ const SKI3D = (() => {
     hanazono: /花園|HANAZONO/i, hirafu: /ひらふ|ヒラフ|Hirafu/i, village: /ビレッジ|Village|東山/i, annupuri: /アンヌプリ|Annupuri/i,
     kiroro: /キロロ|Kiroro/i, rusutsu: /ルスツ|Rusutsu/i, furano: /富良野|Furano/i, tomamu: /トマム|Tomamu/i, appi: /安比|APPI/i, zao: /蔵王|Zao/i,
     gala: /ガーラ|GALA/i, kagura: /かぐら|神楽|Kagura|みつまた|三俣|Mitsumata|田代|Tashiro/i, naeba: /苗場|Naeba/i,
-    arai: /アライ|Arai/i, nozawa: /野沢|Nozawa/i, madarao: /斑尾|Madarao/i, shiga: /志賀|Shiga/i };
+    arai: /アライ|Arai/i, nozawa: /野沢|Nozawa/i, madarao: /斑尾|Madarao/i, shiga: /志賀|Shiga/i,
+    teine: /テイネ|Teine/i, kokusai: /札幌国際|Sapporo Kokusai/i, tenguyama: /天狗山|Tenguyama/i, moiwa: /藻岩|Moiwayama/i, nanae: /七飯|Nanae/i,
+    kamui: /カムイ|Kamui/i, kurodake: /黒岳|Kurodake/i, iwappara: /岩原|Iwappara/i, nakazato: /湯沢中里|Yuzawa Nakazato/i, naspa: /ナスパ|NASPA/i,
+    yuzawakogen: /湯沢高原|Yuzawa Kogen/i, ishiuchi: /石打丸山|Ishiuchi/i, maiko: /舞子|Maiko/i, kandatsu: /神立|Kandatsu/i };
   // 涵蓋好幾個雪場的大範圍（例如整個 Hakuba Valley），不能拿來當單一雪場的範圍
   const UMBRELLA = /Hakuba Valley|Niseko United|ニセコユナイテッド/i;
   // OSM 上沒有自己範圍的雪場（二世古四個雪場共用一座山）：改用纜車名稱分辨，再留下靠近這些纜車的雪道
@@ -5877,7 +5931,7 @@ const SKI3D = (() => {
     village: /ニセコゴンドラ|Niseko Gondola|ビレッジ|Village|バンザイ|コミュニティ|カントリーロード|森のチェア|ワンダーランド/i, annupuri: /アンヌプリ|Annupuri|ジャンボ|Jumbo|ドリーム|Dream/i };
   const segDist = (p, a, b) => { const k = Math.cos(p[1] * Math.PI / 180), dx = (b[0] - a[0]) * k, dy = b[1] - a[1], L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * k * dx + (p[1] - a[1]) * dy) / L)) : 0; return Math.hypot((p[0] - a[0]) * k - t * dx, p[1] - a[1] - t * dy) * 111; };   // 公里
   async function fetchOSM(r) {
-    const key = 'ski3dv4-' + r.id;   // 改過篩選方式就換版本，舊的快取才不會繼續用
+    const key = 'ski3dv5-' + r.id;   // 改過篩選方式就換版本，舊的快取才不會繼續用
     try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < 30 * 864e5 && Array.isArray(c.pistes)) return c; } catch {}
     const [la, lo] = r.ll, dy = 0.045, dx = 0.055, bb = `${la - dy},${lo - dx},${la + dy},${lo + dx}`;
     const q = `[out:json][timeout:40];(way["landuse"="winter_sports"](around:4500,${la},${lo});relation["landuse"="winter_sports"](around:4500,${la},${lo}););out tags geom;(way["piste:type"="downhill"](${bb});way["aerialway"~"gondola|cable_car|chair_lift|mixed_lift|drag_lift|t-bar|j-bar|platter|magic_carpet"](${bb}););out tags geom;`;
@@ -5899,9 +5953,12 @@ const SKI3D = (() => {
     // 射線法：線段不必依序排列，奇數次相交就在範圍內
     const inArea = (A, [x, y]) => { let c = false; for (const [x1, y1, x2, y2] of A.segs) if ((y1 > y) !== (y2 > y) && x < (x2 - x1) * (y - y1) / (y2 - y1) + x1) c = !c; return c; };
     const base = [lo, la], kw = KW[r.id];
-    let area = areas.find(A => kw && kw.test(A.name) && !UMBRELLA.test(A.name));
-    if (!area) area = areas.filter(A => !UMBRELLA.test(A.name)).find(A => inArea(A, base));
-    const mine = f => { const n = f.pts.filter(p => inArea(area, p)).length; return n / f.pts.length >= 0.4; };
+    // 名稱符合的範圍全部都算（志賀高原、神樂在 OSM 上分成好幾個小範圍）
+    let own = areas.filter(A => kw && kw.test(A.name) && !UMBRELLA.test(A.name));
+    if (!own.length) own = areas.filter(A => !UMBRELLA.test(A.name) && inArea(A, base)).slice(0, 1);
+    const area = own.length ? { name: own.map(A => A.name).join(' + ') } : null, inOwn = p => own.some(A => inArea(A, p));
+    // 纜車山腳站常常畫在範圍外面，所以纜車只要有一端在範圍內就算
+    const mine = f => f.kind && (inOwn(f.pts[0]) || inOwn(f.pts[f.pts.length - 1])) || f.pts.filter(inOwn).length / f.pts.length >= 0.4;
     const near = f => dist(f.pts[Math.floor(f.pts.length / 2)], base) <= 2.5;
     const lk = !area && LIFTKW[r.id], myLifts = lk ? lifts.filter(l => lk.test(l.name)) : [];
     const segs = myLifts.flatMap(l => l.pts.slice(1).map((p, i) => [l.pts[i], p]));
@@ -5954,6 +6011,16 @@ const SKI3D = (() => {
     function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   }
   const dist = (a, b) => { const k = Math.cos(a[1] * Math.PI / 180); return Math.hypot((a[0] - b[0]) * k, a[1] - b[1]) * 111; };   // 公里
+  // 沿曲線先取好等距點和水平方向，動畫時直接內插（getPointAt/getTangentAt 每格算很慢）
+  function sampler(curve) {
+    const N = Math.max(32, Math.ceil(curve.getLength() / 2)), P = curve.getSpacedPoints(N), T = new Float32Array((N + 1) * 2);
+    for (let i = 0; i <= N; i++) { const a = P[Math.max(0, i - 1)], b = P[Math.min(N, i + 1)], dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz) || 1; T[i * 2] = dx / L; T[i * 2 + 1] = dz / L; }
+    return (u, out) => {
+      const f = Math.min(N, Math.max(0, u * N)), i = Math.min(N - 1, Math.floor(f)), k = f - i, a = P[i], b = P[i + 1];
+      out.x = a.x + (b.x - a.x) * k; out.y = a.y + (b.y - a.y) * k; out.z = a.z + (b.z - a.z) * k;
+      out.tx = T[i * 2] + (T[i * 2 + 2] - T[i * 2]) * k; out.tz = T[i * 2 + 1] + (T[i * 2 + 3] - T[i * 2 + 1]) * k; return out;
+    };
+  }
 
   // ---------- 建立雪山模型 ----------
   function build(r, osm, dem, lon0, lat0, RAD) {
@@ -6002,6 +6069,8 @@ const SKI3D = (() => {
     const mask = new Set(), cell = 2.5, key = (x, z) => Math.round(x / cell) + ',' + Math.round(z / cell);
     const inside = (x, z) => x * x + z * z < (RU * 0.985) ** 2;
     const W = 2.6 * Math.max(0.9, S), lines = [], groomMats = {};
+    // 效能：同一種材質的雪道條帶合成一個 Mesh、標桿用 InstancedMesh，繪製次數從上千次降到十幾次
+    const buckets = new Map(), poles = {};
     const cordTex = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#f9fcff'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#e3edf8'; for (let y = 0; y < 64; y += 8) g.fillRect(0, y, 64, 3); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; return t; })();
     const markMats = {}, bankMat = new THREE.MeshToonMaterial({ color: 0xf4f8ff, gradientMap: toon, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
     const groomFor = color => groomMats[color] || (groomMats[color] = new THREE.MeshBasicMaterial({ map: cordTex, color: new THREE.Color(0xffffff).lerp(new THREE.Color(color), 0.16), side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
@@ -6014,19 +6083,25 @@ const SKI3D = (() => {
       flush();
     }
     function strip(pts, w0, w1, lift, mat, uv) {
-      const v = [], t = [], nrm = i => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1; return [-dz / L, dx / L]; };
+      let bk = buckets.get(mat); if (!bk) buckets.set(mat, bk = { v: [], t: [], uv });
+      const v = bk.v, t = bk.t, nrm = i => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1; return [-dz / L, dx / L]; };
       let len = 0;
       for (let i = 0; i < pts.length - 1; i++) {
         const [ax, az] = pts[i], [bx, bz] = pts[i + 1], na = nrm(i), nb = nrm(i + 1), sl = Math.hypot(bx - ax, bz - az);
         const P = (x, z, n, w) => { const X = x + n[0] * w, Z = z + n[1] * w; return [X, hy(X, Z) + lift, Z]; };
         const A0 = P(ax, az, na, w0), A1 = P(ax, az, na, w1), B0 = P(bx, bz, nb, w0), B1 = P(bx, bz, nb, w1);
-        v.push(...A0, ...B0, ...A1, ...B0, ...B1, ...A1);
+        v.push(A0[0], A0[1], A0[2], B0[0], B0[1], B0[2], A1[0], A1[1], A1[2], B0[0], B0[1], B0[2], B1[0], B1[1], B1[2], A1[0], A1[1], A1[2]);
         if (uv) { const v0 = len / 3, v1 = (len + sl) / 3; t.push(0, v0, 0, v1, 1, v0, 0, v1, 1, v1, 1, v0); }
         len += sl;
       }
-      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(t, 2));
-      const m = new THREE.Mesh(g, mat); m.name = 'piste'; grp.add(m); return len;
     }
+    for (const [mat, bk] of buckets) {
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(bk.v, 3)); if (bk.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(bk.t, 2));
+      const m = new THREE.Mesh(g, mat); m.name = 'piste'; grp.add(m);
+    }
+    { const poleGeo = new THREE.CylinderGeometry(0.09, 0.09, 1.7 * S, 4);
+      for (const color in poles) { const list = poles[color], im = new THREE.InstancedMesh(poleGeo, new THREE.MeshBasicMaterial({ color: +color }), list.length), o = new THREE.Object3D();
+        list.forEach((p, i) => { o.position.set(p[0], p[1], p[2]); o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); im.frustumCulled = false; im.name = 'piste'; grp.add(im); } }
     function piste(pts, d) {
       const color = PCOL[d] ?? 0x3d7be0, edge = markMats[color] || (markMats[color] = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
       strip(pts, -W, W, 0.3, groomFor(color), true);
@@ -6034,11 +6109,11 @@ const SKI3D = (() => {
       // 雪道旁的雪堆（壓雪機推出的雪牆）
       strip(pts, W, W + 1.2 * S, 0.5, bankMat); strip(pts, -W - 1.2 * S, -W, 0.5, bankMat);
       // 邊界標桿：每隔一段距離左右交替插一根
-      const pole = new THREE.CylinderGeometry(0.09, 0.09, 1.7 * S, 4), top = new THREE.MeshBasicMaterial({ color });
+      const list = poles[color] || (poles[color] = []);
       for (let i = 4; i < pts.length - 2; i += 14) {
         const a = pts[i - 1], b = pts[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1, side = (i / 14) % 2 ? 1 : -1;
-        const x = pts[i][0] - dz / L * (W + 0.4) * side, z = pts[i][1] + dx / L * (W + 0.4) * side, m = new THREE.Mesh(pole, top);
-        m.position.set(x, hy(x, z) + 0.85 * S, z); m.name = 'piste'; grp.add(m);
+        const x = pts[i][0] - dz / L * (W + 0.4) * side, z = pts[i][1] + dx / L * (W + 0.4) * side;
+        list.push([x, hy(x, z) + 0.85 * S, z]);
       }
       // 給滑雪的小人用：由高往低
       const p3 = pts.map(([x, z]) => new THREE.Vector3(x, hy(x, z) + 0.35, z)); if (p3[0].y < p3[p3.length - 1].y) p3.reverse();
@@ -6071,40 +6146,40 @@ const SKI3D = (() => {
     const jackets = [0xff5d5d, 0x3d7be0, 0xffc93c, 0x8e5bd9, 0x2fb36b, 0xff8fb1], skin = new THREE.MeshToonMaterial({ color: 0xffd9b8, gradientMap: toon });
     const skiGeo = new THREE.BoxGeometry(0.16, 0.06, 1.5), bodyGeo = new THREE.CapsuleGeometry(0.32, 0.55, 3, 6), headGeo = new THREE.SphereGeometry(0.27, 8, 6), hatGeo = new THREE.SphereGeometry(0.29, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
     const skiers = Math.min(60, lines.length * 2), skiMat = new THREE.MeshToonMaterial({ color: 0x2b2f3a, gradientMap: toon });
+    // 所有人共用 4 個 InstancedMesh（身體、頭、帽子、雪板），衣服和帽子顏色用 instanceColor
+    const crew = [];
     for (let k = 0; k < skiers; k++) {
       const L = lines[k % lines.length]; if (L.p3.length < 4) continue;
-      const g = new THREE.Group(), jc = new THREE.MeshToonMaterial({ color: jackets[k % jackets.length], gradientMap: toon });
-      const body = new THREE.Mesh(bodyGeo, jc); body.position.y = 0.75; body.rotation.x = 0.25;
-      const head = new THREE.Mesh(headGeo, skin); head.position.set(0, 1.45, 0.12);
-      const hat = new THREE.Mesh(hatGeo, new THREE.MeshToonMaterial({ color: jackets[(k + 2) % jackets.length], gradientMap: toon })); hat.position.set(0, 1.49, 0.12);
-      const s1 = new THREE.Mesh(skiGeo, skiMat), s2 = new THREE.Mesh(skiGeo, skiMat); s1.position.set(-0.17, 0.04, 0); s2.position.set(0.17, 0.04, 0);
-      g.add(body, head, hat, s1, s2); g.scale.setScalar(S * 1.25); grp.add(g);
-      const curve = new THREE.CatmullRomCurve3(L.p3); const len = curve.getLength();
-      anims.push({ skier: g, curve, len, u: rnd(), sp: (5 + rnd() * 5) / len, ph: rnd() * 6 });
+      const curve = new THREE.CatmullRomCurve3(L.p3), len = curve.getLength();
+      crew.push({ k, at: sampler(curve), u: rnd(), sp: (2 + rnd() * 2) / len, ph: rnd() * 6 });
+    }
+    if (crew.length) {
+      const n = crew.length, inst = (geo, mat, cnt) => { const m = new THREE.InstancedMesh(geo, mat, cnt); m.frustumCulled = false; grp.add(m); return m; };
+      const body = inst(bodyGeo, new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: toon }), n), head = inst(headGeo, skin, n);
+      const hat = inst(hatGeo, new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: toon }), n), skis = inst(skiGeo, skiMat, n * 2), col = new THREE.Color();
+      crew.forEach((c, i) => { body.setColorAt(i, col.setHex(jackets[c.k % jackets.length])); hat.setColorAt(i, col.setHex(jackets[(c.k + 2) % jackets.length])); });
+      const local = (x, y, z, rx = 0) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, 0, 0)), new THREE.Vector3(1, 1, 1));
+      anims.push({ crew, scale: new THREE.Vector3().setScalar(S * 1.25), bits: [[body, local(0, 0.75, 0, 0.25), 1, 0], [head, local(0, 1.45, 0.12), 1, 0], [hat, local(0, 1.49, 0.12), 1, 0], [skis, local(-0.17, 0.04, 0), 2, 0], [skis, local(0.17, 0.04, 0), 2, 1]] });
     }
     // 纜車：T 型塔柱 + 上下行兩條纜線 + 會動的吊椅／車廂；兩端放小站房
     const lifts = osm.lifts.map(l => ({ ...l, xz: l.pts.map(q => toXZ(q[0], q[1])) })).filter(l => l.xz.every(q => inside(q[0], q[1])));
     const pyMat = new THREE.MeshToonMaterial({ color: 0x8a94a6, gradientMap: toon }), cabMat = { gondola: 0xff6b6b, cable_car: 0xff6b6b, chair_lift: 0xffc93c }, def = 0x6ea8ff;
     const roofMat = new THREE.MeshToonMaterial({ color: 0xd9534f, gradientMap: toon }), wallMat = new THREE.MeshToonMaterial({ color: 0xfff1d6, gradientMap: toon }), cableMat = new THREE.MeshBasicMaterial({ color: 0x2b2f3a });
     let topPt = null, topY = -Infinity, mainLift = null, mainLen = 0;
+    const towers = [], huts = [];   // 塔柱和站房最後一起做成 InstancedMesh
     for (const l of lifts) {
       const path = []; let len = 0;
       for (let i = 0; i < l.xz.length - 1; i++) { const [ax, az] = l.xz[i], [bx, bz] = l.xz[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / 12)); for (let k = 0; k < n; k++) path.push([ax + (bx - ax) * k / n, az + (bz - az) * k / n]); len += L; }
       path.push(l.xz[l.xz.length - 1]);
       const gond = l.kind === 'gondola' || l.kind === 'cable_car', ph = (gond ? 4.2 : 3.2) * Math.max(0.8, S), top = path.map(([x, z]) => new THREE.Vector3(x, hy(x, z) + ph, z));
       const dirAll = new THREE.Vector3(top[top.length - 1].x - top[0].x, 0, top[top.length - 1].z - top[0].z).normalize(), side = new THREE.Vector3(-dirAll.z, 0, dirAll.x), yaw = Math.atan2(dirAll.x, dirAll.z);
-      const towerGeo = new THREE.CylinderGeometry(0.22, 0.34, ph, 6), armGeo = new THREE.BoxGeometry(2.8, 0.22, 0.3);
-      for (let i = 1; i < top.length - 1; i++) {
-        const t = new THREE.Mesh(towerGeo, pyMat); t.position.set(top[i].x, top[i].y - ph / 2, top[i].z); grp.add(t);
-        const arm = new THREE.Mesh(armGeo, pyMat); arm.position.set(top[i].x, top[i].y + 0.1, top[i].z); arm.rotation.y = yaw; grp.add(arm);
-      }
+      for (let i = 1; i < top.length - 1; i++) towers.push([top[i].x, top[i].y, top[i].z, ph, yaw]);
       const offCurve = o => new THREE.CatmullRomCurve3(top.map(p => p.clone().addScaledVector(side, o)));
       const cUp = offCurve(1.1), cDn = offCurve(-1.1), curve = new THREE.CatmullRomCurve3(top);
       for (const c of [cUp, cDn]) grp.add(new THREE.Mesh(new THREE.TubeGeometry(c, Math.max(8, top.length * 4), 0.11, 4, false), cableMat));
       for (const end of [l.xz[0], l.xz[l.xz.length - 1]]) {
-        const hs = new THREE.Group(), wall = new THREE.Mesh(new THREE.BoxGeometry(4, 2.4, 3.2), wallMat), roof = new THREE.Mesh(new THREE.ConeGeometry(3.3, 2, 4), roofMat);
-        wall.position.y = 1.2; roof.position.y = 3.4; roof.rotation.y = Math.PI / 4; hs.add(wall, roof); hs.scale.setScalar(Math.max(0.75, S)); hs.position.set(end[0], hy(end[0], end[1]) - 0.3, end[1]); hs.rotation.y = yaw; grp.add(hs);
-        const ey = hy(end[0], end[1]); if (ey > topY) { topY = ey; topPt = end; }
+        const ey = hy(end[0], end[1]); huts.push([end[0], ey - 0.3, end[1], yaw]);
+        if (ey > topY) { topY = ey; topPt = end; }
       }
       const n = Math.max(3, Math.round(len / (gond ? 26 : 16))), color = cabMat[l.kind] ?? def, parts = [];
       const add = (geo, mat, dy) => { const im = new THREE.InstancedMesh(geo, mat, n * 2); grp.add(im); parts.push([im, dy]); };
@@ -6112,9 +6187,17 @@ const SKI3D = (() => {
       add(new THREE.BoxGeometry(0.12, gond ? 0.9 : 1.6, 0.12), hanger, gond ? -0.45 : -0.8);
       if (gond) { add(new THREE.BoxGeometry(1.7, 1.7, 1.9), body, -1.75); add(new THREE.BoxGeometry(1.8, 0.5, 2.0), new THREE.MeshToonMaterial({ color: 0x8fd3ff, gradientMap: toon }), -1.55); }
       else { add(new THREE.BoxGeometry(2.1, 0.22, 0.9), body, -1.65); add(new THREE.BoxGeometry(2.1, 0.8, 0.18), body, -1.25); }
-      anims.push({ parts, cUp, cDn, n, off: 0, speed: 0.012 / Math.max(1, len / 60), S: Math.max(0.8, S) });
+      // 車廂速度：約每秒 8 單位（以前約 40 單位，太快）
+      anims.push({ parts, up: sampler(cUp), dn: sampler(cDn), n, off: 0, speed: 8 / Math.max(20, len), S: Math.max(0.8, S) });
       if (len > mainLen) { mainLen = len; mainLift = { curve, from: l.xz[0], to: l.xz[l.xz.length - 1] }; }
     }
+    { const o = new THREE.Object3D(), many = (geo, list, place) => { if (!list.length) return; const im = new THREE.InstancedMesh(geo, place.mat, list.length); list.forEach((x, i) => { place(o, x); o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); im.frustumCulled = false; grp.add(im); };
+      const tower = (o, [x, y, z, ph]) => { o.position.set(x, y - ph / 2, z); o.rotation.set(0, 0, 0); o.scale.set(1, ph, 1); }; tower.mat = pyMat;
+      const arm = (o, [x, y, z, , yaw]) => { o.position.set(x, y + 0.1, z); o.rotation.set(0, yaw, 0); o.scale.set(1, 1, 1); }; arm.mat = pyMat;
+      const hs = Math.max(0.75, S), wall = (o, [x, y, z, yaw]) => { o.position.set(x, y + 1.2 * hs, z); o.rotation.set(0, yaw, 0); o.scale.setScalar(hs); }; wall.mat = wallMat;
+      const roof = (o, [x, y, z, yaw]) => { o.position.set(x, y + 3.4 * hs, z); o.rotation.set(0, yaw + Math.PI / 4, 0); o.scale.setScalar(hs); }; roof.mat = roofMat;
+      many(new THREE.CylinderGeometry(0.22, 0.34, 1, 6), towers, tower); many(new THREE.BoxGeometry(2.8, 0.22, 0.3), towers, arm);
+      many(new THREE.BoxGeometry(4, 2.4, 3.2), huts, wall); many(new THREE.ConeGeometry(3.3, 2, 4), huts, roof); }
     if (!topPt) { let best = -Infinity; for (let k = 0; k < 400; k++) { const a = k * 2.399, rr = Math.sqrt(k / 400) * RU * 0.9, x = Math.cos(a) * rr, z = Math.sin(a) * rr, y = hy(x, z); if (y > best) { best = y; topPt = [x, z]; } } }
     // 標籤：雪場名稱（山腳）＋山頂旗子
     const bxz = toXZ(r.ll[1], r.ll[0]), inB = inside(bxz[0], bxz[1]) ? bxz : [bxz[0] * RU * 0.85 / Math.hypot(...bxz), bxz[1] * RU * 0.85 / Math.hypot(...bxz)];
@@ -6159,21 +6242,28 @@ const SKI3D = (() => {
 
   // ---------- 動畫迴圈 ----------
   const tmpO = () => (tmpO.o || (tmpO.o = new THREE.Object3D()));
+  const tmpP = {};
+  const tmpM = () => (tmpM.m || (tmpM.m = { M: new THREE.Matrix4(), P: new THREE.Matrix4(), V: new THREE.Vector3(), Q: new THREE.Quaternion(), E: new THREE.Euler() }));
   function loop() {
     raf = requestAnimationFrame(loop);
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
     for (const a of anims) {
-      if (a.parts) { a.off = (a.off + a.speed * dt * 60) % 1; const o = tmpO();
-        for (let i = 0; i < a.n; i++) for (let dir = 0; dir < 2; dir++) { const c = dir ? a.cDn : a.cUp, u = ((i / a.n + (dir ? -a.off : a.off)) % 1 + 1) % 1, p = c.getPointAt(u), tg = c.getTangentAt(u);
-          o.rotation.set(0, Math.atan2(tg.x, tg.z), 0); o.scale.setScalar(a.S);
+      if (a.parts) { a.off = (a.off + a.speed * dt) % 1; const o = tmpO(); o.scale.setScalar(a.S);
+        for (let i = 0; i < a.n; i++) for (let dir = 0; dir < 2; dir++) { const u = ((i / a.n + (dir ? -a.off : a.off)) % 1 + 1) % 1, p = (dir ? a.dn : a.up)(u, tmpP);
+          o.rotation.set(0, Math.atan2(p.tx, p.tz), 0);
           for (const [im, dy] of a.parts) { o.position.set(p.x, p.y + dy * a.S, p.z); o.updateMatrix(); im.setMatrixAt(i * 2 + dir, o.matrix); } }
         for (const [im] of a.parts) im.instanceMatrix.needsUpdate = true; }
-      else if (a.skier) { a.u += a.sp * dt; if (a.u >= 1) a.u = 0; const p = a.curve.getPointAt(a.u), tg = a.curve.getTangentAt(a.u), sw = Math.sin(t * 1.6 + a.ph);
-        a.skier.position.set(p.x - tg.z * sw * 0.9, p.y, p.z + tg.x * sw * 0.9); a.skier.rotation.set(0, Math.atan2(tg.x, tg.z) + sw * 0.35, -sw * 0.18); }
+      else if (a.crew) { const { M, P, V, Q, E } = tmpM();
+        a.crew.forEach((c, i) => {
+          c.u += c.sp * dt; if (c.u >= 1) c.u = 0; const p = c.at(c.u, tmpP), sw = Math.sin(t * 1.6 + c.ph);
+          V.set(p.x - p.tz * sw * 0.9, p.y, p.z + p.tx * sw * 0.9); E.set(0, Math.atan2(p.tx, p.tz) + sw * 0.35, -sw * 0.18); M.compose(V, Q.setFromEuler(E), a.scale);
+          for (const [im, lm, per, k] of a.bits) im.setMatrixAt(i * per + k, P.multiplyMatrices(M, lm));
+        });
+        for (const [im] of a.bits) im.instanceMatrix.needsUpdate = true; }
       else if (a.flag) a.flag.rotation.y = Math.sin(t * 2) * 0.35;
       else if (a.cloud) { const u = a.cloud.userData; u.a += u.sp; a.cloud.position.x = Math.cos(u.a) * u.rr; a.cloud.position.z = Math.sin(u.a) * u.rr; }
     }
-    if (snow && snow.visible) { const p = snow.geometry.attributes.position, H = snow.userData.H; for (let i = 0; i < p.count; i++) { let y = p.getY(i) - dt * 6; if (y < 0) y += H; p.setY(i, y); p.setX(i, p.getX(i) + Math.sin(t + i) * dt * 0.6); } p.needsUpdate = true; }
+    if (snow && snow.visible) { const p = snow.geometry.attributes.position, A = p.array, H = snow.userData.H; for (let i = 0, j = 0; i < p.count; i++, j += 3) { let y = A[j + 1] - dt * 6; if (y < 0) y += H; A[j + 1] = y; A[j] += Math.sin(t + i) * dt * 0.6; } p.needsUpdate = true; }
     if (tour) stepTour(t); else if (tweenT) { const k = Math.min(1, (t - tweenT.t0) / tweenT.d); const e = k * k * (3 - 2 * k); controls.target.lerpVectors(tweenT.a, tweenT.b, e); if (tweenT.ca) camera.position.lerpVectors(tweenT.ca, tweenT.cb, e); if (k >= 1) tweenT = null; }
     controls.autoRotate = auto && !tour; controls.update();
     renderer.render(scene, camera);
@@ -6223,7 +6313,8 @@ const SKI3D = (() => {
     skiFont();
     try { await load(); } catch (e) { return st(e.message, 'err'); }
     if (!renderer) {
-      renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.outputEncoding = THREE.sRGBEncoding;
+      // 高解析度螢幕最多畫 1.5 倍，畫面幾乎看不出差別，但每格要畫的像素少很多
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); renderer.outputEncoding = THREE.sRGBEncoding;
       $$('ski3dMap').appendChild(renderer.domElement);
       scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(40, 1, 0.5, 6000); clock = new THREE.Clock();
       controls = new THREE.OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.dampingFactor = 0.08; controls.autoRotateSpeed = 0.7; controls.maxPolarAngle = 1.42;
