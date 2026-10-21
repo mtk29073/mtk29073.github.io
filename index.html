@@ -70,11 +70,11 @@ textarea { resize: vertical; word-break: break-all; line-height: 1.45; min-heigh
 textarea[readonly] { background: transparent; border-style: dashed; }
 textarea:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .btns { display: flex; flex-wrap: wrap; gap: 8px; }
-button.b { white-space: nowrap; font: 500 0.88rem var(--sans); border-radius: 6px; padding: 7px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
-button.b:hover { border-color: var(--accent); }
-button.b.pri { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-button.b.pri:hover { filter: brightness(1.08); }
-button.b.ghost { border-style: dashed; color: var(--muted); }
+:is(button, a).b { white-space: nowrap; font: 500 0.88rem var(--sans); border-radius: 6px; padding: 7px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+:is(button, a).b:hover { border-color: var(--accent); }
+:is(button, a).b.pri { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+:is(button, a).b.pri:hover { filter: brightness(1.08); }
+:is(button, a).b.ghost { border-style: dashed; color: var(--muted); }
 button.cp { font: 0.75rem var(--sans); background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; }
 .st { margin: 0; font-size: 0.86rem; padding: 7px 10px; border-radius: 6px; background: var(--well); color: var(--muted); }
 .st.ok { background: var(--ok-bg); color: var(--ok); }
@@ -368,6 +368,42 @@ table.jtab td.jm { min-width: 7em; }
 .vnote { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px; }
 #vnQuiz[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
 @media (max-width: 560px) { #v-vn table.jtab tr { display: grid; grid-template-columns: auto minmax(0, 1fr); border-top: 1px solid var(--line); } #v-vn table.jtab td { border-top: 0; } #v-vn table.jtab td.jm { grid-column: 2; padding-top: 0; min-width: 0; } #v-vn table.jtab td:first-child { width: auto; } }
+/* ---- 滑雪場地圖 ---- */
+.skigrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .skigrid { grid-template-columns: minmax(0, 1fr); } }
+.skimap { height: min(70vh, 640px); min-height: 380px; border-radius: 8px; border: 1px solid var(--line); background: var(--well); z-index: 0; }
+@media (max-width: 560px) { .skimap { height: 56vh; min-height: 320px; } }
+.skikey { display: flex; gap: 12px; align-items: center; margin-left: auto; font-size: 0.8rem; color: var(--muted); flex-wrap: wrap; }
+.skikey i, .skilegend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+.skiside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.skipin-wrap { background: none; border: 0; }
+.skipin { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--c); color: #fff; font: 700 13px var(--mono); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.45); transition: transform .15s; }
+.skipin.on { transform: scale(1.35); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 35%, transparent), 0 1px 4px rgba(0,0,0,.45); }
+.skino { display: inline-grid; place-items: center; width: 24px; height: 24px; flex: none; border-radius: 50%; background: var(--c); color: #fff; font: 700 12px var(--mono); }
+.skino.big { width: 36px; height: 36px; font-size: 16px; }
+.skihead { display: flex; gap: 12px; align-items: center; }
+.skititle { font: 700 1.2rem var(--sans) !important; color: var(--fg) !important; text-transform: none !important; letter-spacing: 0 !important; }
+.skinote { margin: 0; font-size: 0.9rem; }
+.skistats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.skistats div { background: var(--well); border-radius: 6px; padding: 7px 10px; display: flex; flex-direction: column; gap: 2px; }
+.skistats span { font-size: 0.76rem; color: var(--muted); }
+.skistats b { font: 600 0.98rem var(--mono); }
+.skistats b.skigood { font: 500 0.86rem var(--sans); }
+.skibar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--well); }
+.skibar i { display: block; height: 100%; }
+.skilegend { display: flex; gap: 14px; font-size: 0.8rem; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+.skiacc b { font-size: 0.86rem; } .skiacc p { margin: 4px 0 0; font-size: 0.86rem; }
+a.b { text-decoration: none; display: inline-flex; align-items: center; }
+.skilist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.skilist button { width: 100%; display: flex; gap: 10px; align-items: center; text-align: left; padding: 7px 8px; border-radius: 7px; border: 1px solid transparent; background: none; color: var(--fg); cursor: pointer; font: inherit; }
+.skilist button:hover { background: var(--well); }
+.skilist button[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.skinm { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.skinm small, .skimeta small { color: var(--muted); font-size: 0.76rem; }
+.skimeta { text-align: right; font: 0.82rem var(--mono); white-space: nowrap; }
+.leaflet-container { font-family: var(--sans); }
+@media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) .skimap .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); } }
+:root[data-theme="dark"] .skimap .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); }
 /* ---- 台股策略回測 ---- */
 :root { --k-up: #d12f3a; --k-dn: #16884a; --k-vs: #e08a00; --k-vl: #7a4fd6; }
 @media (prefers-color-scheme: dark), (max-width: 800px) { :root:not([data-theme="light"]) { --k-up: #ff5c66; --k-dn: #35c27a; --k-vs: #ffb340; --k-vl: #b391ff; } }
@@ -536,6 +572,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
     <a href="#crypto" data-view="crypto"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>加密測試台</span></a>
     <a href="#scripts" data-view="scripts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg><span>Script 紀錄區</span></a>
     <a href="#todo" data-view="todo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l2 2 3-3M4 13l2 2 3-3M12 6h8M12 13h8M12 20h8M5 20h.01"/></svg><span>待辦事項</span></a>
+    <a href="#ski" data-view="ski"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20l6-11 4 6 3-4 5 9z"/><path d="M8.2 10.5l1.8 1.5 1.6-1.4"/></svg><span>滑雪地圖</span></a>
     <div class="devnav" aria-label="開發選項">
       <p class="navlabel">開發選項</p>
       <div class="navgrp">
@@ -1261,6 +1298,24 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
       <div id="lvStats"></div>
     </div>
   </div>
+</div>
+
+<!-- ============ 滑雪場地圖 ============ -->
+<div class="view" id="v-ski" hidden>
+  <header class="vhead"><h1>日本滑雪場地圖</h1><p>先收錄長野縣白馬 Hakuba Valley 的 10 個雪場。點地圖上的編號或右側清單，看雪場數據、程度比例和交通。</p></header>
+  <p class="st" id="skiSt">地圖載入中…</p>
+  <div class="skigrid">
+    <div class="card skimapcard">
+      <div class="btns"><button class="b ghost" id="skiFit">顯示全部雪場</button><button class="b ghost" id="skiJapan">日本全圖</button>
+        <span class="skikey"><span><i style="background:var(--ok)"></i>初級多</span><span><i style="background:var(--accent)"></i>各程度</span><span><i style="background:var(--err)"></i>上級多</span></span></div>
+      <div id="skiMap" class="skimap"></div>
+    </div>
+    <div class="skiside">
+      <div class="card" id="skiCard"></div>
+      <div class="card"><h2>白馬 10 大雪場（由北到南）</h2><ul class="skilist" id="skiList"></ul></div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:12px">雪場數據來自 <a href="https://www.hakubavalley.com/ski_resort_info/" target="_blank" rel="noopener">Hakuba Valley 官方網站</a>；交通時間為大約值，出發前請以各雪場與接駁巴士最新公告為準。地圖 © OpenStreetMap。</p>
 </div>
 
 <!-- ============ 日文學習 ============ -->
@@ -3036,7 +3091,7 @@ const hexAuth = (() => {
 })();
 
 const showView = (() => {
-  const VIEWS = ['crypto', 'scripts', 'todo', 'owner', 'chip', 'stock', 'fin', 'level', 'jp', 'vn'];
+  const VIEWS = ['crypto', 'scripts', 'todo', 'ski', 'owner', 'chip', 'stock', 'fin', 'level', 'jp', 'vn'];
   const DEV_VIEWS = ['chip', 'stock', 'fin', 'level', 'jp', 'vn'];
   const links = document.querySelectorAll('.side [data-view]');
   function showView(v) {
@@ -5502,6 +5557,115 @@ const HEXSYNC = (() => {
   $('syncOff').addEventListener('click', e => { const b = e.currentTarget; if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.textContent = '確定解除？'; setTimeout(() => { b.textContent = '解除這台電腦的同步'; delete b.dataset.arm; }, 2500); return; } HEXSYNC.off(); $('syncCodeBox').hidden = true; HEXSYNC.ui(); status('syncSt', '這台電腦已停止同步，本機資料保留；雲端資料不受影響', 'ok'); });
   // 登入後若發現舊密碼加密的資料，提醒轉換
   document.addEventListener('viewchange', e => { if (e.detail === 'owner') refreshMig(); });
+})();
+
+// ================= 滑雪場地圖（Leaflet + OpenStreetMap） =================
+// 雪場數據：Hakuba Valley 官方「Ski Resort Info」（hakubavalley.com/ski_resort_info）
+// 座標：OpenStreetMap；交通時間為大約值，實際以各雪場與 Hakuba Valley 接駁巴士公告為準
+const SKI_AREAS = [
+  { id: 'hakuba', name: '白馬 Hakuba Valley', center: [36.665, 137.85], zoom: 11 },
+];
+// [lat, lon]、top/base/vert 公尺、courses 條、longest 公尺、gondola 座、lifts 座、[初, 中, 上] %
+const SKI = [
+  { id: 'cortina', area: 'hakuba', ja: '白馬コルチナスキー場', en: 'Hakuba Cortina', zh: '白馬科爾蒂納', ll: [36.7788, 137.8825], top: 1402, base: 872, vert: 530, courses: 16, longest: 3500, gondola: 0, lifts: 6, lv: [40, 30, 30],
+    station: 'JR 南小谷站', access: '南小谷站開車約 15 分鐘；白馬站搭接駁巴士約 40 分鐘', url: 'https://www.hgp.co.jp/cortina/ski/',
+    note: '山谷最北端，雪量多、粉雪品質佳，樹林區（Tree Run）很有名。雪場下方就是 Hotel Green Plaza 白馬，可以直接滑進滑出。', good: '粉雪、樹林滑行、住在雪場' },
+  { id: 'norikura', area: 'hakuba', ja: '白馬乗鞍温泉スキー場', en: 'Hakuba Norikura Onsen', zh: '白馬乘鞍溫泉', ll: [36.7700, 137.8790], top: 1598, base: 800, vert: 798, courses: 14, longest: 2500, gondola: 0, lifts: 9, lv: [30, 40, 30],
+    station: 'JR 白馬大池站', access: '白馬大池站開車約 10 分鐘；白馬站搭接駁巴士約 30 分鐘', url: 'https://www.hakunori.com/',
+    note: '和科爾蒂納山頂相連，可以共用纜車券互滑。最陡的雪道約 38 度，山腳有溫泉。', good: '中上級、和科爾蒂納串聯、溫泉' },
+  { id: 'tsugaike', area: 'hakuba', ja: 'つがいけマウンテンリゾート', en: 'Tsugaike Mountain Resort', zh: '栂池高原', ll: [36.7552, 137.8534], top: 1704, base: 800, vert: 904, courses: 11, longest: 5000, gondola: 1, lifts: 13, lv: [50, 30, 20],
+    station: 'JR 白馬大池站', access: '白馬大池站開車約 10 分鐘；白馬站搭巴士約 25 分鐘', url: 'https://www.tsugaike.gr.jp/',
+    note: '山腳有一大片非常寬的緩坡（鐘之鳴廣場），初學者最多人推薦。纜車長約 4 公里，可以一路滑到山腳。', good: '初學者、親子、長距離滑行' },
+  { id: 'iwatake', area: 'hakuba', ja: '白馬岩岳スノーフィールド', en: 'Hakuba Iwatake Snow Field', zh: '白馬岩岳', ll: [36.7219, 137.8375], top: 1289, base: 750, vert: 539, courses: 13, longest: 3300, gondola: 1, lifts: 8, lv: [30, 50, 20],
+    station: 'JR 白馬站', access: '白馬站開車約 10 分鐘；有接駁巴士', url: 'https://iwatake-mountain-resort.com/',
+    note: '山頂 Hakuba Mountain Harbor 可以正面看白馬三山，景色是整個山谷最好的之一。2025 年起有新的 10 人座纜車。', good: '看景色、中級巡航、咖啡廳' },
+  { id: 'happo', area: 'hakuba', ja: '白馬八方尾根スキー場', en: 'Hakuba Happo-one', zh: '白馬八方尾根', ll: [36.7036, 137.8226], top: 1831, base: 760, vert: 1071, courses: 16, longest: 8000, gondola: 1, lifts: 22, lv: [30, 50, 20],
+    station: 'JR 白馬站', access: '白馬站搭巴士約 5 分鐘，八方巴士總站步行可到', url: 'https://www.happo-one.jp/',
+    note: '1998 年長野冬奧的比賽場地，落差 1,071 公尺、最長滑走 8 公里，是白馬最大、最具代表性的雪場。山腳的八方溫泉街住宿和餐廳很多。', good: '中上級、長距離、冬奧雪道' },
+  { id: 'hakuba47', area: 'hakuba', ja: 'Hakuba47 マウンテンリゾート', en: 'Hakuba47 Mountain Resort', zh: 'Hakuba47', ll: [36.6725, 137.8179], top: 1614, base: 820, vert: 794, courses: 8, longest: 6400, gondola: 1, lifts: 6, lv: [30, 40, 30],
+    station: 'JR 神城站／白馬站', access: '白馬站開車約 10 分鐘；有接駁巴士', url: 'https://www.hakuba47.co.jp/winter/',
+    note: '和五竜在山頂相連，可共用纜車券。地形公園（Park）規模大，單板玩家很多。', good: '單板、地形公園、和五竜串聯' },
+  { id: 'goryu', area: 'hakuba', ja: 'エイブル白馬五竜', en: 'Able Hakuba Goryu', zh: '白馬五竜', ll: [36.6645, 137.8325], top: 1676, base: 750, vert: 926, courses: 15, longest: 5000, gondola: 1, lifts: 11, lv: [35, 40, 25],
+    station: 'JR 神城站', access: '神城站開車約 5 分鐘；白馬站開車約 10 分鐘，有接駁巴士', url: 'https://www.hakubaescal.com/',
+    note: '山腳 Escal Plaza 設施齊全，有夜滑。山頂的 Alps 平台雪道又寬又長，天氣好可以看到鹿島槍岳。', good: '各程度都適合、夜滑、和 47 串聯' },
+  { id: 'sanosaka', area: 'hakuba', ja: 'White Resort 白馬さのさか', en: 'White Resort Hakuba Sanosaka', zh: '白馬佐野坂', ll: [36.6230, 137.8380], top: 1200, base: 740, vert: 460, courses: 10, longest: 2600, gondola: 0, lifts: 4, lv: [40, 40, 20],
+    station: 'JR 南神城站', access: '南神城站步行可到（過平交道就是入口）', url: 'https://sanosaka.jp/',
+    note: '可以俯瞰青木湖，約八成雪道適合初中級。規模小、人少，價格也比較親民。2025–26 雪季於 3 月 15 日提早結束營業。', good: '初中級、人少、湖景' },
+  { id: 'kashimayari', area: 'hakuba', ja: '鹿島槍スキー場 ファミリーパーク', en: 'Kashimayari Family Park', zh: '鹿島槍家庭公園', ll: [36.6006, 137.8256], top: 1320, base: 830, vert: 490, courses: 12, longest: 4100, gondola: 0, lifts: 5, lv: [33, 50, 17],
+    station: 'JR 簗場站／信濃大町站', access: '信濃大町站開車約 20 分鐘；安曇野 IC 開車約 50 分鐘', url: 'https://www.kashimayari.net/snow/',
+    note: '名字就是家庭公園，兒童雪地樂園與教學很完整；山頂往下有約 2 公里的長滑道。', good: '親子、家庭、教學' },
+  { id: 'jigatake', area: 'hakuba', ja: '爺ガ岳スキー場', en: 'Jiigatake', zh: '爺岳', ll: [36.5604, 137.8013], top: 1200, base: 940, vert: 260, courses: 7, longest: 1500, gondola: 0, lifts: 4, lv: [70, 30, 0],
+    station: 'JR 信濃大町站', access: '信濃大町站開車約 20 分鐘', url: 'http://www.jiigatake.com/',
+    note: '山谷最南端的小型雪場，七成是初級雪道、沒有上級雪道，適合第一次滑雪或帶小孩。', good: '第一次滑雪、小朋友' },
+];
+
+(() => {
+  let map = null, layer = null, markers = {}, sel = null, loading = null;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const fmt = n => n.toLocaleString('zh-TW');
+  const LV = [['初級', '--ok'], ['中級', '--accent'], ['上級', '--err']];
+  // 依程度上色：初級多＝綠、上級多＝紅、其他＝藍
+  const tone = r => r.lv[0] >= 50 ? '--ok' : r.lv[2] >= 30 ? '--err' : '--accent';
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    if (loading) return loading;
+    loading = new Promise((ok, bad) => {
+      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l);
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+      s.onload = ok; s.onerror = () => { loading = null; bad(new Error('地圖元件載入失敗，請確認網路連線')); }; document.head.appendChild(s);
+    });
+    return loading;
+  }
+  function icon(r, i, on) {
+    return L.divIcon({ className: 'skipin-wrap', html: `<span class="skipin${on ? ' on' : ''}" style="--c:var(${tone(r)})">${i + 1}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] });
+  }
+  async function init() {
+    try { await loadLeaflet(); } catch (e) { return status('skiSt', e.message, 'err'); }
+    if (map) { map.invalidateSize(); return; }
+    map = L.map('skiMap', { zoomControl: true, attributionControl: true }).setView(SKI_AREAS[0].center, SKI_AREAS[0].zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
+    layer = L.layerGroup().addTo(map);
+    SKI.forEach((r, i) => {
+      const m = L.marker(r.ll, { icon: icon(r, i, false), title: r.zh, riseOnHover: true }).addTo(layer);
+      m.bindTooltip(`<b>${escHtml(r.zh)}</b><br>${escHtml(r.ja)}`, { direction: 'top', offset: [0, -12] });
+      m.on('click', () => pick(r.id, false));
+      markers[r.id] = m;
+    });
+    // 主要車站
+    for (const [nm, ll] of [['JR 白馬站', [36.6985, 137.8618]], ['JR 信濃大町站', [36.5016, 137.8517]], ['JR 南小谷站', [36.7929, 137.8707]]])
+      L.circleMarker(ll, { radius: 5, color: css('--fg') || '#333', weight: 2, fillColor: css('--panel') || '#fff', fillOpacity: 1 }).bindTooltip(nm, { direction: 'right', offset: [6, 0] }).addTo(layer);
+    status('skiSt', `已標記 ${SKI.length} 個滑雪場。點地圖上的編號或右側清單看詳細資料。`, 'ok');
+    pick(store.get('hexlab-ski-sel', 'happo'), true);
+  }
+  function renderList() {
+    $('skiList').innerHTML = SKI.map((r, i) => `<li><button type="button" data-id="${r.id}" aria-pressed="${sel === r.id}"><span class="skino" style="--c:var(${tone(r)})">${i + 1}</span><span class="skinm"><b>${escHtml(r.zh)}</b><small>${escHtml(r.ja)}</small></span><span class="skimeta">${fmt(r.vert)} m<br><small>${r.courses} 條</small></span></button></li>`).join('');
+  }
+  function pick(id, quiet) {
+    const r = SKI.find(x => x.id === id) || SKI[0], i = SKI.indexOf(r); sel = r.id; store.set('hexlab-ski-sel', sel);
+    if (map) { SKI.forEach((x, k) => markers[x.id].setIcon(icon(x, k, x.id === sel))); markers[sel].setZIndexOffset(1000); if (!quiet) map.flyTo(r.ll, Math.max(map.getZoom(), 12), { duration: 0.6 }); }
+    renderList();
+    const bar = r.lv.map((v, k) => v ? `<i style="width:${v}%;background:var(${LV[k][1]})" title="${LV[k][0]} ${v}%"></i>` : '').join('');
+    $('skiCard').innerHTML = `
+      <div class="skihead"><span class="skino big" style="--c:var(${tone(r)})">${i + 1}</span><div><h2 class="skititle">${escHtml(r.zh)}</h2><p class="note">${escHtml(r.ja)} · ${escHtml(r.en)}</p></div></div>
+      <p class="skinote">${escHtml(r.note)}</p>
+      <div class="skistats">
+        <div><span>山頂 / 山腳</span><b>${fmt(r.top)} / ${fmt(r.base)} m</b></div>
+        <div><span>落差</span><b>${fmt(r.vert)} m</b></div>
+        <div><span>雪道</span><b>${r.courses} 條</b></div>
+        <div><span>最長滑走</span><b>${(r.longest / 1000).toFixed(1)} km</b></div>
+        <div><span>纜車 / 吊椅</span><b>${r.gondola} / ${r.lifts} 座</b></div>
+        <div><span>適合</span><b class="skigood">${escHtml(r.good)}</b></div>
+      </div>
+      <div class="skilv"><div class="skibar">${bar}</div><div class="skilegend">${r.lv.map((v, k) => `<span><i style="background:var(${LV[k][1]})"></i>${LV[k][0]} ${v}%</span>`).join('')}</div></div>
+      <div class="skiacc"><b>交通</b><p>最近車站：${escHtml(r.station)}<br>${escHtml(r.access)}<br><span class="note">Hakuba Valley 接駁巴士 V 線各雪場都有停（成人 800 円，持 Hakuba Valley 季票或 HV 券免費）。</span></p></div>
+      <div class="btns"><a class="b pri" href="${r.url}" target="_blank" rel="noopener">官方網站</a><a class="b ghost" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.ja)}" target="_blank" rel="noopener">Google 地圖導航</a></div>`;
+  }
+  $('skiList').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) pick(b.dataset.id, false); });
+  $('skiFit').addEventListener('click', () => { if (map) map.flyToBounds(L.latLngBounds(SKI.map(r => r.ll)).pad(0.15), { duration: 0.6 }); });
+  $('skiJapan').addEventListener('click', () => { if (map) map.flyTo([37.6, 138.3], 6, { duration: 0.8 }); });
+  renderList();
+  document.addEventListener('viewchange', e => { if (e.detail === 'ski') requestAnimationFrame(init); });
+  if (!$('v-ski').hidden) requestAnimationFrame(init);   // 直接用 #ski 網址開啟時，切換事件比這段程式更早發生
 })();
 
 </script>
