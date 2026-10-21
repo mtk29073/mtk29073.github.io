@@ -5786,26 +5786,44 @@ const SKI3D = (() => {
   function load() { if (window.THREE && THREE.OrbitControls) return Promise.resolve(); return R3 || (R3 = script(T_URL).then(() => script(O_URL)).then(() => { THREE.ColorManagement.legacyMode = false; }).catch(e => { R3 = null; throw e; })); }
 
   // ---------- 資料：雪道與纜車（OSM） ----------
+  // 每個雪場在 OpenStreetMap 上的雪場範圍名稱（landuse=winter_sports），用來只留下這個雪場自己的雪道與纜車
+  const KW = { cortina: /コルチナ|Cortina/i, norikura: /乗鞍|Norikura/i, tsugaike: /栂池|つがいけ|Tsugaike/i, iwatake: /岩岳|Iwatake/i, happo: /八方|Happo/i,
+    hakuba47: /47/, goryu: /五竜|Goryu|いいもり|Iimori/i, sanosaka: /さのさか|佐野坂|Sanosaka/i, kashimayari: /鹿島槍|Kashimayari/i, jigatake: /爺ガ岳|爺ヶ岳|Ji+gatake/i };
   async function fetchOSM(r) {
-    const key = 'ski3dv2-' + r.id;
-    try { const c = JSON.parse(sessionStorage.getItem(key) || 'null'); if (c && Array.isArray(c.pistes) && Array.isArray(c.lifts)) return c; } catch {}
-    const [la, lo] = r.ll, dy = 0.04, dx = 0.05, bb = `${la - dy},${lo - dx},${la + dy},${lo + dx}`;
-    const q = `[out:json][timeout:25];(way["piste:type"="downhill"](${bb});way["aerialway"~"gondola|cable_car|chair_lift|mixed_lift|drag_lift|t-bar|j-bar|platter|magic_carpet"](${bb}););out tags geom;`;
+    const key = 'ski3dv3-' + r.id;
+    try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < 30 * 864e5 && Array.isArray(c.pistes)) return c; } catch {}
+    const [la, lo] = r.ll, dy = 0.045, dx = 0.055, bb = `${la - dy},${lo - dx},${la + dy},${lo + dx}`;
+    const q = `[out:json][timeout:40];(way["landuse"="winter_sports"](around:4500,${la},${lo});relation["landuse"="winter_sports"](around:4500,${la},${lo}););out tags geom;(way["piste:type"="downhill"](${bb});way["aerialway"~"gondola|cable_car|chair_lift|mixed_lift|drag_lift|t-bar|j-bar|platter|magic_carpet"](${bb}););out tags geom;`;
     const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(q) });
     if (!res.ok) throw new Error('osm');
-    const j = await res.json(), pistes = [], lifts = [];
+    const j = await res.json(), pistes = [], lifts = [], areas = [];
     for (const e of j.elements || []) {
+      const t = e.tags || {};
+      if (t.landuse === 'winter_sports') {
+        const segs = [], add = g => { for (let i = 0; i < g.length - 1; i++) segs.push([g[i].lon, g[i].lat, g[i + 1].lon, g[i + 1].lat]); };
+        if (e.geometry) add(e.geometry); else for (const m of e.members || []) if (m.geometry && m.role !== 'inner') add(m.geometry);
+        if (segs.length) areas.push({ name: [t.name, t['name:en'], t['name:ja']].filter(Boolean).join(' / '), segs });
+        continue;
+      }
       if (!e.geometry) continue;
       const pts = e.geometry.map(p => [p.lon, p.lat]);
-      (e.tags.aerialway ? lifts : pistes).push({ name: e.tags.name || '', d: e.tags['piste:difficulty'] || '', kind: e.tags.aerialway || '', pts });
+      (t.aerialway ? lifts : pistes).push({ name: t.name || '', d: t['piste:difficulty'] || '', kind: t.aerialway || '', pts });
     }
-    const out = { pistes, lifts };
-    try { sessionStorage.setItem(key, JSON.stringify(out)); } catch {}
+    // 射線法：線段不必依序排列，奇數次相交就在範圍內
+    const inArea = (A, [x, y]) => { let c = false; for (const [x1, y1, x2, y2] of A.segs) if ((y1 > y) !== (y2 > y) && x < (x2 - x1) * (y - y1) / (y2 - y1) + x1) c = !c; return c; };
+    const base = [lo, la], kw = KW[r.id];
+    let area = areas.find(A => kw && kw.test(A.name) && !/Hakuba Valley/i.test(A.name));
+    if (!area) area = areas.filter(A => !/Hakuba Valley/i.test(A.name)).find(A => inArea(A, base));
+    const mine = f => { const n = f.pts.filter(p => inArea(area, p)).length; return n / f.pts.length >= 0.4; };
+    const near = f => dist(f.pts[Math.floor(f.pts.length / 2)], base) <= 2.5;
+    const keep = area ? mine : near;
+    const out = { t: Date.now(), area: area ? area.name : '', pistes: pistes.filter(keep), lifts: lifts.filter(keep) };
+    try { localStorage.setItem(key, JSON.stringify(out)); } catch {}
     return out;
   }
   // ---------- 資料：地形高度（Terrarium 圖磚，zoom 12，約 30 m 解析度） ----------
   async function loadDEM(lon0, lat0, rad) {
-    const z = 12, n = 2 ** z, mx = 111320 * Math.cos(lat0 * Math.PI / 180), my = 110540;
+    const z = rad < 3200 ? 13 : 12, n = 2 ** z, mx = 111320 * Math.cos(lat0 * Math.PI / 180), my = 110540;
     const dLon = rad / mx * 1.05, dLat = rad / my * 1.05;
     const tx = lon => (lon + 180) / 360 * n, ty = lat => { const s = Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)); return (1 - s / Math.PI) / 2 * n; };
     const x0 = Math.floor(tx(lon0 - dLon)), x1 = Math.floor(tx(lon0 + dLon)), y0 = Math.floor(ty(lat0 + dLat)), y1 = Math.floor(ty(lat0 - dLat));
@@ -5856,7 +5874,7 @@ const SKI3D = (() => {
     let hmin = Infinity, hmax = -Infinity;
     for (let i = 0; i <= 40; i++) for (let j = 0; j <= 40; j++) { const x = (i / 40 * 2 - 1) * RAD / M, zz = (j / 40 * 2 - 1) * RAD / M; if (x * x + zz * zz > (RAD / M) ** 2) continue; const h = dem.hAt(...toLL(x, zz)); hmin = Math.min(hmin, h); hmax = Math.max(hmax, h); }
     const base = hmin - 60, Y = h => (h - base) / M * EX, hy = (x, z) => Y(dem.hAt(...toLL(x, z)));
-    const RU = RAD / M, RINGS = 70, SEG = 150;
+    const RU = RAD / M, RINGS = 100, SEG = 220, S = Math.min(1.15, Math.max(0.6, RU / 320));
     // 地形：極座標網格（外圈剛好是圓，方便做側面）
     const pos = [], col = [], idx = [];
     const cSnow = new THREE.Color(th.snow), cLow = new THREE.Color(th.snowLow), cRock = new THREE.Color(th.rock), tmp = new THREE.Color();
@@ -5890,68 +5908,128 @@ const SKI3D = (() => {
     grp.add(new THREE.Mesh(sg, new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toon, side: THREE.DoubleSide })));
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(RU * 1.06, RU * 1.1, 3, 96), new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: toon }));
     plate.position.y = bottom - 1.5; grp.add(plate);
-    // 雪道：沿地形鋪的彩色緞帶
-    const near = [], mask = new Set(), cell = 4, key = (x, z) => Math.round(x / cell) + ',' + Math.round(z / cell);
+    // 雪道：壓雪過的白色雪面（有壓雪紋路）＋兩側程度色邊線＋邊界標桿
+    const mask = new Set(), cell = 2.5, key = (x, z) => Math.round(x / cell) + ',' + Math.round(z / cell);
     const inside = (x, z) => x * x + z * z < (RU * 0.985) ** 2;
+    const W = 2.2 * Math.max(0.8, S), lines = [];
+    const cordTex = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#f9fcff'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#e3edf8'; for (let y = 0; y < 64; y += 8) g.fillRect(0, y, 64, 3); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.encoding = THREE.sRGBEncoding; return t; })();
+    const groomMat = new THREE.MeshBasicMaterial({ map: cordTex, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    const markMats = {};
     for (const p of osm.pistes) {
       const pts = p.pts.map(q => toXZ(q[0], q[1]));
-      const res = []; for (let i = 0; i < pts.length - 1; i++) { const [ax, az] = pts[i], [bx, bz] = pts[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / 1.5)); for (let k = 0; k < n; k++) res.push([ax + (bx - ax) * k / n, az + (bz - az) * k / n]); }
+      const res = []; for (let i = 0; i < pts.length - 1; i++) { const [ax, az] = pts[i], [bx, bz] = pts[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / 1.2)); for (let k = 0; k < n; k++) res.push([ax + (bx - ax) * k / n, az + (bz - az) * k / n]); }
       res.push(pts[pts.length - 1]);
-      const seg = []; const flush = () => { if (seg.length > 1) ribbon(seg.splice(0), PCOL[p.d] ?? 0x3d7be0); else seg.length = 0; };
-      for (const q of res) { if (inside(q[0], q[1])) { seg.push(q); mask.add(key(q[0], q[1])); near.push(q); } else flush(); }
+      const seg = []; const flush = () => { if (seg.length > 2) piste(seg.splice(0), p.d); else seg.length = 0; };
+      for (const q of res) { if (inside(q[0], q[1])) { seg.push(q); for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) mask.add(key(q[0] + dx * cell, q[1] + dz * cell)); } else flush(); }
       flush();
     }
-    function ribbon(pts, color) {
-      const w = 1.6, v = [];
-      const off = i => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1; return [-dz / L * w, dx / L * w]; };
+    function strip(pts, w0, w1, lift, mat, uv) {
+      const v = [], t = [], nrm = i => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1; return [-dz / L, dx / L]; };
+      let len = 0;
       for (let i = 0; i < pts.length - 1; i++) {
-        const [ax, az] = pts[i], [bx, bz] = pts[i + 1], oa = off(i), ob = off(i + 1);
-        const A1 = [ax + oa[0], az + oa[1]], A2 = [ax - oa[0], az - oa[1]], B1 = [bx + ob[0], bz + ob[1]], B2 = [bx - ob[0], bz - ob[1]], hh = q => hy(q[0], q[1]) + 0.35;
-        v.push(A1[0], hh(A1), A1[1], B1[0], hh(B1), B1[1], A2[0], hh(A2), A2[1], B1[0], hh(B1), B1[1], B2[0], hh(B2), B2[1], A2[0], hh(A2), A2[1]);
+        const [ax, az] = pts[i], [bx, bz] = pts[i + 1], na = nrm(i), nb = nrm(i + 1), sl = Math.hypot(bx - ax, bz - az);
+        const P = (x, z, n, w) => { const X = x + n[0] * w, Z = z + n[1] * w; return [X, hy(X, Z) + lift, Z]; };
+        const A0 = P(ax, az, na, w0), A1 = P(ax, az, na, w1), B0 = P(bx, bz, nb, w0), B1 = P(bx, bz, nb, w1);
+        v.push(...A0, ...B0, ...A1, ...B0, ...B1, ...A1);
+        if (uv) { const v0 = len / 3, v1 = (len + sl) / 3; t.push(0, v0, 0, v1, 1, v0, 0, v1, 1, v1, 1, v0); }
+        len += sl;
       }
-      const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
-      const m = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
-      m.name = 'piste'; grp.add(m);
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); if (uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(t, 2));
+      const m = new THREE.Mesh(g, mat); m.name = 'piste'; grp.add(m); return len;
     }
-    // 樹：深綠圓錐 + 白色積雪帽，避開雪道
-    const treeH = Y(Math.min(hmax, 1950)), trees = [];
+    function piste(pts, d) {
+      const color = PCOL[d] ?? 0x3d7be0, edge = markMats[color] || (markMats[color] = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
+      strip(pts, -W, W, 0.3, groomMat, true);
+      strip(pts, W - 0.5, W, 0.36, edge); strip(pts, -W, -W + 0.5, 0.36, edge);
+      // 邊界標桿：每隔一段距離左右交替插一根
+      const pole = new THREE.CylinderGeometry(0.09, 0.09, 1.7 * S, 4), top = new THREE.MeshBasicMaterial({ color });
+      for (let i = 4; i < pts.length - 2; i += 14) {
+        const a = pts[i - 1], b = pts[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1, side = (i / 14) % 2 ? 1 : -1;
+        const x = pts[i][0] - dz / L * (W + 0.4) * side, z = pts[i][1] + dx / L * (W + 0.4) * side, m = new THREE.Mesh(pole, top);
+        m.position.set(x, hy(x, z) + 0.85 * S, z); m.name = 'piste'; grp.add(m);
+      }
+      // 給滑雪的小人用：由高往低
+      const p3 = pts.map(([x, z]) => new THREE.Vector3(x, hy(x, z) + 0.35, z)); if (p3[0].y < p3[p3.length - 1].y) p3.reverse();
+      lines.push({ p3, d, pts });
+    }
+    // 樹：雪道兩側密集的樹林 + 其他地方零星的樹（避開雪道、只長在森林線以下）
+    const treeH = Y(Math.min(hmax, 2000)), trees = [];
     let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let t = 0; t < 9000 && trees.length < 1800; t++) {
-      const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * RU * 0.95, x = Math.cos(a) * rr, z = Math.sin(a) * rr, y = hy(x, z);
-      if (y > treeH || mask.has(key(x, z)) || mask.has(key(x + cell, z)) || mask.has(key(x - cell, z)) || mask.has(key(x, z + cell)) || mask.has(key(x, z - cell))) continue;
-      const sl = Math.hypot(hy(x + 2, z) - hy(x - 2, z), hy(x, z + 2) - hy(x, z - 2)) / 4; if (sl > 0.9) continue;
-      if (rnd() > 0.55 + 0.4 * (1 - y / treeH)) continue;
-      trees.push([x, y, z, 0.7 + rnd() * 0.7]);
+    const okTree = (x, z) => { if (x * x + z * z > (RU * 0.96) ** 2 || mask.has(key(x, z))) return null; const y = hy(x, z); if (y > treeH) return null; const sl = Math.hypot(hy(x + 1.5, z) - hy(x - 1.5, z), hy(x, z + 1.5) - hy(x, z - 1.5)) / 3; return sl > 1.1 ? null : y; };
+    for (const L of lines) for (let i = 1; i < L.pts.length - 1; i += 2) for (const side of [-1, 1]) {
+      if (rnd() > 0.8 || trees.length > 7000) continue;
+      const a = L.pts[i - 1], b = L.pts[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz) || 1, d = W + 1.4 + rnd() * rnd() * 9;
+      const x = L.pts[i][0] - dz / len * d * side + (rnd() - 0.5), z = L.pts[i][1] + dx / len * d * side + (rnd() - 0.5), y = okTree(x, z);
+      if (y != null) trees.push([x, y, z, (0.55 + rnd() * 0.6) * S]);
+    }
+    for (let t = 0; t < 14000 && trees.length < 9000; t++) {
+      const a = rnd() * Math.PI * 2, rr = Math.sqrt(rnd()) * RU * 0.95, x = Math.cos(a) * rr, z = Math.sin(a) * rr, y = okTree(x, z);
+      if (y == null || rnd() > 0.35 + 0.45 * (1 - y / treeH)) continue;
+      trees.push([x, y, z, (0.55 + rnd() * 0.7) * S]);
     }
     const cone = new THREE.ConeGeometry(1.5, 4.2, 6), cap = new THREE.ConeGeometry(0.95, 1.7, 6), trunk = new THREE.CylinderGeometry(0.28, 0.32, 1.1, 5);
-    const mk = (geo, color, dy) => { const im = new THREE.InstancedMesh(geo, new THREE.MeshToonMaterial({ color, gradientMap: toon }), trees.length); const o = new THREE.Object3D(); trees.forEach(([x, y, z, s], i) => { o.position.set(x, y + dy * s, z); o.scale.setScalar(s); o.rotation.y = i; o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); grp.add(im); };
-    mk(trunk, 0x7a5236, 0.4); mk(cone, 0x2f7d5b, 2.6); mk(cap, 0xffffff, 4.15);
-    // 纜車：塔柱 + 纜線 + 會動的車廂；兩端放小站房
+    const mk = (list, geo, color, dy) => { if (!list.length) return; const im = new THREE.InstancedMesh(geo, new THREE.MeshToonMaterial({ color, gradientMap: toon }), list.length); const o = new THREE.Object3D(); list.forEach(([x, y, z, s], i) => { o.position.set(x, y + dy * s, z); o.scale.setScalar(s); o.rotation.y = i; o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); grp.add(im); };
+    const tA = trees.filter((_, i) => i % 3), tB = trees.filter((_, i) => !(i % 3));
+    mk(trees, trunk, 0x7a5236, 0.4); mk(tA, cone, 0x2f7d5b, 2.6); mk(tB, cone, 0x3f9a6a, 2.6); mk(trees, cap, 0xffffff, 4.15);
+    // 滑雪的小人：沿雪道往下滑，左右小幅擺動
+    const jackets = [0xff5d5d, 0x3d7be0, 0xffc93c, 0x8e5bd9, 0x2fb36b, 0xff8fb1], skin = new THREE.MeshToonMaterial({ color: 0xffd9b8, gradientMap: toon });
+    const skiGeo = new THREE.BoxGeometry(0.16, 0.06, 1.5), bodyGeo = new THREE.CapsuleGeometry(0.32, 0.55, 3, 6), headGeo = new THREE.SphereGeometry(0.27, 8, 6), hatGeo = new THREE.SphereGeometry(0.29, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+    const skiers = Math.min(40, lines.length * 2), skiMat = new THREE.MeshToonMaterial({ color: 0x2b2f3a, gradientMap: toon });
+    for (let k = 0; k < skiers; k++) {
+      const L = lines[k % lines.length]; if (L.p3.length < 4) continue;
+      const g = new THREE.Group(), jc = new THREE.MeshToonMaterial({ color: jackets[k % jackets.length], gradientMap: toon });
+      const body = new THREE.Mesh(bodyGeo, jc); body.position.y = 0.75; body.rotation.x = 0.25;
+      const head = new THREE.Mesh(headGeo, skin); head.position.set(0, 1.45, 0.12);
+      const hat = new THREE.Mesh(hatGeo, new THREE.MeshToonMaterial({ color: jackets[(k + 2) % jackets.length], gradientMap: toon })); hat.position.set(0, 1.49, 0.12);
+      const s1 = new THREE.Mesh(skiGeo, skiMat), s2 = new THREE.Mesh(skiGeo, skiMat); s1.position.set(-0.17, 0.04, 0); s2.position.set(0.17, 0.04, 0);
+      g.add(body, head, hat, s1, s2); g.scale.setScalar(S * 1.25); grp.add(g);
+      const curve = new THREE.CatmullRomCurve3(L.p3); const len = curve.getLength();
+      anims.push({ skier: g, curve, len, u: rnd(), sp: (5 + rnd() * 5) / len, ph: rnd() * 6 });
+    }
+    // 纜車：T 型塔柱 + 上下行兩條纜線 + 會動的吊椅／車廂；兩端放小站房
     const lifts = osm.lifts.map(l => ({ ...l, xz: l.pts.map(q => toXZ(q[0], q[1])) })).filter(l => l.xz.every(q => inside(q[0], q[1])));
     const pyMat = new THREE.MeshToonMaterial({ color: 0x8a94a6, gradientMap: toon }), cabMat = { gondola: 0xff6b6b, cable_car: 0xff6b6b, chair_lift: 0xffc93c }, def = 0x6ea8ff;
-    const roofMat = new THREE.MeshToonMaterial({ color: 0xd9534f, gradientMap: toon }), wallMat = new THREE.MeshToonMaterial({ color: 0xfff1d6, gradientMap: toon });
+    const roofMat = new THREE.MeshToonMaterial({ color: 0xd9534f, gradientMap: toon }), wallMat = new THREE.MeshToonMaterial({ color: 0xfff1d6, gradientMap: toon }), cableMat = new THREE.MeshBasicMaterial({ color: 0x2b2f3a });
     let topPt = null, topY = -Infinity, mainLift = null, mainLen = 0;
     for (const l of lifts) {
       const path = []; let len = 0;
       for (let i = 0; i < l.xz.length - 1; i++) { const [ax, az] = l.xz[i], [bx, bz] = l.xz[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / 12)); for (let k = 0; k < n; k++) path.push([ax + (bx - ax) * k / n, az + (bz - az) * k / n]); len += L; }
       path.push(l.xz[l.xz.length - 1]);
-      const ph = l.kind === 'gondola' || l.kind === 'cable_car' ? 4 : 3, top = path.map(([x, z]) => new THREE.Vector3(x, hy(x, z) + ph, z));
-      for (let i = 0; i < top.length; i++) { const py = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, ph, 5), pyMat); py.position.set(top[i].x, top[i].y - ph / 2, top[i].z); grp.add(py); }
-      const curve = new THREE.CatmullRomCurve3(top);
-      const cab = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(8, top.length * 4), 0.3, 5, false), new THREE.MeshBasicMaterial({ color: 0x2b2f3a })); grp.add(cab);
+      const gond = l.kind === 'gondola' || l.kind === 'cable_car', ph = (gond ? 4.2 : 3.2) * Math.max(0.8, S), top = path.map(([x, z]) => new THREE.Vector3(x, hy(x, z) + ph, z));
+      const dirAll = new THREE.Vector3(top[top.length - 1].x - top[0].x, 0, top[top.length - 1].z - top[0].z).normalize(), side = new THREE.Vector3(-dirAll.z, 0, dirAll.x), yaw = Math.atan2(dirAll.x, dirAll.z);
+      const towerGeo = new THREE.CylinderGeometry(0.22, 0.34, ph, 6), armGeo = new THREE.BoxGeometry(2.8, 0.22, 0.3);
+      for (let i = 1; i < top.length - 1; i++) {
+        const t = new THREE.Mesh(towerGeo, pyMat); t.position.set(top[i].x, top[i].y - ph / 2, top[i].z); grp.add(t);
+        const arm = new THREE.Mesh(armGeo, pyMat); arm.position.set(top[i].x, top[i].y + 0.1, top[i].z); arm.rotation.y = yaw; grp.add(arm);
+      }
+      const offCurve = o => new THREE.CatmullRomCurve3(top.map(p => p.clone().addScaledVector(side, o)));
+      const cUp = offCurve(1.1), cDn = offCurve(-1.1), curve = new THREE.CatmullRomCurve3(top);
+      for (const c of [cUp, cDn]) grp.add(new THREE.Mesh(new THREE.TubeGeometry(c, Math.max(8, top.length * 4), 0.11, 4, false), cableMat));
       for (const end of [l.xz[0], l.xz[l.xz.length - 1]]) {
         const hs = new THREE.Group(), wall = new THREE.Mesh(new THREE.BoxGeometry(4, 2.4, 3.2), wallMat), roof = new THREE.Mesh(new THREE.ConeGeometry(3.3, 2, 4), roofMat);
-        wall.position.y = 1.2; roof.position.y = 3.4; roof.rotation.y = Math.PI / 4; hs.add(wall, roof); hs.position.set(end[0], hy(end[0], end[1]) - 0.3, end[1]); hs.rotation.y = Math.atan2(l.xz[1][0] - l.xz[0][0], l.xz[1][1] - l.xz[0][1]); grp.add(hs);
+        wall.position.y = 1.2; roof.position.y = 3.4; roof.rotation.y = Math.PI / 4; hs.add(wall, roof); hs.scale.setScalar(Math.max(0.75, S)); hs.position.set(end[0], hy(end[0], end[1]) - 0.3, end[1]); hs.rotation.y = yaw; grp.add(hs);
         const ey = hy(end[0], end[1]); if (ey > topY) { topY = ey; topPt = end; }
       }
-      const n = Math.max(3, Math.round(len / 22)), color = cabMat[l.kind] ?? def, geo = l.kind === 'chair_lift' ? new THREE.BoxGeometry(2, 0.8, 1.6) : new THREE.BoxGeometry(2, 2, 2);
-      const im = new THREE.InstancedMesh(geo, new THREE.MeshToonMaterial({ color, gradientMap: toon }), n * 2); grp.add(im);
-      anims.push({ im, curve, n, off: 0, speed: 0.012 / Math.max(1, len / 60) });
+      const n = Math.max(3, Math.round(len / (gond ? 26 : 16))), color = cabMat[l.kind] ?? def, parts = [];
+      const add = (geo, mat, dy) => { const im = new THREE.InstancedMesh(geo, mat, n * 2); grp.add(im); parts.push([im, dy]); };
+      const hanger = new THREE.MeshToonMaterial({ color: 0x555b66, gradientMap: toon }), body = new THREE.MeshToonMaterial({ color, gradientMap: toon });
+      add(new THREE.BoxGeometry(0.12, gond ? 0.9 : 1.6, 0.12), hanger, gond ? -0.45 : -0.8);
+      if (gond) { add(new THREE.BoxGeometry(1.7, 1.7, 1.9), body, -1.75); add(new THREE.BoxGeometry(1.8, 0.5, 2.0), new THREE.MeshToonMaterial({ color: 0x8fd3ff, gradientMap: toon }), -1.55); }
+      else { add(new THREE.BoxGeometry(2.1, 0.22, 0.9), body, -1.65); add(new THREE.BoxGeometry(2.1, 0.8, 0.18), body, -1.25); }
+      anims.push({ parts, cUp, cDn, n, off: 0, speed: 0.012 / Math.max(1, len / 60), S: Math.max(0.8, S) });
       if (len > mainLen) { mainLen = len; mainLift = { curve, from: l.xz[0], to: l.xz[l.xz.length - 1] }; }
     }
     if (!topPt) { let best = -Infinity; for (let k = 0; k < 400; k++) { const a = k * 2.399, rr = Math.sqrt(k / 400) * RU * 0.9, x = Math.cos(a) * rr, z = Math.sin(a) * rr, y = hy(x, z); if (y > best) { best = y; topPt = [x, z]; } } }
     // 標籤：雪場名稱（山腳）＋山頂旗子
     const bxz = toXZ(r.ll[1], r.ll[0]), inB = inside(bxz[0], bxz[1]) ? bxz : [bxz[0] * RU * 0.85 / Math.hypot(...bxz), bxz[1] * RU * 0.85 / Math.hypot(...bxz)];
+    // 山腳的小鎮：幾間彩色屋頂的小木屋
+    { const roofs = [0xd9534f, 0x3d7be0, 0x2fb36b, 0x9a6b4f, 0xf08c00], wm = new THREE.MeshToonMaterial({ color: 0xfff1d6, gradientMap: toon });
+      for (let k = 0, made = 0; k < 60 && made < 9; k++) {
+        const a = rnd() * Math.PI * 2, d = 6 + rnd() * 22, x = inB[0] + Math.cos(a) * d, z = inB[1] + Math.sin(a) * d;
+        if (!inside(x, z) || mask.has(key(x, z))) continue;
+        const h = new THREE.Group(), w = 2.4 + rnd() * 2, wall = new THREE.Mesh(new THREE.BoxGeometry(w, 2, w * 0.8), wm), roof = new THREE.Mesh(new THREE.ConeGeometry(w * 0.82, 1.6, 4), new THREE.MeshToonMaterial({ color: roofs[k % roofs.length], gradientMap: toon }));
+        wall.position.y = 1; roof.position.y = 2.8; roof.rotation.y = Math.PI / 4; h.add(wall, roof); h.scale.setScalar(Math.max(0.7, S)); h.position.set(x, hy(x, z) - 0.2, z); h.rotation.y = rnd() * Math.PI; grp.add(h); made++;
+      } }
     const lb = label(r.zh, `山腳 ${r.base} m`); lb.position.set(inB[0], hy(inB[0], inB[1]) + 6, inB[1]); grp.add(lb);
     const fy = hy(topPt[0], topPt[1]), pole = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 7, 6), new THREE.MeshToonMaterial({ color: 0x6b5a4a, gradientMap: toon }));
     pole.position.set(topPt[0], fy + 3.5, topPt[1]); grp.add(pole);
@@ -5989,9 +6067,13 @@ const SKI3D = (() => {
     raf = requestAnimationFrame(loop);
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
     for (const a of anims) {
-      if (a.im) { a.off = (a.off + a.speed * dt * 60) % 1; const o = tmpO();
-        for (let i = 0; i < a.n; i++) for (let dir = 0; dir < 2; dir++) { const u = ((i / a.n + (dir ? -a.off : a.off)) % 1 + 1) % 1, p = a.curve.getPointAt(u), tg = a.curve.getTangentAt(u); o.position.set(p.x + (dir ? 1.1 : -1.1) * tg.z, p.y - 1.6, p.z - (dir ? 1.1 : -1.1) * tg.x); o.rotation.set(0, Math.atan2(tg.x, tg.z), 0); o.updateMatrix(); a.im.setMatrixAt(i * 2 + dir, o.matrix); }
-        a.im.instanceMatrix.needsUpdate = true; }
+      if (a.parts) { a.off = (a.off + a.speed * dt * 60) % 1; const o = tmpO();
+        for (let i = 0; i < a.n; i++) for (let dir = 0; dir < 2; dir++) { const c = dir ? a.cDn : a.cUp, u = ((i / a.n + (dir ? -a.off : a.off)) % 1 + 1) % 1, p = c.getPointAt(u), tg = c.getTangentAt(u);
+          o.rotation.set(0, Math.atan2(tg.x, tg.z), 0); o.scale.setScalar(a.S);
+          for (const [im, dy] of a.parts) { o.position.set(p.x, p.y + dy * a.S, p.z); o.updateMatrix(); im.setMatrixAt(i * 2 + dir, o.matrix); } }
+        for (const [im] of a.parts) im.instanceMatrix.needsUpdate = true; }
+      else if (a.skier) { a.u += a.sp * dt; if (a.u >= 1) a.u = 0; const p = a.curve.getPointAt(a.u), tg = a.curve.getTangentAt(a.u), sw = Math.sin(t * 1.6 + a.ph);
+        a.skier.position.set(p.x - tg.z * sw * 0.9, p.y, p.z + tg.x * sw * 0.9); a.skier.rotation.set(0, Math.atan2(tg.x, tg.z) + sw * 0.35, -sw * 0.18); }
       else if (a.flag) a.flag.rotation.y = Math.sin(t * 2) * 0.35;
       else if (a.cloud) { const u = a.cloud.userData; u.a += u.sp; a.cloud.position.x = Math.cos(u.a) * u.rr; a.cloud.position.z = Math.sin(u.a) * u.rr; }
     }
@@ -6048,9 +6130,9 @@ const SKI3D = (() => {
     if (cur !== r) return;
     // 畫面中心：雪場附近（3.5 公里內）雪道與纜車的範圍中心
     const base = [r.ll[1], r.ll[0]], pts = [];
-    for (const f of [...osm.pistes, ...osm.lifts]) { const mid = f.pts[Math.floor(f.pts.length / 2)]; if (dist(mid, base) <= 3.5) pts.push(...f.pts); }
+    for (const f of [...osm.pistes, ...osm.lifts]) pts.push(...f.pts);
     let lon0 = base[0] - 0.012, lat0 = base[1], rad = 3800;
-    if (pts.length) { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } lon0 = (x0 + x1) / 2; lat0 = (y0 + y1) / 2; rad = Math.min(5200, Math.max(2600, Math.hypot((x1 - x0) * 111320 * Math.cos(lat0 * Math.PI / 180), (y1 - y0) * 110540) / 2 + 700)); }
+    if (pts.length) { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } lon0 = (x0 + x1) / 2; lat0 = (y0 + y1) / 2; rad = Math.min(4500, Math.max(1600, Math.hypot((x1 - x0) * 111320 * Math.cos(lat0 * Math.PI / 180), (y1 - y0) * 110540) / 2 + 450)); }
     let dem; try { dem = await loadDEM(lon0, lat0, rad); } catch (e) { return st(e.message + '，請稍後再試', 'err'); }
     if (cur !== r) return;
     try { await document.fonts.load('800 44px "M PLUS Rounded 1c"'); } catch {}
