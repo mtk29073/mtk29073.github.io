@@ -5787,8 +5787,8 @@ const SKI3D = (() => {
 
   // ---------- 資料：雪道與纜車（OSM） ----------
   async function fetchOSM(r) {
-    const key = 'ski3d-' + r.id;
-    try { const c = sessionStorage.getItem(key); if (c) return JSON.parse(c); } catch {}
+    const key = 'ski3dv2-' + r.id;
+    try { const c = JSON.parse(sessionStorage.getItem(key) || 'null'); if (c && Array.isArray(c.pistes) && Array.isArray(c.lifts)) return c; } catch {}
     const [la, lo] = r.ll, dy = 0.04, dx = 0.05, bb = `${la - dy},${lo - dx},${la + dy},${lo + dx}`;
     const q = `[out:json][timeout:25];(way["piste:type"="downhill"](${bb});way["aerialway"~"gondola|cable_car|chair_lift|mixed_lift|drag_lift|t-bar|j-bar|platter|magic_carpet"](${bb}););out tags geom;`;
     const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(q) });
