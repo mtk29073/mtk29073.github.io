@@ -368,6 +368,24 @@ table.jtab td.jm { min-width: 7em; }
 .vnote { color: var(--muted); font-size: 0.8rem; display: block; margin-top: 2px; }
 #vnQuiz[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
 @media (max-width: 560px) { #v-vn table.jtab tr { display: grid; grid-template-columns: auto minmax(0, 1fr); border-top: 1px solid var(--line); } #v-vn table.jtab td { border-top: 0; } #v-vn table.jtab td.jm { grid-column: 2; padding-top: 0; min-width: 0; } #v-vn table.jtab td:first-child { width: auto; } }
+/* ---- CASI 筆記 ---- */
+#casiTabs { flex-wrap: wrap; margin-bottom: 16px; max-width: 100%; }
+.casisec h2 { font-size: 0.9rem; }
+.casisec h3 { font: 600 1rem var(--sans); margin: 10px 0 0; }
+.casilead { margin: 0; font-size: 0.95rem; }
+.casinote { margin: 0; font-size: 0.86rem; color: var(--muted); }
+.casilead span, .casinote span { display: block; color: var(--muted); font-size: 0.86rem; margin-top: 2px; }
+.casilist { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
+.casiwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table.casitab { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 520px; }
+table.casitab.two { min-width: 0; }
+table.casitab th { text-align: left; font-weight: 600; font-size: 0.78rem; color: var(--muted); background: var(--well); padding: 7px 10px; white-space: nowrap; }
+table.casitab td { padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; line-height: 1.5; }
+table.casitab td:first-child { font-weight: 600; }
+table.casitab.two td:first-child { font-weight: 500; width: 55%; }
+table.casitab td small { display: block; font-size: 0.84rem; font-weight: 400; color: var(--muted); margin-top: 2px; }
+.casisay { float: right; margin: 0 0 0 8px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: var(--well); color: var(--accent); font-size: 10px; cursor: pointer; }
+.casisay:hover { border-color: var(--accent); }
 /* ---- 滑雪場地圖 ---- */
 .skigrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 900px) { .skigrid { grid-template-columns: minmax(0, 1fr); } }
@@ -617,6 +635,7 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
     <a href="#scripts" data-view="scripts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg><span>Script 紀錄區</span></a>
     <a href="#todo" data-view="todo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l2 2 3-3M4 13l2 2 3-3M12 6h8M12 13h8M12 20h8M5 20h.01"/></svg><span>待辦事項</span></a>
     <a href="#ski" data-view="ski"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20l6-11 4 6 3-4 5 9z"/><path d="M8.2 10.5l1.8 1.5 1.6-1.4"/></svg><span>滑雪地圖</span></a>
+    <a href="#casi" data-view="casi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-4 9 4-9 4z"/><path d="M7 10v5c2.5 2 7.5 2 10 0v-5M21 8v6"/></svg><span>CASI 筆記</span></a>
     <div class="devnav" aria-label="開發選項">
       <p class="navlabel">開發選項</p>
       <div class="navgrp">
@@ -1342,6 +1361,13 @@ canvas.cxcanvas { width: 100%; display: block; cursor: crosshair; touch-action: 
       <div id="lvStats"></div>
     </div>
   </div>
+</div>
+
+<!-- ============ CASI 筆記 ============ -->
+<div class="view" id="v-casi" hidden>
+  <header class="vhead"><h1>CASI 單板指導員筆記</h1><p>加拿大單板滑雪指導員協會（CASI）Level 1 的規則、考試項目、官方 PDF 重點與示範教學常用句，中英對照；另附 Level 2、Level 3、Park 介紹。句子旁的 ▶ 可以朗讀英文。</p></header>
+  <div class="segbtns" id="casiTabs" role="group" aria-label="章節"></div>
+  <div id="casiBody"></div>
 </div>
 
 <!-- ============ 滑雪場地圖 ============ -->
@@ -3154,7 +3180,7 @@ const hexAuth = (() => {
 })();
 
 const showView = (() => {
-  const VIEWS = ['crypto', 'scripts', 'todo', 'ski', 'owner', 'chip', 'stock', 'fin', 'level', 'jp', 'vn'];
+  const VIEWS = ['crypto', 'scripts', 'todo', 'ski', 'casi', 'owner', 'chip', 'stock', 'fin', 'level', 'jp', 'vn'];
   const DEV_VIEWS = ['chip', 'stock', 'fin', 'level', 'jp', 'vn'];
   const links = document.querySelectorAll('.side [data-view]');
   function showView(v) {
@@ -6372,6 +6398,312 @@ const SKI3D = (() => {
     if (cur) { const r = cur; cur = null; open(r); }
   });
   return { open, close };
+})();
+
+// ================= CASI 單板指導員筆記（中英對照） =================
+// 資料來源：CASI 官網課程頁、Level 1/2/3 與 Park 1 Evaluator Guide 2023-24、Level 1 Course Guide 中英版（2026-11 查詢）
+// 儲存格內用 \n 分行：第一行英文、第二行中文。say: 該欄可按鈕朗讀英文。
+const CASI = [
+  { id: 'rules', t: 'L1 規則', h: '課程規則 Course rules',
+    lead: ['Level 1 是三天、至少 18 小時的課程，滑行與教學兩項都要「Meets Standard」才拿得到證照。', 'Level 1 is a 3-day course of at least 18 hours; you must reach Meets Standard in both riding and teaching to be certified.'],
+    blocks: [
+      { cols: ['項目 Item', 'English', '中文'], rows: [
+        ['年齡 Age', '14 years old on the first day of the course (current website).', '開課第一天須滿 14 歲（現行官網）。舊版中英課程指南寫 15 歲，以報名頁為準。'],
+        ['滑行能力 Riding ability', 'Comfortable and safe riding on intermediate terrain.', '能在中級雪道舒適且安全地滑行。'],
+        ['語言 Language', 'Fluent in the language of the course you register for.', '能流利使用所報名課程的授課語言。'],
+        ['時數 Duration', '3 days, minimum 18 hours, including evaluations.', '3 天，至少 18 小時，含評核。'],
+        ['出席 Attendance', 'Full attendance is mandatory; missing any part makes you ineligible for evaluation. Arrive 10 minutes early.', '必須全程出席，缺任何一段就失去評核資格。每個時段提早 10 分鐘到。'],
+        ['安全帽 Helmet', 'Helmets are mandatory on all CASI courses.', '所有 CASI 課程都必須戴安全帽。'],
+        ['線上課程 Online portion', 'The online preparation workshop is mandatory and must be finished before the course ends.', '線上預習課程為必修，須在課程結束前完成，否則不發證。'],
+        ['評分方式 Scoring', 'Ongoing assessment over 3 days. Each component is rated Meets Standard or Below Standard; there is no numeric score.', '三天持續評核。每項只有「達標」或「未達標」，沒有分數。'],
+        ['通過條件 Pass rule', 'Pass both the riding and the teaching evaluation. Each is half of the result.', '滑行與教學都要通過，兩者各占一半。'],
+        ['補考 Retest', 'Fail one part: retest that part within 2 years. Fail both: retake the full course.', '只有一項未過：2 年內補考該項。兩項都未過：重上整個課程。'],
+        ['補考日 Retest day', 'Teaching retest candidates join on Day 2; riding retest candidates join on Day 3. A 1-day Re-test Day is also offered.', '教學補考者第 2 天報到，滑行補考者第 3 天報到。也可報名一日補考。'],
+        ['超過 2 年 After 2 years', 'Retake the full course, but only the remaining part is evaluated.', '需重上完整課程，但只評核尚未通過的那一項。'],
+        ['證照範圍 Scope', 'Certified to teach beginners up to the Novice Turn level.', '可教初學者到 Novice Turn（新手連續轉彎）程度。'],
+        ['後續 Next step', 'Prerequisite for Level 2 Instructor and Park Instructor 1.', '是 Level 2 與 Park 1 指導員課程的報名前提。'],
+        ['費用 Fees', 'Course $552.98 early / $608.28 regular; retest $167.13 early / $183.84 regular. Lift tickets not included.', '加拿大官網標價：課程早鳥 $552.98、一般 $608.28；補考早鳥 $167.13、一般 $183.84。不含纜車票。海外開課的費用請看當地報名頁。'],
+      ] },
+      { h: '三天流程 3-day agenda', cols: ['天 Day', 'English', '中文'], rows: [
+        ['Day 1', 'Registration and introductions. Warm-up and Riding Skills Improvement Session #1. Afternoon: QuickRide System presentation. Daily review and evaluation.', '報到與自我介紹。暖身與滑行技術提升課一。下午 QuickRide 系統講解。每日回顧與評核。'],
+        ['Day 2', 'QuickRide System presentation continues, morning and afternoon. Workshop review. Daily review and evaluation.', '上下午繼續 QuickRide 系統講解與練習教學。研討回顧。每日回顧與評核。'],
+        ['Day 3', 'Practice Teaching Session in the morning. Riding Skills Improvement Session #2 in the afternoon. Presentation of results.', '上午實際試教。下午滑行技術提升課二。公布結果。'],
+      ] },
+      { p: ['標準時段是 8:30 報到、9:00 到 11:30 上午課、12:30 到 15:30 下午課，實際時間會依雪場狀況調整。', 'The standard day runs 8:30 registration, 9:00–11:30 morning session, 12:30–3:30 afternoon session; times may change with mountain conditions.'] },
+    ] },
+  { id: 'exam', t: 'L1 考試項目', h: '考試項目 Exam items',
+    lead: ['考試分滑行與教學兩大項：滑行看 3 個核心能力加 4 個指定動作，教學看 5 個實務教學技能。', 'The exam has two components: riding (3 Core Competencies plus 4 mandatory maneuvers) and teaching (5 Practical Teaching Skills).'],
+    blocks: [
+      { h: '滑行：三個核心能力 Riding: 3 Core Competencies', note: ['標準是在壓雪中級雪道上展現穩定的中級滑行技術。', 'The standard is consolidated intermediate-level riding on intermediate groomed terrain.'],
+        cols: ['核心能力 Competency', '達標 Meets Standard', '未達標 Below Standard'], rows: [
+        ['Centred & Mobile Position\n居中且靈活的站姿', 'Weight equal over both feet; shoulders, hips, knees and feet stay aligned; even flexion in hips, knees and ankles.\n重心平均在雙腳；肩、髖、膝、腳保持對齊；髖膝踝均勻彎曲。', 'Weight stuck on one foot; body twisted out of alignment; one joint bends far more than the others.\n重心偏一腳；身體扭轉沒對齊；只彎某一個關節。'],
+        ['Turning With The Lower Body\n下半身帶動轉彎', 'Hips and knees start the turn; rotation flows hips to knees to feet; turns are round and symmetrical.\n由髖與膝啟動轉彎；旋轉由髖到膝到腳；彎型圓且對稱。', 'Turns with arms, shoulders or upper body; uses counter-rotation; turns not round.\n用手、肩或上身甩板；反擰；彎型不圓。'],
+        ['Balance Along The Working Edge\n在工作刃上平衡', 'Combines inclination and angulation for reliable edge grip.\n結合傾倒與折疊，板刃抓地穩定。', 'Too much or too little inclination or angulation; edge grip not reliable.\n傾倒或折疊過多或不足；板刃抓不住。'],
+      ] },
+      { h: '滑行：四個指定動作 Riding: 4 mandatory maneuvers', note: ['CW 指滑行走廊寬度 (corridor width)，轉彎要維持在這個寬度內。', 'CW means corridor width; keep your turns inside it.'],
+        cols: ['動作 Maneuver', '雪道 Terrain', '寬度 CW', '重點 Key points'], rows: [
+        ['Beginner Turns, forward and switch\n初學者轉彎（正腳與反腳）', 'Green 綠線', '3–5 m', 'Low speed, started from the lower joints, minimal edge. Same quality in both directions.\n低速、由下肢關節啟動、立刃極少，正反腳品質一致。'],
+        ['Intermediate Sliding Turns\n中級搓雪轉彎', 'Blue 藍線', '5–7 m', 'Medium radius, steady speed, round shape, pressure and edge control.\n中彎、速度穩定、彎型圓、控制壓力與立刃。'],
+        ['Open Carved Turns\n開放式刻滑轉彎', 'Easiest green or cat track\n最緩綠線或連絡道', '3–6 m', 'Linked turns down the fall line, thin pencil-line track, no pivot or skid, constant rhythm.\n沿滾落線連續轉彎、鉛筆線般的細軌跡、不轉板不搓雪、節奏固定。'],
+        ['Hopping Through Turns\n轉彎中跳躍', 'Green or blue\n綠線或藍線', '5–7 m', 'Hop during the traverse while linking turns; land with equal weight on both feet.\n連續轉彎中於橫渡時跳躍，雙腳平均著地。'],
+      ] },
+      { p: ['達標代表動作已穩定，核心能力大部分時間看得出來，坡度或雪況改變時偶有小失誤可接受。', 'Meets Standard means the maneuver is consolidated and Core Competencies show most of the time; minor occasional faults with changes in slope or snow are accepted.'] },
+      { h: '教學：五個實務教學技能 Teaching: 5 Practical Teaching Skills', note: ['標準是能有效教學初學者課程，第 3 天上午的試教是主要展現時段。', 'The standard is teaching beginner lessons effectively; the Day 3 morning Practice Teaching Session is where you show it.'],
+        cols: ['項目 Skill', '考官看什麼 What evaluators look for', '中文'], rows: [
+        ['Guest Service & Safety\n顧客服務與安全', 'Safe, suitable terrain; positive, student-centred lesson; safe and secure environment at all times.', '地形安全合適；課程正向、以學生為中心；全程維持安全環境。'],
+        ['Communication & Lesson Structure\n溝通與課程結構', 'Clear explanations in a What, Why, How format; clear building-block progression.', '用「做什麼、為什麼、怎麼做」講解；課程一步一步堆疊。'],
+        ['Demonstrations\n示範', "Adapted to the student's level, clear, easy to copy, confidence-inspiring, technically correct.", '符合學生程度、清楚、容易模仿、讓人有信心、技術正確。'],
+        ['Analysis & Improvement\n分析與改進', 'Finds the main cause of difficulty; feedback is positive, relevant to the lesson goal, and explains why it matters.', '找出學生卡關的主因；回饋正向、扣緊課程目標，並說明為什麼要改。'],
+        ['Technical Content\n技術內容', 'Technical concepts are correct and complete, in line with CASI methodology, up to novice level.', '技術觀念正確完整，符合 CASI 教學法，範圍到新手程度。'],
+      ] },
+      { p: ['課程指南另列了 Professionalism（專業度）：全程展現專業指導員該有的態度。', 'The course guide also lists Professionalism: display the traits of a professional instructor throughout.'] },
+    ] },
+  { id: 'summary', t: 'PDF 摘要', h: '官方 PDF 重點摘要 Official PDF summary',
+    lead: ['官方文件的核心是三件事：QuickRide 五階段教初學者、訓練循環與 S.A.F.E. 組織每個練習、三個核心能力解釋所有技術。', 'The official documents come down to three ideas: the 5-phase QuickRide System for beginners, the Training Cycle and S.A.F.E. to organise each exercise, and 3 Core Competencies that explain all technique.'],
+    blocks: [
+      { h: 'QuickRide 系統五階段 The QuickRide System', note: ['試教題目都出自這五個階段，每個階段的目標要能用一句話講出來。', 'Practice-teaching topics come from these five phases; be able to state each goal in one sentence.'],
+        cols: ['階段 Phase', '目標 Goal', '常用練習 Sample tactics'], rows: [
+        ['I. Basics 基礎\n裝備、移動', 'Learn to use the equipment and move around with one foot attached.\n認識裝備，單腳穿板自如移動。', 'Parts of the board 雪板部位、Attaching the front foot 穿前腳、Neutral position 中立姿勢、Skating 滑行推進、Climbing & descending 上坡與下坡'],
+        ['II. Sliding 滑動\n直滑降', 'Become comfortable standing on a sliding board.\n在滑動的板上站得自在。', 'Push-Push-Glide 推推滑、Toe/heel drag 腳尖或腳跟拖雪、J-Turns J 型轉彎'],
+        ['III. Control 控制\n橫滑、落葉飄', 'Control speed and direction with both feet attached.\n雙腳穿板控制速度與方向。', 'Gas pedal exercise 踩油門練習、One-foot sideslip & traverse 單腳橫滑與橫渡、Sideslipping 橫滑、Pendulum 落葉飄、Power pendulum 強力落葉飄'],
+        ['IV. Turning 轉彎\n初學者轉彎', 'Learn to change edges in the fall line.\n學會在滾落線上換刃。', 'Static rotation exercise 靜態旋轉練習、Garland 花環練習、Walking through turns 走過轉彎、Beginner turns 初學者轉彎'],
+        ['V. Flow 流暢\n新手轉彎', 'Explore the mountain safely.\n安全地探索雪場。', "Add a traverse between turns 轉彎間加橫渡、Novice turns 新手轉彎、Speed control (4 S's) 速度控制、Sliding 360s 滑行中轉 360、Hopping in traverses 橫渡中跳躍"],
+      ] },
+      { h: '訓練循環 The Training Cycle', note: ['每個練習都照這四步跑一輪，講解要短，讓學生多做。', 'Run every exercise through these four steps; keep explanations short and give students plenty of tries.'],
+        ol: ['Explanation 講解：What, Why, How（做什麼、為什麼、怎麼做）。', 'Demonstration 示範：清楚、慢、讓全組都看得到。', 'Student Trial 學生嘗試：選對地形，給足練習次數。', 'Feedback 回饋：正向、具體，說明為什麼要改。'] },
+      { h: 'S.A.F.E. 教學進程 The S.A.F.E. concept', note: ['教新動作時由靜到動、由易到難，順序是 S、A、F、E。', 'Teach a new movement from static to moving and from easy to hard, in the order S, A, F, E.'],
+        cols: ['步驟 Step', 'English', '中文'], rows: [
+        ['Static 靜態', 'Visualise or feel the movement on flat ground.', '在平地先想像並感受動作。'],
+        ['Active 動態', 'Try the movement while sliding, with close attention to terrain.', '在滑行中嘗試動作，特別注意地形選擇。'],
+        ['Free 自由練習', 'Focused mileage and practice; mistakes are fine, corrected positively.', '大量有重點的練習，允許犯錯並正向修正。'],
+        ['Experimentation 實驗', 'Change the terrain or the movement to build adaptability.', '改變地形或動作，培養適應力。'],
+      ] },
+      { h: '技能架構 The skills framework', note: ['三個核心能力各對應一個主要滑行技能，講解時同樣用 What, Why, How。', 'Each Core Competency maps to a primary riding skill, and is explained as What, Why, How.'],
+        cols: ['核心能力 What', '主要技能 Skill', '目的 Why', '做法 How', '練習 Tactics'], rows: [
+        ['Centred & Mobile Position\n居中且靈活的站姿', 'Position & Balance\n姿勢與平衡', 'Find the position that makes us most stable.\n找到最穩定的姿勢。', 'Even flexion of joints, equal weight, mobile lower joints.\n關節均勻彎曲、重心平均、下肢靈活。', 'Riding fore, aft and centred 前後中重心滑行、Hopping 跳躍、Switch riding 反腳滑行'],
+        ['Turning With The Lower Body\n下半身帶動轉彎', 'Pivot\n轉板', 'Keep rotational alignment so the lower joints turn the board.\n保持旋轉對齊，讓下肢關節轉板。', 'Hips, knees and ankles initiate.\n由髖、膝、踝啟動。', 'Switching hands exercise 換手練習、Garland 花環練習、Pickle jar analogy 轉罐頭蓋比喻'],
+        ['Balance Along The Working Edge\n在工作刃上平衡', 'Edging & Pressure\n立刃與壓力', 'Develop use of the lower joints in edging.\n用下肢關節控制立刃。', 'Flex hips, knees and ankles; ankles build the edge platform; use the sidecut for turn shape.\n彎曲髖膝踝；腳踝建立刃台；用側切做出彎型。', 'Static edging exercise 靜態立刃練習、Stop-n-hops 停跳練習、Carved traverse 刻滑橫渡'],
+      ] },
+      { h: '不同學生的教法 Teaching by student type', cols: ['對象 Student', 'English', '中文'], rows: [
+        ['Group lessons 團體課', 'Several demos, position students so all can see, short explanations with lots of repetition, clear meeting spots, terrain that keeps the group together.', '多次示範、排好隊形讓大家看得到、講解短且多重複、明確的集合點、選能讓全組待在一起的地形。'],
+        ['Children 兒童', 'Fun, game-based learning, exaggerated demos, lots of positive reinforcement, an emergency meeting spot, visual contact at all times.', '遊戲化教學、誇張示範、大量正向鼓勵、約好緊急集合點、全程保持視線接觸。'],
+        ['Private lessons 私人課', "Personalised communication, specific feedback after each try, find the student's learning style, keep intimidation low.", '個人化溝通、每次嘗試後給具體回饋、找出學習風格、降低壓迫感。'],
+      ] },
+    ] },
+  { id: 'phrases', t: '教學常用句', h: '示範教學常用句子 Teaching phrases',
+    lead: ['試教時照「開場、安全、講解、示範、學生嘗試、回饋、收尾」的順序講，每段背兩三句就夠用。官方指南沒有句型範本，以下是依訓練循環與五項教學評分編寫的句子。', 'In practice teaching, speak in this order: opening, safety, explanation, demo, student trial, feedback, wrap-up. The official guide gives no scripted phrases; these were written to fit the Training Cycle and the five teaching criteria.'],
+    blocks: [
+      { h: '開場與了解學生 Opening', say: 0, cols: ['English', '中文'], rows: [
+        ["Hi everyone, my name is Darren and I'll be your instructor today.", '大家好，我是 Darren，今天由我來帶大家。'],
+        ['Have you snowboarded before?', '你之前滑過單板嗎？'],
+        ['Do you do any other board sports, like skateboarding or surfing?', '你有玩其他板類運動嗎，像滑板或衝浪？'],
+        ['Which foot do you ride with in front, left or right?', '你是左腳在前還是右腳在前？'],
+        ['What would you like to achieve today?', '你今天想學到什麼？'],
+        ['How are you feeling? Is everyone warm enough?', '大家狀況還好嗎？會不會冷？'],
+      ] },
+      { h: '安全與隊形 Safety and group management', say: 0, cols: ['English', '中文'], rows: [
+        ["Let's move over to the side of the run, out of the traffic.", '我們移到雪道旁邊，避開其他滑雪者。'],
+        ['Always look uphill before you start.', '出發前一定要先看上方。'],
+        ['Please line up along this side so everyone can see me.', '請沿著這邊排成一排，讓大家都看得到我。'],
+        ["We'll stop and meet at that sign down there.", '我們在下面那個牌子停下來集合。'],
+        ['One at a time, and leave some space between each rider.', '一次一個人，前後保持距離。'],
+        ['If you feel out of control, just sit down gently.', '如果覺得失控，輕輕坐下來就好。'],
+        ['Keep your leash attached and your board across the slope.', '腳繩扣好，雪板橫放在坡上。'],
+      ] },
+      { h: '講解：What, Why, How Explanation', say: 0, cols: ['English', '中文'], rows: [
+        ["What we're going to do now is sideslipping on the heel edge.", '我們現在要練習的是後刃橫滑。'],
+        ['The goal of this exercise is to control your speed.', '這個練習的目的是控制速度。'],
+        ['We do this because it helps you stop anywhere on the slope.', '練這個是因為它能讓你在坡上任何地方停下來。'],
+        ["Here's how: stand centred, with equal weight on both feet.", '做法是：站在板子中間，重心平均放在雙腳。'],
+        ['Bend your ankles, knees and hips evenly.', '腳踝、膝蓋、髖部均勻彎曲。'],
+        ['Look where you want to go, not down at your board.', '看你要去的方向，不要低頭看板子。'],
+        ['To slow down, lift your toes a little more.', '要減速時，把腳尖再抬高一點。'],
+        ['To go, gently lower your toes, like pressing a gas pedal.', '要前進時，輕輕放下腳尖，像踩油門一樣。'],
+        ['Turn your hips and knees in the direction you want to go.', '把髖與膝轉向你要去的方向。'],
+      ] },
+      { h: '示範 Demonstration', say: 0, cols: ['English', '中文'], rows: [
+        ["Watch me first. I'll do it slowly.", '先看我做一次，我會放慢做。'],
+        ['Watch my knees and hips.', '注意看我的膝蓋和髖部。'],
+        ["I'll ride down to that marker and stop.", '我會滑到那個標記然後停下來。'],
+        ['Notice how my upper body stays quiet and aligned with the board.', '注意我的上半身保持穩定，並與雪板對齊。'],
+        ['Did everyone see that? Would you like to see it again?', '大家都看到了嗎？要不要再看一次？'],
+        ["I'll show it once from the front and once from the side.", '我從正面和側面各示範一次。'],
+      ] },
+      { h: '學生嘗試 Student trial', say: 0, cols: ['English', '中文'], rows: [
+        ["Now it's your turn.", '現在換你們試試看。'],
+        ['Who would like to go first?', '誰想先來？'],
+        ['Come down to me one by one when I wave.', '我揮手的時候，一個一個滑到我這裡。'],
+        ["Take your time. There's no rush.", '慢慢來，不急。'],
+        ["Let's try it three more times.", '我們再練習三次。'],
+        ["Let's try the same thing on your toe edge.", '我們換前刃做同樣的練習。'],
+      ] },
+      { h: '回饋與修正 Feedback', say: 0, cols: ['English', '中文'], rows: [
+        ['Great job! Your balance was really steady.', '做得很好！你的平衡很穩。'],
+        ['I liked how you kept your knees bent.', '我喜歡你一直保持膝蓋彎曲。'],
+        ['This time, try to keep more weight on your front foot.', '這次試著把重心多放一點在前腳。'],
+        ['That will help the board turn more easily.', '這樣板子會比較容易轉。'],
+        ["I noticed you're leaning back. Try to stand centred over the board.", '我注意到你身體往後坐，試著站回板子正中間。'],
+        ['Try turning with your hips and knees instead of your shoulders.', '試著用髖和膝轉板，不要用肩膀。'],
+        ['That was much better. Did you feel the difference?', '這次好很多，你有感覺到差別嗎？'],
+        ['How did that feel?', '剛剛感覺怎麼樣？'],
+      ] },
+      { h: '收尾 Wrap-up', say: 0, cols: ['English', '中文'], rows: [
+        ["Let's review what we learned today.", '我們來複習今天學到的內容。'],
+        ['Today you learned how to control your speed with your edges.', '今天你學會了用板刃控制速度。'],
+        ['Keep practising this on gentle terrain.', '繼續在緩坡上練習這個動作。'],
+        ['The next step is linking your turns.', '下一步是把轉彎連起來。'],
+        ['Do you have any questions?', '大家有任何問題嗎？'],
+        ['Thanks for riding with me today. You did great!', '謝謝今天跟我一起滑，你們表現得很棒！'],
+      ] },
+      { h: '完整範例：後刃橫滑 Full sample: heel-side sideslip', say: 1, cols: ['步驟 Step', 'English', '中文'], rows: [
+        ['What', "Now we're going to learn the heel-side sideslip.", '現在我們要學後刃橫滑。'],
+        ['Why', 'This lets you control your speed and stop on any slope.', '這能讓你在任何坡上控制速度並停下來。'],
+        ['How', 'Stand centred, knees bent, and look across the hill. Lower your toes slowly to slide, lift them to stop.', '站在中間、膝蓋彎曲、眼睛看坡的橫向。慢慢放下腳尖就會滑，抬起腳尖就會停。'],
+        ['Demo', "Watch me first. I'll slide down to that sign and stop.", '先看我做，我會滑到那個牌子停下來。'],
+        ['Trial', 'Your turn. Come down one at a time and stop beside me.', '換你們，一次一個人滑下來，停在我旁邊。'],
+        ['Feedback', 'Nice and steady! Next time bend your knees a bit more, so you stay balanced when you stop.', '很穩！下次膝蓋再彎一點，停下來時會更平衡。'],
+      ] },
+    ] },
+  { id: 'glossary', t: '術語表', h: '術語對照表 Glossary',
+    lead: ['考官講評與試教時最常聽到的詞，中文採台灣常見說法。', 'The words you will hear most in feedback and practice teaching; the Chinese follows common Taiwan usage.'],
+    blocks: [
+      { say: 0, cols: ['English', '中文', '說明 Note'], rows: [
+        ['Toe edge / Heel edge', '前刃 / 後刃', '腳尖側與腳跟側的板刃'], ['Nose / Tail', '板頭 / 板尾', ''], ['Regular / Goofy', '左腳在前 / 右腳在前', ''],
+        ['Switch', '反腳滑行', '非慣用腳在前'], ['Fall line', '滾落線', '球自然滾下坡的方向'], ['Traverse', '橫渡', '橫跨雪道滑行'],
+        ['Sideslip', '橫滑', '板子橫向往下滑'], ['Pendulum', '落葉飄', '同一刃左右來回'], ['Garland', '花環練習', '反覆朝滾落線轉再轉回來，不換刃'],
+        ['Skating', '單腳滑行推進', '後腳踩地推'], ['Straight running', '直滑降', ''], ['Edge change', '換刃', ''],
+        ['Pivot', '轉板', '讓板子旋轉改變方向'], ['Edging', '立刃', ''], ['Pressure', '壓力控制', ''],
+        ['Inclination', '傾倒', '整個身體往彎內倒'], ['Angulation', '折疊', '彎曲關節來增加立刃角'], ['Counter-rotation', '反擰', '上下半身反向旋轉，Level 1 要避免'],
+        ['Rotational alignment', '旋轉對齊', '肩、髖、膝、腳朝同一方向'], ['Flexion / Extension', '彎曲 / 伸展', ''], ['Edge grip', '板刃抓地力', ''],
+        ['Sidecut', '側切', '板子側邊的弧度'], ['Sliding turn / Carved turn', '搓雪轉彎 / 刻滑轉彎', ''], ['Corridor width (CW)', '滑行走廊寬度', '轉彎左右範圍'],
+        ['Groomed terrain', '壓雪雪道', ''], ['Green / Blue run', '綠線 / 藍線', '初級 / 中級雪道'], ['Cat track', '連絡道', '窄而平緩的道路'],
+        ['Building blocks', '積木式進程', '小步驟逐步堆疊'], ['Duty of care', '照顧義務', '指導員對學生安全的責任'],
+      ] },
+    ] },
+  { id: 'next', t: 'L2・L3・Park', h: '進階證照：Level 2、Level 3、Park',
+    lead: ['Level 1 之後有兩條路：往上考 Level 2、Level 3，或轉向公園的 Park 1、Park 2；要考 Level 3 的教學與滑行模組，必須先有 Park 1。', 'After Level 1 there are two paths: up to Level 2 and Level 3, or into the park with Park 1 and Park 2. Park 1 is required before the Level 3 Teaching and Riding modules.'],
+    blocks: [
+      { h: '各證照比較 At a glance', cols: ['證照', '前提 Prerequisite', '時數 Duration', '可教範圍 Teaching scope', '課程費（早鳥 / 一般）'], rows: [
+        ['Level 1', 'Age 14.\n滿 14 歲。', '3 days, 18 h', 'Beginners up to Novice Turn.\n初學者到新手轉彎。', '$552.98 / $608.28'],
+        ['Level 2', 'Level 1, age 16.\n持 Level 1、滿 16 歲。', '4 days, 24 h', 'Up to intermediate, in skills and terrain.\n到中級技術與地形。', '$694.97 / $764.47'],
+        ['Level 3', 'Level 2; Park 1 for Teaching and Riding.\n持 Level 2；教學與滑行模組另需 Park 1。', '3 modules of 2 days (12 h) each, plus 3 one-day exams.\n三個模組各 2 天，加三場各 1 天的考試。', 'Advanced riders on all-mountain, freeride and park terrain; training new instructors.\n進階學生的全山、自由滑行與公園；培訓新指導員。', '每模組 $388.57 / $427.43\n每場考試 $167.13 / $183.84'],
+        ['Park 1', 'Level 1.\n持 Level 1。', '3 days, 18 h', 'Introductory and basic maneuvers on beginner park features.\n初級公園道具上的入門與基本動作。', '$581.72 / $639.89'],
+        ['Park 2', 'Park 1.\n持 Park 1。', '3 days, 18 h', 'Intermediate maneuvers on small and medium park features.\n小型與中型道具上的中級動作。', '$581.72 / $639.89'],
+      ] },
+      { p: ['各級都是「Meets Standard / Below Standard」兩級評分，教學同樣看五個實務教學技能。費用為加拿大官網標價，不含纜車票。Park 1 現行官網寫 3 天，2023-24 版評核指南的議程是 2 天，以官網為準。', 'Every level uses the same Meets / Below Standard rating and the same five Practical Teaching Skills. Fees are the Canadian website prices and exclude lift tickets.'] },
+      { h: 'Level 2', note: ['Level 2 要求紮實的中級滑行：能在黑線做小彎，並在中級雪道刻滑。', 'Level 2 asks for solid intermediate riding: short-radius turns on black runs and carving on intermediate terrain.'],
+        cols: ['項目 Item', 'English', '中文'], rows: [
+        ['資格 Prerequisites', 'Current Level 1, age 16, able to ride advanced terrain including ungroomed slopes. About 45 hours of teaching experience is recommended, not required.', '持有效 Level 1、滿 16 歲、能滑高級地形（含非壓雪）。建議有約 45 小時教學經驗，非必要。'],
+        ['四天流程 Agenda', 'Day 1 riding improvement and Analysis & Improvement. Day 2 QuickRide teaching and Introducing New Skills. Day 3 practice teaching and Developing Intermediate Skills. Day 4 practice teaching, riding session, results.', '第 1 天滑行提升與分析改進。第 2 天 QuickRide 教學與引入新技能。第 3 天試教與發展中級技能。第 4 天試教、滑行課、公布結果。'],
+        ['滑行標準 Riding standard', "Relaxed, centred stance as terrain varies; knees and feet start the turn; consistent carving, with the new edge engaged above the fall line at about 2 and 10 o'clock.", '地形變化時仍放鬆居中；由膝與腳啟動轉彎；穩定刻滑，在滾落線之前約 2 點與 10 點方向就立起新刃。'],
+        ['補考 Retest', 'One failed part can be retested within 2 years. Riding retest on Days 1 and 2; teaching retest on Days 3 and 4.', '單項未過可在 2 年內補考。滑行補考在第 1、2 天，教學補考在第 3、4 天。'],
+      ] },
+      { cols: ['Level 2 指定動作 Maneuver', '雪道 Terrain', '寬度 CW'], rows: [
+        ['Novice Turns, forward and switch\n新手轉彎（正腳與反腳）', 'Green 綠線', '4–6 m'],
+        ['Intermediate Carved Turns\n中級刻滑轉彎', 'Green or easy blue\n綠線或緩藍線', '7–10 m'],
+        ['Short Radius Sliding Turns\n小彎搓雪轉彎', 'Steep blue or black\n陡藍線或黑線', '3–5 m'],
+        ['Ollie, landing on two feet\n豪跳，雙腳著地', 'Green 綠線', '文件未標'],
+      ] },
+      { h: 'Level 2 新增的教學觀念', ul: [
+        'Whole, Part, Whole 整體、分解、整體：先看整體滑行，拆出一個小部分修正，再放回整體。',
+        'Analysis sequence 分析流程：建立理想型，比較理想與實際，擬定改進計畫。',
+        'PTT feedback 回饋格式：Positive, To, Try，先講優點，再講要達成什麼，最後講試試怎麼做。',
+        "用詞 Language：避免 But、You should、I want，改用 We 與 Let's try。",
+        '第五個技能 Timing & Coordination 時機與協調，常用練習有 X-Turns、Hop Carves、Ollies & Nollies。'] },
+      { h: 'Level 3', note: ['Level 3 分教學、滑行、指導員培訓三個模組，各自上課、各自考試，三項全過才取得證照。', 'Level 3 has three modules (Teaching, Riding, Instructor Training), each with its own course and exam; you need all three.'],
+        cols: ['項目 Item', 'English', '中文'], rows: [
+        ['資格 Prerequisites', 'Level 2. Park 1 is required before the Teaching and Riding modules; Instructor Training can be taken earlier. Comfortable on all terrain including basic park.', '持 Level 2。教學與滑行模組需先有 Park 1，指導員培訓模組可先上。能滑所有地形，含基本公園。'],
+        ['教學考 Teaching exam', 'One advanced skill development lesson, about 30 to 40 minutes.', '一堂進階技能發展課，約 30 到 40 分鐘。'],
+        ['滑行考 Riding exam', 'Two attempts at each mandatory maneuver, on advanced terrain at adequate speed.', '每個指定動作有兩次機會，在高級地形以足夠速度完成。'],
+        ['培訓考 Instructor Training exam', 'A session of about 20 minutes, stopped at 25, in three phases: introduction, demo lesson, conclusion.', '約 20 分鐘、25 分鐘強制結束，分引言、示範課、總結三段。'],
+        ['補考 Retest', 'No time limit. After the course you may sit each exam as often as needed; passed components are kept for life.', '沒有期限。上完課後可無限次應考，已通過的項目終身保留。'],
+      ] },
+      { cols: ['Level 3 指定動作 Maneuver', '雪道 Terrain', '寬度 CW'], rows: [
+        ['Large Turns 大彎', 'Groomed blue 壓雪藍線', '7–10 m'],
+        ['Medium Turns, forward and switch\n中彎（正腳與反腳）', 'Groomed black 壓雪黑線', '4–6 m'],
+        ['Short Turns 小彎', 'Groomed black 壓雪黑線', '3–4 m'],
+        ['Free Run 自由滑行', 'Ungroomed blue or black\n非壓雪藍線或黑線', '3–6 m'],
+      ] },
+      { h: 'Level 3 四個進階滑行能力 Advanced Riding Competencies', ul: [
+        'Strength & Flow 力量與流暢：姿勢強壯又保有靈活，流暢地通過整個彎。',
+        'Arc To Arc 弧接弧：在滾落線之前就用側切與抓地力，把圓彎一個接一個。',
+        'Loading & Deflection 蓄力與反彈：用板子彎曲累積能量，反彈進入下一個彎。',
+        'Steering Versatility 轉向多樣性：混合立刃、轉板、壓力，在搓雪與刻滑之間自由切換並控制速度。',
+        '教學面新增第三種教法 Guided Discovery（引導式探索），與 Building Block、Whole-Part-Whole 並列。'] },
+      { h: 'Park 1', note: ['Park 1 教的是小型道具上的自由式基礎，跳台大小約 2 到 3 公尺（起跳點到落地坡轉折處）。', 'Park 1 covers freestyle fundamentals on small features; jumps are about 2 to 3 m from the lip to the knuckle.'],
+        cols: ['項目 Item', 'English', '中文'], rows: [
+        ['資格 Prerequisites', 'Current Level 1; comfortable on intermediate terrain and basic park features.', '持有效 Level 1；能舒適地滑中級雪道與基本公園道具。'],
+        ['課程內容 Content', 'Park etiquette and safety; the Core Competencies in freestyle; teaching the freestyle fundamentals; progression building.', '公園禮儀與安全；核心能力在自由式的應用；自由式基礎教學；進程設計。'],
+        ['指定動作 Mandatory maneuvers', 'Ollie; nose and tail press with variation; 50-50 with variation on a 3 to 5 m box; straight airs with variation; air 180 frontside; air 180 backside.', '豪跳；板頭與板尾壓板（含變化）；3 到 5 公尺箱子上的 50-50（含變化）；直飛（含變化）；正轉 180；背轉 180。'],
+        ['補考 Retest', 'Teaching retest on Day 2, riding retest on Day 3.', '教學補考在第 2 天，滑行補考在第 3 天。'],
+      ] },
+      { h: '公園安全必背 Park safety', ul: [
+        'Smart Style：道具以橘色橢圓標示 S、M、L 大小。',
+        'Spotter signals 觀察員手勢：手比 O 代表跳台開放，比 X 代表不可跳。',
+        'Call your drop-in：出發前喊聲，並注意匯流。',
+        'Stop zones 停等區：停在動線之外，不要停在跳台下方的落地區。',
+        'Alpine Responsibility Code 雪場安全守則同樣適用。'] },
+      { h: 'Park 2', note: ['Park 2 把道具升到中型（部分大型），轉體升到 360。', 'Park 2 moves to medium features (some large) and rotations up to 360.'],
+        cols: ['項目 Item', 'English', '中文'], rows: [
+        ['資格 Prerequisites', 'Current Park 1; comfortable on intermediate freestyle terrain, including medium and some large features. One season or 40 to 60 hours of park teaching is recommended.', '持有效 Park 1；能滑中級公園地形，含中型與部分大型道具。建議有一季或 40 到 60 小時公園教學經驗。'],
+        ['滑行要求 Riding', 'Straight airs on medium and some large jumps; 180s in all four directions; 360s frontside and backside; comfortable moving and rotating the board on rails and boxes.', '中型與部分大型跳台直飛；四個方向的 180；正轉與背轉 360；在鐵杆與箱子上能自在移動與轉板。'],
+        ['補考 Retest', 'Teaching retest on Day 2, riding retest on Day 3.', '教學補考在第 2 天，滑行補考在第 3 天。'],
+      ] },
+    ] },
+];
+const CASI_SRC = [
+  ['Level 1 課程頁', 'https://casi-acms.com/courses/level-1-instructor/'],
+  ['Level 1 Agenda 2025-26', 'https://casi-acms.com/wp-content/uploads/2025/10/LEVEL-1-AGENDA-25-26_EN.pdf'],
+  ['Level 1 Evaluator Guide 2023-24', 'https://casi-acms.com/PDF/eval_guides/LEVEL%201%20EVALUATOR%20GUIDE%202023-24-EN.pdf'],
+  ['Level 1 Course Guide（中英版）', 'https://casi-acms.com/documents/Level%201%20Course%20Guide%20_English_Chinese.pdf'],
+  ['Level 2 課程頁', 'https://casi-acms.com/courses/level-2-instructor/'],
+  ['Level 2 Evaluator Guide 2023-24', 'https://casi-acms.com/PDF/eval_guides/LEVEL%202%20EVALUATOR%20GUIDE%202023-24-EN.pdf'],
+  ['Level 3 課程頁', 'https://casi-acms.com/courses/level-3-instructor/'],
+  ['Level 3 Evaluator Guide 2023-24', 'https://casi-acms.com/PDF/eval_guides/LEVEL%203%20EVALUATOR%20GUIDE%202023-24-EN.pdf'],
+  ['Park 1 課程頁', 'https://casi-acms.com/courses/park-1-instructor/'],
+  ['Park 1 Evaluator Guide 2023-24', 'https://casi-acms.com/PDF/eval_guides/PARK%201%20EVALUATOR%20GUIDE%202023-24-EN.pdf'],
+  ['Park 2 課程頁', 'https://casi-acms.com/courses/park-2-instructor/'],
+];
+
+(() => {
+  const root = $('casiBody'), tabs = $('casiTabs');
+  if (!root || !tabs) return;
+  const canSay = 'speechSynthesis' in window;
+  const cell = s => { const [a, ...b] = String(s).split('\n'); return escHtml(a) + (b.length ? `<small>${escHtml(b.join(' '))}</small>` : ''); };
+  const pair = (p, cls) => `<p class="${cls}">${escHtml(p[0])}${p[1] ? `<span lang="en">${escHtml(p[1])}</span>` : ''}</p>`;
+  function block(b) {
+    let h = b.h ? `<h3>${escHtml(b.h)}</h3>` : '';
+    if (b.note) h += pair(b.note, 'casinote');
+    if (b.p) h += pair(b.p, 'casinote');
+    if (b.ol || b.ul) { const tag = b.ol ? 'ol' : 'ul'; h += `<${tag} class="casilist">${(b.ol || b.ul).map(x => `<li>${escHtml(x)}</li>`).join('')}</${tag}>`; }
+    if (b.rows) {
+      const say = canSay && b.say != null ? b.say : -1;
+      h += `<div class="casiwrap"><table class="casitab${b.cols.length === 2 ? ' two' : ''}"><thead><tr>${b.cols.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr></thead><tbody>` +
+        b.rows.map(r => '<tr>' + r.map((c, i) => `<td>${i === say ? `<button type="button" class="casisay" data-say="${escHtml(c)}" aria-label="朗讀英文" title="朗讀英文">▶</button>` : ''}${cell(c)}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>';
+    }
+    return h;
+  }
+  const section = s => `<section class="card casisec"><h2>${escHtml(s.h)}</h2>${pair(s.lead, 'casilead')}${s.blocks.map(block).join('')}</section>`;
+  const sources = () => `<section class="card casisec"><h2>資料來源 Sources</h2><p class="casinote">規則、評分與費用以 CASI 官網最新公告為準；評核指南是 2023-24 版，報名前請再核對一次。教學常用句為自行編寫，非官方範本。</p><ul class="casilist">${CASI_SRC.map(([t, u]) => `<li><a href="${u}" target="_blank" rel="noopener">${escHtml(t)}</a></li>`).join('')}</ul></section>`;
+  const ids = CASI.map(s => s.id).concat('src');
+  let cur = store.get('hexlab-casi', 'rules');
+  if (!ids.includes(cur)) cur = 'rules';
+  tabs.innerHTML = CASI.map(s => `<button type="button" data-casi="${s.id}">${escHtml(s.t)}</button>`).join('') + '<button type="button" data-casi="src">來源</button>';
+  function show(id) {
+    cur = id; store.set('hexlab-casi', id);
+    tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.casi === id)));
+    const s = CASI.find(x => x.id === id);
+    root.innerHTML = s ? section(s) : sources();
+    if (canSay) speechSynthesis.cancel();
+  }
+  tabs.addEventListener('click', e => { const b = e.target.closest('button[data-casi]'); if (b) show(b.dataset.casi); });
+  root.addEventListener('click', e => {
+    const b = e.target.closest('.casisay'); if (!b || !canSay) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(b.dataset.say.split('\n')[0].replace(/\s*\/\s*/g, ', '));
+    u.lang = 'en-US'; u.rate = 0.9; speechSynthesis.speak(u);
+  });
+  show(cur);
 })();
 
 </script>
