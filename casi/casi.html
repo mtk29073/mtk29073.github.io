@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CASI 英文常用句子</title>
+<style>
+:root { --bg:#f6f8fb; --panel:#fff; --well:#eef2f8; --line:#dbe2ec; --fg:#1b2433; --muted:#667389; --accent:#2f6bff; --accent2:#e8efff; --star:#f5a623; --ok:#1a9d6b; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0e1420; --panel:#151d2c; --well:#1c2639; --line:#27334a; --fg:#e6ebf5; --muted:#8c99b0; --accent:#6c97ff; --accent2:#1d2b4d; } }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, "Noto Sans TC", "Microsoft JhengHei", sans-serif; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.app { display: grid; grid-template-columns: 250px minmax(0, 1fr); height: 100vh; }
+/* 左側分類 */
+.cats { background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+.cats h2 { margin: 2px 10px 8px; font-size: .95rem; letter-spacing: .02em; }
+.cats h2 small { display: block; color: var(--muted); font-weight: 400; font-size: .75rem; margin-top: 2px; }
+.cat { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 8px; color: var(--muted); }
+.cat:hover { background: var(--well); color: var(--fg); }
+.cat[aria-current="true"] { background: var(--accent2); color: var(--accent); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+.cat .ic { width: 22px; text-align: center; flex: none; }
+.cat .nm { flex: 1; min-width: 0; }
+.cat .ct { font-size: .75rem; opacity: .75; }
+.secgrp { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.sec { display: flex; align-items: center; gap: 6px; width: 100%; border: 0; background: var(--well); color: var(--fg); padding: 7px 10px; border-radius: 8px; font-size: .82rem; font-weight: 700; text-align: left; }
+.sec:hover { background: var(--accent2); }
+.sec .sn { flex: 1; }
+.sec .ct { font-weight: 400; font-size: .7rem; color: var(--muted); }
+.sec .chev { display: inline-block; transition: transform .15s; font-size: .8rem; }
+.secgrp.closed .chev { transform: rotate(-90deg); }
+.secgrp.closed .cat { display: none; }
+.catsep { height: 1px; background: var(--line); margin: 8px 6px; }
+/* 右側內容 */
+.main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 10px 18px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar input[type=search] { flex: 1 1 220px; min-width: 0; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; }
+.bar input[type=search]:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.tg { border: 1px solid var(--line); background: var(--bg); padding: 7px 12px; border-radius: 8px; white-space: nowrap; }
+.tg[aria-pressed="true"] { background: var(--accent2); border-color: var(--accent); color: var(--accent); }
+.tg.go { background: var(--accent); border-color: var(--accent); color: #fff; }
+.scroll { flex: 1; overflow-y: auto; padding: 18px 22px 60px; scroll-behavior: smooth; }
+.head h1 { font-size: 1.35rem; margin: 0 0 2px; }
+.head p { margin: 0 0 14px; color: var(--muted); }
+.jump { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; position: sticky; top: -18px; z-index: 2; background: var(--bg); padding: 8px 0; }
+.jump a { font-size: .8rem; text-decoration: none; color: var(--muted); border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 11px; }
+.jump a:hover { color: var(--accent); border-color: var(--accent); }
+.grp { margin: 0 0 22px; }
+.grp h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 1rem; color: var(--accent); }
+.grp h3 small { color: var(--muted); font-weight: 400; }
+.list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 8px; }
+.s { display: flex; gap: 8px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.s:hover { border-color: var(--accent); }
+.s .t { flex: 1; min-width: 0; cursor: pointer; }
+.s .en { font-weight: 600; word-break: break-word; }
+.s .zh { color: var(--muted); font-size: .88rem; margin-top: 2px; }
+.nozh .s .zh { display: none; }
+.nozh .s .zh.show { display: block; }
+.blank { color: var(--accent); font-weight: 700; letter-spacing: .06em; }
+mark { background: #ffe58a; color: #222; border-radius: 3px; padding: 0 1px; }
+.ib { border: 0; background: none; color: var(--muted); font-size: 1.05rem; padding: 2px 5px; border-radius: 6px; line-height: 1; }
+.ib:hover { background: var(--well); color: var(--fg); }
+.ib.on { color: var(--star); }
+.empty { color: var(--muted); padding: 30px 0; text-align: center; }
+.toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: #222; color: #fff; padding: 7px 16px; border-radius: 999px; font-size: .85rem; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 30; }
+.toast.on { opacity: .95; }
+/* 練習模式 */
+.dlg { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+.dlg.on { display: flex; }
+.card { background: var(--panel); border-radius: 16px; width: min(560px, 100%); padding: 22px; box-shadow: 0 14px 50px rgba(0,0,0,.35); }
+.card .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: .82rem; margin-bottom: 14px; }
+.card .q { font-size: 1.3rem; font-weight: 700; min-height: 3.2em; }
+.card .a { font-size: 1.2rem; color: var(--accent); font-weight: 600; min-height: 3em; margin-top: 8px; }
+.card .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.card .row .tg { flex: 1; }
+@media (max-width: 800px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .cats { flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; gap: 4px; }
+  .cats h2, .catsep, .sec { display: none; }
+  .secgrp { flex-direction: row; gap: 4px; margin: 0; }
+  .secgrp.closed .cat { display: flex; }
+  .cat { width: auto; flex: none; white-space: nowrap; padding: 6px 10px; }
+  .cat .ct { display: none; }
+  .main { height: auto; min-height: 0; }
+  .scroll { padding: 14px 12px 60px; }
+  .app { height: 100vh; }
+  .main { overflow: hidden; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="cats" id="cats" aria-label="分類"></nav>
+  <div class="main">
+    <div class="bar">
+      <input type="search" id="q" placeholder="搜尋英文或中文，例如：repeat、遲到、緊張…" aria-label="搜尋">
+      <button class="tg" id="tgZh" aria-pressed="true" title="隱藏中文可以自我測驗：看英文想中文，或遮住中文自己試著說">中文：顯示</button>
+      <button class="tg" id="tgFav" aria-pressed="false">★ 只看收藏 <span id="favN"></span></button>
+      <button class="tg go" id="btnPr">🎯 練習模式</button>
+    </div>
+    <div class="scroll" id="scroll"><div id="content"></div></div>
+  </div>
+</div>
+<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-label="練習模式">
+  <div class="card">
+    <div class="meta"><span id="prScope"></span><span id="prN"></span></div>
+    <div class="q" id="prQ"></div>
+    <div class="a" id="prA"></div>
+    <div class="row">
+      <button class="tg" id="prShow">顯示英文</button>
+      <button class="tg" id="prSay">🔊 朗讀</button>
+      <button class="tg go" id="prNext">下一句 →</button>
+      <button class="tg" id="prX">結束</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="data.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const KEY = 'casi-', ls = {
+    get(k, d) { try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch {} },
+  };
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const all = []; // 攤平：{en, zh, cat, grp}
+  CASI.forEach(c => c.groups.forEach(([g, items]) => items.forEach(s => { const i = s.indexOf('|'); all.push({ en: s.slice(0, i), zh: s.slice(i + 1), cat: c.id, grp: g }); })));
+  const total = CASI.reduce((n, c) => n + c.groups.reduce((m, g) => m + g[1].length, 0), 0);
+  const count = c => c.groups.reduce((m, g) => m + g[1].length, 0);
+  const secOf = c => c.sec || '💬 通用英文口說';
+  const closed = new Set(ls.get('closed', []));
+
+  let cur = ls.get('cat', CASI[0].id), showZh = ls.get('zh', true), favOnly = false, fav = new Set(ls.get('fav', [])), query = '';
+  if (!CASI.some(c => c.id === cur)) cur = CASI[0].id;
+
+  const fmt = (t, q) => {
+    let h = esc(t).replace(/___/g, '<span class="blank">___</span>');
+    if (q) { const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'); h = h.replace(/(<[^>]*>)|([^<]+)/g, (m, tag, txt) => tag ? tag : txt.replace(re, '<mark>$1</mark>')); }
+    return h;
+  };
+
+  function renderCats() {
+    $('cats').innerHTML = '<h2>CASI 英文常用句子<small>共 ' + total + ' 句 · ' + CASI.length + ' 類</small></h2>' +
+      [...new Set(CASI.map(secOf))].map(sec => {
+        const cs = CASI.filter(c => secOf(c) === sec), shut = closed.has(sec);
+        return `<div class="secgrp${shut ? ' closed' : ''}"><button class="sec" data-s="${sec}" aria-expanded="${!shut}"><span class="chev">▾</span><span class="sn">${sec}</span><span class="ct">${cs.length} 類 · ${cs.reduce((n, c) => n + count(c), 0)} 句</span></button>` +
+          cs.map(c => `<button class="cat" data-c="${c.id}" aria-current="${c.id === cur && !query && !favOnly}"><span class="ic">${c.icon}</span><span class="nm">${c.name}</span><span class="ct">${count(c)}</span></button>`).join('') + '</div>';
+      }).join('');
+  }
+
+  function card(s, q) {
+    const k = s.en, on = fav.has(k);
+    return `<div class="s" data-k="${esc(k)}"><div class="t" title="點一下複製"><div class="en">${fmt(s.en, q)}</div><div class="zh">${fmt(s.zh, q)}</div></div>` +
+      `<button class="ib say" title="朗讀" aria-label="朗讀">🔊</button><button class="ib fv${on ? ' on' : ''}" title="收藏" aria-label="收藏">${on ? '★' : '☆'}</button></div>`;
+  }
+
+  function render() {
+    renderCats();
+    $('favN').textContent = fav.size ? '(' + fav.size + ')' : '';
+    $('content').classList.toggle('nozh', !showZh);
+    let html = '';
+    if (query || favOnly) {
+      const q = query.trim().toLowerCase();
+      const rows = all.filter(s => (!favOnly || fav.has(s.en)) && (!q || s.en.toLowerCase().includes(q) || s.zh.toLowerCase().includes(q)));
+      html = `<div class="head"><h1>${favOnly ? '★ 我的收藏' : '搜尋結果'}</h1><p>${rows.length} 句${q ? '，關鍵字「' + esc(query) + '」' : ''}</p></div>`;
+      if (!rows.length) html += `<div class="empty">${favOnly && !q ? '還沒有收藏，點句子右邊的 ☆ 就能收藏。' : '找不到符合的句子。'}</div>`;
+      CASI.forEach(c => { const r = rows.filter(s => s.cat === c.id); if (r.length) html += `<section class="grp"><h3>${c.icon} ${c.name} <small>${r.length}</small></h3><div class="list">${r.map(s => card(s, q)).join('')}</div></section>`; });
+    } else {
+      const c = CASI.find(x => x.id === cur);
+      html = `<div class="head"><h1>${c.icon} ${c.name}</h1><p>${c.desc}（${count(c)} 句）</p></div>` +
+        `<div class="jump">${c.groups.map((g, i) => `<a href="#g${i}" data-g="g${i}">${g[0]}</a>`).join('')}</div>` +
+        c.groups.map((g, i) => `<section class="grp" id="g${i}"><h3>${g[0]} <small>${g[1].length}</small></h3><div class="list">${g[1].map(s => { const j = s.indexOf('|'); return card({ en: s.slice(0, j), zh: s.slice(j + 1) }); }).join('')}</div></section>`).join('');
+    }
+    $('content').innerHTML = html;
+  }
+
+  // 朗讀
+  let voice = null;
+  const pick = () => { const v = speechSynthesis.getVoices(); voice = v.find(x => /en[-_]US/i.test(x.lang) && /(Google|Samantha|Aria|Jenny|Zira)/i.test(x.name)) || v.find(x => /^en[-_]/i.test(x.lang)) || null; };
+  if ('speechSynthesis' in window) { pick(); speechSynthesis.onvoiceschanged = pick; }
+  function say(t) {
+    if (!('speechSynthesis' in window)) return toast('這個瀏覽器不支援朗讀');
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t.replace(/___/g, 'blank')); u.lang = 'en-US'; u.rate = .92; if (voice) u.voice = voice;
+    speechSynthesis.speak(u);
+  }
+  let tt; const toast = m => { const e = $('toast'); e.textContent = m; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), 1300); };
+
+  // 事件
+  $('cats').addEventListener('click', e => {
+    const h = e.target.closest('.sec');
+    if (h) { const s = h.dataset.s; closed.has(s) ? closed.delete(s) : closed.add(s); ls.set('closed', [...closed]); h.parentElement.classList.toggle('closed', closed.has(s)); h.setAttribute('aria-expanded', !closed.has(s)); return; }
+    const b = e.target.closest('.cat'); if (!b) return; cur = b.dataset.c; ls.set('cat', cur); query = ''; $('q').value = ''; favOnly = false; $('tgFav').setAttribute('aria-pressed', 'false'); render(); $('scroll').scrollTop = 0; });
+  $('q').addEventListener('input', e => { query = e.target.value; render(); });
+  $('tgZh').addEventListener('click', () => { showZh = !showZh; ls.set('zh', showZh); $('tgZh').textContent = '中文：' + (showZh ? '顯示' : '隱藏'); $('tgZh').setAttribute('aria-pressed', showZh); $('content').classList.toggle('nozh', !showZh); });
+  $('tgFav').addEventListener('click', () => { favOnly = !favOnly; $('tgFav').setAttribute('aria-pressed', favOnly); render(); $('scroll').scrollTop = 0; });
+  $('content').addEventListener('click', e => {
+    const a = e.target.closest('.jump a'); if (a) { e.preventDefault(); const t = $(a.dataset.g); if (t) $('scroll').scrollTo({ top: t.offsetTop - 56 }); return; }
+    const s = e.target.closest('.s'); if (!s) return;
+    const k = s.dataset.k;
+    if (e.target.closest('.say')) return say(k);
+    if (e.target.closest('.fv')) { fav.has(k) ? fav.delete(k) : fav.add(k); ls.set('fav', [...fav]); if (favOnly) render(); else { const b = s.querySelector('.fv'); b.classList.toggle('on', fav.has(k)); b.textContent = fav.has(k) ? '★' : '☆'; $('favN').textContent = fav.size ? '(' + fav.size + ')' : ''; } return; }
+    if (e.target.closest('.t')) {
+      if (!showZh) s.querySelector('.zh').classList.toggle('show');
+      (navigator.clipboard ? navigator.clipboard.writeText(k) : Promise.reject()).then(() => toast('已複製'), () => {});
+    }
+  });
+  $('tgZh').textContent = '中文：' + (showZh ? '顯示' : '隱藏'); $('tgZh').setAttribute('aria-pressed', showZh);
+
+  // 練習模式：給中文，自己說英文，再看答案
+  let deck = [], idx = 0;
+  const prShow = () => { $('prA').textContent = deck[idx].en.replace(/___/g, '＿＿'); say(deck[idx].en); };
+  const prCard = () => { const s = deck[idx]; $('prQ').textContent = s.zh; $('prA').textContent = ''; $('prN').textContent = (idx + 1) + ' / ' + deck.length; };
+  $('btnPr').addEventListener('click', () => {
+    const q = query.trim().toLowerCase();
+    let pool, name;
+    if (favOnly && fav.size) { pool = all.filter(s => fav.has(s.en)); name = '我的收藏'; }
+    else if (q) { pool = all.filter(s => s.en.toLowerCase().includes(q) || s.zh.toLowerCase().includes(q)); name = '搜尋結果'; }
+    else { pool = all.filter(s => s.cat === cur); name = CASI.find(c => c.id === cur).name; }
+    if (!pool.length) return toast('沒有可練習的句子');
+    deck = pool.slice().sort(() => Math.random() - .5); idx = 0;
+    $('prScope').textContent = '練習範圍：' + name; $('dlg').classList.add('on'); prCard();
+  });
+  $('prShow').addEventListener('click', prShow);
+  $('prSay').addEventListener('click', () => say(deck[idx].en));
+  $('prNext').addEventListener('click', () => { idx = (idx + 1) % deck.length; prCard(); });
+  $('prX').addEventListener('click', () => { $('dlg').classList.remove('on'); speechSynthesis.cancel(); });
+  document.addEventListener('keydown', e => {
+    if (!$('dlg').classList.contains('on')) return;
+    if (e.key === 'Escape') $('prX').click();
+    else if (e.key === 'ArrowRight') $('prNext').click();
+    else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); prShow(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAPAN RAIL GRID · 日本全國鐵道網</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="lib/topojson-client.min.js"></script>
+<script src="lib/japan-topo.js"></script>
+<script src="lib/rail-data.js"></script>
+<style>
+:root{
+  --bg:#02060f; --cy:#00e5ff; --cy2:#7ff8ff; --mg:#ff2bd6; --am:#ffc94d; --gr:#3dff9a;
+  --tx:#cfeaff; --mu:#5f82ad; --dim:#36506f;
+  --pn:rgba(2,12,28,.80); --pn2:rgba(4,20,44,.85); --ln:rgba(0,229,255,.20); --ln2:rgba(0,229,255,.45);
+  --mono:"JetBrains Mono",Consolas,monospace; --orb:"Orbitron","JetBrains Mono",sans-serif; --jp:"Noto Sans JP","Noto Sans TC","Microsoft JhengHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{color:var(--tx);font-family:var(--mono);font-size:12px;-webkit-font-smoothing:antialiased}
+canvas.layer{position:fixed;inset:0;width:100%;height:100%;display:block}
+#fx{cursor:crosshair;touch-action:none}
+#fx.drag{cursor:grabbing}
+#scan{position:fixed;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(120,220,255,.035) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at 55% 50%,transparent 50%,rgba(0,0,0,.7) 100%)}
+#frame{position:fixed;inset:8px;pointer-events:none;z-index:3}
+#frame i{position:absolute;width:26px;height:26px;border:2px solid var(--cy);opacity:.55}
+#frame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}
+#frame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+#frame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}
+#frame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+
+.panel{position:fixed;z-index:10;background:var(--pn);border:1px solid var(--ln);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);
+  clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));box-shadow:0 0 30px rgba(0,229,255,.06) inset}
+.panel::before{content:"";position:absolute;right:0;top:0;width:23px;height:1px;background:var(--ln2);transform-origin:right;transform:rotate(45deg) translate(-1px,0)}
+
+#left{left:18px;top:18px;bottom:46px;width:372px;display:flex;flex-direction:column}
+.title{padding:16px 18px 12px;border-bottom:1px solid var(--ln);position:relative}
+.title .t1{font:900 21px var(--orb);letter-spacing:.14em;color:#fff;text-shadow:0 0 12px rgba(0,229,255,.75);position:relative}
+.title .t1 b{color:var(--cy)}
+.title .t1::after{content:attr(data-t);position:absolute;left:0;top:0;color:var(--mg);opacity:.0;clip-path:inset(0 0 60% 0);animation:glitch 6s infinite steps(1)}
+@keyframes glitch{0%,92%,100%{opacity:0;transform:none}93%{opacity:.8;transform:translate(2px,-1px)}95%{opacity:.6;transform:translate(-3px,1px);clip-path:inset(40% 0 20% 0)}97%{opacity:0}}
+.title .t2{font:500 13px var(--jp);letter-spacing:.3em;color:var(--cy2);margin-top:3px}
+.title .t3{font:10px var(--mono);color:var(--mu);margin-top:6px;letter-spacing:.08em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.stat{border:1px solid var(--ln);padding:5px 8px;background:rgba(0,229,255,.03)}
+.stat .k{font-size:9px;color:var(--mu);letter-spacing:.14em}
+.stat .v{font:700 16px var(--orb);color:#fff;letter-spacing:.04em}
+.scroll{flex:1;overflow-y:auto;padding:10px 14px 16px;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.3) transparent}
+.scroll::-webkit-scrollbar{width:5px}.scroll::-webkit-scrollbar-thumb{background:rgba(0,229,255,.3)}
+.sec{margin:12px 0 8px;display:flex;align-items:center;gap:8px;font:700 10px var(--orb);letter-spacing:.2em;color:var(--cy)}
+.sec span{color:var(--mu);font-family:var(--mono);font-weight:500;letter-spacing:.12em}
+.sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--ln2),transparent)}
+.field{position:relative;margin-bottom:6px}
+.field label{position:absolute;left:10px;top:50%;transform:translateY(-50%);font:700 9px var(--orb);letter-spacing:.12em;color:var(--cy);pointer-events:none}
+.field.to label{color:var(--mg)}
+.field input{width:100%;background:rgba(0,10,24,.7);border:1px solid var(--ln);color:#fff;font:500 13px var(--jp);padding:9px 10px 9px 54px;outline:none;transition:.2s}
+.field input::placeholder{color:var(--dim);font-family:var(--mono);font-size:11px}
+.field input:focus{border-color:var(--cy);box-shadow:0 0 0 1px rgba(0,229,255,.3),0 0 18px rgba(0,229,255,.15)}
+.field.to input:focus{border-color:var(--mg);box-shadow:0 0 0 1px rgba(255,43,214,.3),0 0 18px rgba(255,43,214,.15)}
+.ac{position:absolute;left:0;right:0;top:calc(100% + 2px);background:rgba(2,12,28,.97);border:1px solid var(--ln2);z-index:30;max-height:320px;overflow-y:auto;display:none}
+.ac.on{display:block}
+.ac div{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border-bottom:1px solid rgba(0,229,255,.06)}
+.ac div.on,.ac div:hover{background:rgba(0,229,255,.1)}
+.ac .nm{font:700 13px var(--jp);color:#fff;white-space:nowrap}
+.ac .dots{display:flex;gap:2px;flex-wrap:wrap;max-width:110px}
+.ac .dots i{width:8px;height:8px;border-radius:50%;box-shadow:0 0 6px currentColor}
+.ac .ops{flex:1;text-align:right;color:var(--mu);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{display:flex;gap:6px;align-items:center}
+.btn{background:rgba(0,229,255,.06);border:1px solid var(--ln2);color:var(--cy2);font:700 10px var(--orb);letter-spacing:.14em;padding:8px 10px;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{background:rgba(0,229,255,.16);color:#fff;box-shadow:0 0 14px rgba(0,229,255,.25)}
+.btn.on{background:var(--cy);color:#001018;border-color:var(--cy)}
+.btn.go{flex:1;background:linear-gradient(90deg,rgba(0,229,255,.25),rgba(255,43,214,.25));color:#fff;border-color:rgba(255,255,255,.35);padding:10px}
+.btn.go:hover{box-shadow:0 0 20px rgba(255,43,214,.35)}
+.btn.sm{padding:5px 8px;font-size:9px}
+.layers{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.lay{border:1px solid var(--ln);padding:7px 8px;cursor:pointer;position:relative;transition:.15s;background:rgba(0,0,0,.2)}
+.lay:hover{border-color:var(--ln2)}
+.lay .sw{height:3px;margin-bottom:6px;border-radius:2px;background:var(--c);box-shadow:0 0 8px var(--c),0 0 2px #fff inset;opacity:.25;transition:.2s}
+.lay .n{font:700 12px var(--jp);color:var(--mu)}
+.lay .e{font-size:9px;color:var(--dim);letter-spacing:.1em}
+.lay .c{position:absolute;right:8px;top:12px;font:500 10px var(--orb);color:var(--dim)}
+.lay.on{border-color:var(--ln2);background:rgba(0,229,255,.05)}
+.lay.on .sw{opacity:1}.lay.on .n{color:#fff}.lay.on .c{color:var(--cy2)}
+.cities{display:flex;flex-wrap:wrap;gap:4px}
+.cities .btn{font:500 11px var(--jp);letter-spacing:.06em;padding:5px 9px}
+.res .sum{display:flex;align-items:baseline;gap:12px;margin:12px 0 8px;padding:10px 12px;border:1px solid var(--ln2);background:linear-gradient(90deg,rgba(0,229,255,.08),rgba(255,43,214,.06))}
+.res .sum .t{font:900 28px var(--orb);color:#fff;text-shadow:0 0 12px rgba(0,229,255,.6);white-space:nowrap}
+.res .sum .t small{font-size:12px;color:var(--cy2);margin:0 2px}
+.res .sum .m{font-size:10px;color:var(--mu);line-height:1.7}
+.res .sum .m b{color:#fff}
+.stp{display:grid;grid-template-columns:16px 1fr auto;gap:10px;align-items:center;padding:3px 0}
+.stp .d{width:12px;height:12px;border:2px solid #fff;transform:rotate(45deg);justify-self:center;background:var(--bg);box-shadow:0 0 8px rgba(255,255,255,.6)}
+.stp .d.a{border-color:var(--cy);box-shadow:0 0 10px var(--cy)}.stp .d.b{border-color:var(--mg);box-shadow:0 0 10px var(--mg)}
+.stp .n{font:700 14px var(--jp);color:#fff}
+.stp .tm{font:500 10px var(--orb);color:var(--mu)}
+.leg{display:grid;grid-template-columns:16px 1fr;gap:10px}
+.leg .bar{width:4px;justify-self:center;background:var(--c);box-shadow:0 0 10px var(--c);margin:-3px 0}
+.leg .inf{padding:6px 0 8px;color:var(--mu);font-size:10.5px;line-height:1.6}
+.leg .inf .ln{font:700 12px var(--jp);color:var(--c);text-shadow:0 0 8px var(--c)}
+.leg .inf .op{font-size:10px;color:var(--mu);margin-left:6px}
+.leg details summary{cursor:pointer;color:var(--cy2);list-style:none;font-size:10px}
+.leg details summary::-webkit-details-marker{display:none}
+.leg details div{font:400 11px var(--jp);color:var(--mu);padding-top:3px;line-height:1.7}
+.xf{display:grid;grid-template-columns:16px 1fr;gap:10px}
+.xf .w{justify-self:center;border-left:1px dashed var(--mu);margin:-2px 0}
+.xf span{font-size:10px;color:var(--am);padding:4px 0}
+.note{font-size:10px;color:var(--dim);line-height:1.6;margin-top:8px}
+.lfilter{width:100%;background:rgba(0,10,24,.7);border:1px solid var(--ln);color:#fff;font:12px var(--jp);padding:7px 10px;outline:none;margin-bottom:6px}
+.lfilter:focus{border-color:var(--cy)}
+.llist{display:flex;flex-direction:column}
+.lop{font:700 9px var(--orb);color:var(--mu);letter-spacing:.16em;margin:8px 0 3px}
+.li{display:grid;grid-template-columns:4px 1fr auto;gap:9px;align-items:center;padding:5px 6px;cursor:pointer;border-left:1px solid transparent}
+.li:hover{background:rgba(0,229,255,.06);border-left-color:var(--cy)}
+.li.off{opacity:.35}
+.li .b{height:16px;background:var(--c);box-shadow:0 0 8px var(--c)}
+.li .n{font:500 12.5px var(--jp);color:#fff}
+.li .k{font:500 10px var(--orb);color:var(--mu)}
+.focus h2{font:900 22px var(--jp);color:var(--c);text-shadow:0 0 14px var(--c);letter-spacing:.06em}
+.focus .meta{color:var(--mu);font-size:10.5px;margin:4px 0 10px;line-height:1.7}
+.focus .meta b{color:#fff;font-family:var(--orb)}
+.seq{position:relative;margin-left:4px}
+.seq .s{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;min-height:26px;cursor:pointer;position:relative}
+.seq .s::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--c);box-shadow:0 0 6px var(--c)}
+.seq .s:first-child::before{top:50%}.seq .s:last-child::before{bottom:50%}
+.seq .s i{width:9px;height:9px;border-radius:50%;background:var(--bg);border:2px solid var(--c);justify-self:center;z-index:1}
+.seq .s.x i{border-color:#fff;width:11px;height:11px;box-shadow:0 0 6px #fff}
+.seq .s .sn{font:500 12.5px var(--jp);color:#e9f8ff}
+.seq .s:hover .sn{color:var(--cy)}
+.seq .s .xd{display:flex;gap:2px}
+.seq .s .xd b{width:6px;height:6px;border-radius:50%}
+
+#card{right:18px;top:18px;width:340px;max-height:calc(100% - 300px);display:flex;flex-direction:column;transform:translateX(20px);opacity:0;pointer-events:none;transition:.25s}
+#card.on{transform:none;opacity:1;pointer-events:auto}
+#card .hd{padding:14px 16px 10px;border-bottom:1px solid var(--ln)}
+#card .tag{font:700 9px var(--orb);letter-spacing:.2em;color:var(--cy)}
+#card h2{font:900 30px var(--jp);color:#fff;letter-spacing:.08em;text-shadow:0 0 16px rgba(0,229,255,.55);margin-top:2px}
+#card .co{font-size:10px;color:var(--mu);margin-top:2px}
+#card .x{position:absolute;right:14px;top:10px;background:none;border:none;color:var(--mu);font:18px var(--mono);cursor:pointer}
+#card .x:hover{color:#fff}
+#card .bd{overflow-y:auto;padding:8px 16px 14px;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.3) transparent}
+.cl{display:grid;grid-template-columns:4px 1fr;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,229,255,.07);cursor:pointer}
+.cl:hover .ln{text-decoration:underline}
+.cl .b{background:var(--c);box-shadow:0 0 8px var(--c)}
+.cl .ln{font:700 13px var(--jp);color:#fff}
+.cl .op{font-size:10px;color:var(--mu);margin-left:6px;font-weight:400}
+.cl .nb{font:400 11px var(--jp);color:var(--mu);margin-top:2px}
+#card .acts{display:flex;gap:6px;padding:0 16px 14px}
+#card .acts .btn{flex:1}
+
+#tools{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:9;display:flex;flex-direction:column;gap:5px}
+#tools .btn{width:38px;height:38px;padding:0;font-size:14px;display:grid;place-items:center;background:var(--pn)}
+#tools .btn.on{background:rgba(0,229,255,.22);color:#fff}
+
+#mini{right:18px;bottom:46px;width:214px;height:214px;padding:0}
+#mini canvas{position:absolute;left:0;top:0;cursor:pointer}
+#mini .lb{position:absolute;left:10px;top:8px;font:700 9px var(--orb);letter-spacing:.2em;color:var(--cy);z-index:2;pointer-events:none}
+
+#status{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:10;display:flex;align-items:center;gap:22px;padding:0 22px;background:linear-gradient(0deg,rgba(2,10,22,.95),rgba(2,10,22,.75));border-top:1px solid var(--ln);font-size:10.5px;color:var(--mu);white-space:nowrap;overflow:hidden}
+#status b{color:var(--cy2);font-weight:500}
+#status .sp{flex:1}
+#status .live::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gr);margin-right:6px;box-shadow:0 0 8px var(--gr);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.2}}
+#sbar{display:inline-block;height:6px;border:1px solid var(--cy2);border-top:0;vertical-align:middle;margin:0 6px}
+#tip{position:fixed;z-index:20;pointer-events:none;background:rgba(2,12,28,.94);border:1px solid var(--ln2);padding:8px 11px;opacity:0;transition:opacity .1s;max-width:300px}
+#tip .n{font:900 15px var(--jp);color:#fff}
+#tip .l{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:4px;font:500 10.5px var(--jp)}
+#tip .l span{color:var(--c);text-shadow:0 0 6px var(--c)}
+#boot{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;transition:opacity .6s}
+#boot.hide{opacity:0;pointer-events:none}
+#boot pre{font:12px/1.7 var(--mono);color:var(--cy2);text-shadow:0 0 8px rgba(0,229,255,.6);min-width:440px}
+#boot pre b{color:var(--gr)}
+@media (max-width:900px){#left{width:auto;right:18px;bottom:auto;max-height:48%}#card{left:18px;right:18px;width:auto;top:auto;bottom:46px}#mini{display:none}}
+</style>
+</head>
+<body>
+<canvas class="layer" id="bg"></canvas>
+<canvas class="layer" id="rail"></canvas>
+<canvas class="layer" id="fx"></canvas>
+<div id="scan"></div><div id="vig"></div>
+<div id="frame"><i></i><i></i><i></i><i></i></div>
+
+<aside id="left" class="panel">
+  <div class="title">
+    <div class="t1" data-t="JAPAN RAIL GRID">JAPAN <b>RAIL</b> GRID</div>
+    <div class="t2">日本全國鐵道網</div>
+    <div class="t3">SHINKANSEN · JR · METRO // MLIT N02-24</div>
+    <div class="stats">
+      <div class="stat"><div class="k">LINES</div><div class="v" id="stL">0</div></div>
+      <div class="stat"><div class="k">STATIONS</div><div class="v" id="stS">0</div></div>
+      <div class="stat"><div class="k">TRACK KM</div><div class="v" id="stK">0</div></div>
+    </div>
+  </div>
+  <div class="scroll" id="scroll">
+    <div class="sec">01 // SEARCH <span>車站搜尋</span></div>
+    <div class="field"><label>FIND</label><input id="inS" placeholder="駅名 / 中文 / romaji" autocomplete="off"><div class="ac" id="acS"></div></div>
+
+    <div class="sec">02 // ROUTE <span>路線規劃</span></div>
+    <div class="field"><label>FROM</label><input id="inA" placeholder="出發站" autocomplete="off"><div class="ac" id="acA"></div></div>
+    <div class="field to"><label>TO</label><input id="inB" placeholder="到達站" autocomplete="off"><div class="ac" id="acB"></div></div>
+    <div class="row" style="margin-top:4px">
+      <button class="btn sm on" data-m="fast">FASTEST</button>
+      <button class="btn sm" data-m="few">MIN TRANSFER</button>
+      <button class="btn sm" id="swap" title="交換">⇅</button>
+      <button class="btn go" id="go">COMPUTE ▸</button>
+    </div>
+    <div class="res" id="res"></div>
+
+    <div class="sec">03 // LAYERS <span>圖層</span></div>
+    <div class="layers" id="layers"></div>
+
+    <div class="sec">04 // JUMP <span>城市</span></div>
+    <div class="cities" id="cities"></div>
+
+    <div class="sec">05 // LINES <span>路線</span></div>
+    <div id="focus"></div>
+    <input class="lfilter" id="lf" placeholder="篩選路線 / 營運者…">
+    <div class="llist" id="llist"></div>
+    <div class="note">資料來源：國土交通省「國土數值情報（鐵道資料 N02-24）」。所需時間為依距離與車種估算之概略值，僅供參考。</div>
+  </div>
+</aside>
+
+<aside id="card" class="panel">
+  <div class="hd"><div class="tag" id="cTag">STATION // 駅</div><h2 id="cName"></h2><div class="co" id="cCo"></div><button class="x" id="cX">✕</button></div>
+  <div class="bd" id="cBody"></div>
+  <div class="acts"><button class="btn" id="cA">SET FROM</button><button class="btn" id="cB" style="color:#ff8cec;border-color:rgba(255,43,214,.5)">SET TO</button></div>
+</aside>
+
+<div id="tools">
+  <button class="btn" id="zIn" title="放大">＋</button>
+  <button class="btn" id="zOut" title="縮小">－</button>
+  <button class="btn" id="zFit" title="全國">◎</button>
+  <button class="btn on" id="tTr" title="列車動畫">⟿</button>
+  <button class="btn on" id="tLb" title="站名">A</button>
+  <button class="btn on" id="tXh" title="準星">✛</button>
+</div>
+
+<div id="mini" class="panel"><div class="lb">RADAR // 全域</div><canvas id="miniC"></canvas></div>
+
+<div id="status">
+  <span class="live">ONLINE</span>
+  <span>LAT <b id="sLat">--</b></span><span>LON <b id="sLon">--</b></span>
+  <span>ZOOM <b id="sZ">--</b></span>
+  <span>SCALE<span id="sbar"></span><b id="sS">--</b></span>
+  <span>TRAINS <b id="sT">0</b></span>
+  <span class="sp"></span>
+  <span>FPS <b id="sF">--</b></span>
+  <span>JST <b id="sC">--</b></span>
+</div>
+<div id="tip"></div>
+<div id="boot"><pre id="bootTxt"></pre></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const R = window.RAIL;
+
+/* =====================================================================
+   Projection: Web-Mercator degrees, origin shifted to keep float32 precision
+   ===================================================================== */
+const D2R = Math.PI/180, LON0 = 137;
+const mercY = lat => Math.log(Math.tan(Math.PI/4 + lat*D2R/2)) / D2R;
+const MY0 = mercY(36);
+const WX = lon => lon - LON0, WY = lat => MY0 - mercY(lat);
+const invLon = X => X + LON0, invLat = Y => (2*Math.atan(Math.exp((MY0 - Y)*D2R)) - Math.PI/2) / D2R;
+
+function decode(str){
+  const out = []; let i = 0, lat = 0, lon = 0; const n = str.length;
+  while (i < n){
+    let b, sh = 0, r = 0;
+    do { b = str.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32);
+    lat += (r & 1) ? ~(r >> 1) : (r >> 1);
+    sh = 0; r = 0;
+    do { b = str.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32);
+    lon += (r & 1) ? ~(r >> 1) : (r >> 1);
+    out.push(WX(lon/1e5), WY(lat/1e5));
+  }
+  return new Float32Array(out);
+}
+const mix = (hex, to, t) => { const a = parseInt(hex.slice(1),16), b = parseInt(to.slice(1),16);
+  const c = [16,8,0].map(s => Math.round(((a>>s)&255)*(1-t) + ((b>>s)&255)*t)); return `rgb(${c[0]},${c[1]},${c[2]})`; };
+
+/* =====================================================================
+   Categories
+   ===================================================================== */
+const CATS = {
+  shinkansen:{n:'新幹線',      e:'SHINKANSEN',   on:true,  col:'#ffd84a', w:2.4, glow:12, kmh:260, dwell:2.5, trail:28},
+  jr:        {n:'JR 在來線',   e:'JR LINES',     on:true,  col:'#36e27b', w:1.25,glow:6,  kmh:70,  dwell:.8,  trail:11},
+  subway:    {n:'地下鐵',      e:'METRO',        on:true,  col:'#ff4dd8', w:1.7, glow:7,  kmh:34,  dwell:.5,  trail:10},
+  private:   {n:'私鐵',        e:'PRIVATE',      on:false, col:'#a78bfa', w:1.05,glow:5,  kmh:58,  dwell:.7,  trail:9},
+  third:     {n:'第三部門',    e:'3RD SECTOR',   on:false, col:'#67b7ff', w:1.05,glow:5,  kmh:52,  dwell:.8,  trail:9},
+  mono:      {n:'單軌/新交通', e:'MONO / AGT',   on:false, col:'#c9a6ff', w:1.1, glow:5,  kmh:30,  dwell:.6,  trail:8},
+  tram:      {n:'路面電車',    e:'TRAM',         on:false, col:'#ff8fd0', w:1.0, glow:4,  kmh:16,  dwell:.4,  trail:6},
+};
+const CAT_ORDER = ['tram','mono','third','private','jr','subway','shinkansen']; // draw order (bottom → top)
+
+/* =====================================================================
+   Lines
+   ===================================================================== */
+const LINES = R.lines.map((l,i) => {
+  const L = {i, name:l.n, op:l.op, cat:l.c, col:l.col, km:l.km, fineS:l.f, fine:null, coarse:l.g.map(decode), paths:{}};
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for (const a of L.coarse) for (let j=0;j<a.length;j+=2){ const x=a[j],y=a[j+1]; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
+  L.bb = [x0,y0,x1,y1];
+  L.core = mix(l.col, '#ffffff', .5);
+  L.label = l.op + ' ' + l.n;
+  return L;
+});
+function linePath(L, lod){
+  if (L.paths[lod]) return L.paths[lod];
+  if (lod==='fine' && !L.fine) L.fine = L.fineS.map(decode);
+  const p = new Path2D();
+  for (const a of (lod==='fine' ? L.fine : L.coarse)){ if (a.length<4) continue; p.moveTo(a[0],a[1]); for (let j=2;j<a.length;j+=2) p.lineTo(a[j],a[j+1]); }
+  return L.paths[lod] = p;
+}
+const LINES_DRAW = [...LINES].sort((a,b) => CAT_ORDER.indexOf(a.cat)-CAT_ORDER.indexOf(b.cat));
+
+/* =====================================================================
+   Stations / groups / edges
+   ===================================================================== */
+const N = R.st.l.length, SL = Int32Array.from(R.st.l), SG = Int32Array.from(R.st.g);
+const SX = new Float32Array(N), SY = new Float32Array(N), SLON = R.st.x, SLAT = R.st.y;
+for (let s=0;s<N;s++){ SX[s]=WX(R.st.x[s]); SY[s]=WY(R.st.y[s]); }
+const NG = R.gr.n.length, GN = R.gr.n, GX = new Float32Array(NG), GY = new Float32Array(NG);
+for (let g=0; g<NG; g++){ GX[g]=WX(R.gr.x[g]); GY[g]=WY(R.gr.y[g]); }
+const GM = Array.from({length:NG}, () => []);
+for (let s=0;s<N;s++) GM[SG[s]].push(s);
+const GL = GM.map(m => [...new Set(m.map(s => SL[s]))]);
+const GSHIN = GL.map(ls => ls.some(l => LINES[l].cat==='shinkansen'));
+const GV = new Int16Array(NG);      // number of visible lines at the group
+const LS = LINES.map(() => []);     // stations per line
+for (let s=0;s<N;s++) LS[SL[s]].push(s);
+
+const NE = R.e.length/3, EA = new Int32Array(NE), EB = new Int32Array(NE), EKM = new Float32Array(NE);
+const NB = Array.from({length:N}, () => []);
+const LE = LINES.map(() => []);
+for (let e=0;e<NE;e++){ EA[e]=R.e[3*e]; EB[e]=R.e[3*e+1]; EKM[e]=R.e[3*e+2]/100; NB[EA[e]].push(e); NB[EB[e]].push(e); LE[SL[EA[e]]].push(e); }
+const EG = new Array(NE);   // lazily decoded track geometry {xy, cum, len}
+function edgeGeom(e){
+  if (EG[e]) return EG[e];
+  let xy = decode(R.ep[e]);
+  if (xy.length < 4) xy = new Float32Array([SX[EA[e]],SY[EA[e]],SX[EB[e]],SY[EB[e]]]);
+  const n = xy.length/2, cum = new Float32Array(n);
+  for (let i=1;i<n;i++) cum[i] = cum[i-1] + Math.hypot(xy[2*i]-xy[2*i-2], xy[2*i+1]-xy[2*i-1]);
+  return EG[e] = {xy, cum, len:cum[n-1]};
+}
+function pointAt(G, d, out){
+  const {xy, cum, len} = G, n = cum.length;
+  if (d <= 0 || n < 2){ out[0]=xy[0]; out[1]=xy[1]; return out; }
+  if (d >= len){ out[0]=xy[2*n-2]; out[1]=xy[2*n-1]; return out; }
+  let lo = 0, hi = n-1;
+  while (hi-lo > 1){ const m = (lo+hi)>>1; if (cum[m] <= d) lo = m; else hi = m; }
+  const t = (d-cum[lo]) / ((cum[hi]-cum[lo]) || 1);
+  out[0] = xy[2*lo] + (xy[2*hi]-xy[2*lo])*t; out[1] = xy[2*lo+1] + (xy[2*hi+1]-xy[2*lo+1])*t;
+  return out;
+}
+const kmBetween = (lon1,lat1,lon2,lat2) => Math.hypot((lon1-lon2)*Math.cos((lat1+lat2)/2*D2R)*111.32, (lat1-lat2)*110.57);
+
+// walking links between nearby (different) station groups, e.g. 梅田 ↔ 大阪
+const WALK = Array.from({length:NG}, () => []);
+(() => {
+  const cell = new Map(), key = (a,b) => a*100000+b;
+  for (let g=0; g<NG; g++){ const k = key(Math.floor(R.gr.x[g]/.01), Math.floor(R.gr.y[g]/.01)); if (!cell.has(k)) cell.set(k,[]); cell.get(k).push(g); }
+  for (let g=0; g<NG; g++){
+    const cx = Math.floor(R.gr.x[g]/.01), cy = Math.floor(R.gr.y[g]/.01);
+    for (let dx=-1;dx<=1;dx++) for (let dy=-1;dy<=1;dy++){
+      for (const h of cell.get(key(cx+dx,cy+dy)) || []){
+        if (h<=g) continue;
+        const d = kmBetween(R.gr.x[g],R.gr.y[g],R.gr.x[h],R.gr.y[h]);
+        if (d < .45){ WALK[g].push([h,d]); WALK[h].push([g,d]); }
+      }
+    }
+  }
+})();
+
+/* =====================================================================
+   Search index (Japanese names + 繁/簡 kanji folding + romaji aliases)
+   ===================================================================== */
+const FOLD = (() => {
+  const pairs = '澀渋澁渋濱浜廣広櫻桜國国澤沢邊辺鐵鉄會会龍竜條条戶戸黑黒惠恵壽寿德徳豐豊藏蔵圓円關関鄉郷縣県樂楽學学瀨瀬淺浅發発稻稲竝並兩両對対廳庁號号臺台灣湾萬万禪禅靜静龜亀榮栄氣気歲歳譽誉莊荘輕軽實実鹽塩驛駅區区團団圖図營営獨独舊旧單単參参寶宝嶽岳濟済齋斎劍剣經経總総綠緑處処戰戦擴拡曉暁檢検殘残溫温滿満瀧滝燒焼狹狭產産畫画當当盡尽穗穂繪絵繼継續続聲声腦脳舉挙藝芸藥薬蟲虫裝装覺覚觀観證証讀読變変賣売轉転辭辞醫医釋釈錢銭鎭鎮隨随險険雜雑雙双靈霊顯顕驗験鷄鶏麥麦點点齒歯齡齢拜拝稱称繩縄兒児歐欧涉渉狀状祕秘蘆芦錄録鐮鎌隱隠雞鶏顏顔橫横與与'+
+    '东東涩渋滨浜广広樱桜国国泽沢边辺铁鉄龙竜户戸丰豊圆円关関乡郷县県乐楽濑瀬发発两両对対厅庁湾湾龟亀荣栄气気岁歳轻軽实実盐塩驿駅团団图図营営单単剑剣经経总総绿緑处処战戦扩拡晓暁检検满満泷滝烧焼产産众衆矿鉱穗穂丝糸绘絵继継续続听聴脑脳举挙艺芸药薬装装觉覚观観证証读読变変卖売转転释釈钱銭镇鎮险険杂雑双双灵霊显顕验験鸡鶏齿歯龄齢阳陽门門马馬鸟鳥长長冈岡桥橋车車云雲叶葉历歴冲沖绳縄儿児岛島宫宮爱愛树樹汤湯汉漢见見贺賀罗羅闻聞开開间間华華园園远遠连連进進运運过過达達铃鈴银銀锦錦镰鎌问問阵陣陆陸际際难難电電须須顺順预預领領风風飞飛馆館驹駒鱼魚鸭鴨鹤鶴丽麗筑築线線站駅';
+  const m = new Map(); for (let i=0;i<pairs.length;i+=2) m.set(pairs[i], pairs[i+1]); return m;
+})();
+const norm = s => [...String(s).toLowerCase()].map(c => FOLD.get(c) || c).join('')
+  .replace(/[ヶヵが]/g,'ケ').replace(/[のノ]/g,'ノ').replace(/[\s\-‐ー・･()（）〈〉]/g,'');
+const ALIAS = {tokyo:'東京',shinjuku:'新宿',shibuya:'渋谷',ikebukuro:'池袋',ueno:'上野',shinagawa:'品川',akihabara:'秋葉原',ginza:'銀座',asakusa:'浅草',
+  roppongi:'六本木',harajuku:'原宿',ebisu:'恵比寿',meguro:'目黒',gotanda:'五反田',osaki:'大崎',hamamatsucho:'浜松町',shimbashi:'新橋',otemachi:'大手町',
+  yokohama:'横浜',shinyokohama:'新横浜',kawasaki:'川崎',omiya:'大宮',chiba:'千葉',narita:'成田空港',haneda:'羽田空港第1・第2ターミナル',
+  osaka:'大阪',shinosaka:'新大阪',umeda:'梅田',namba:'難波',tennoji:'天王寺',kyoto:'京都',kobe:'神戸',sannomiya:'三宮',sannomiyajr:'三ノ宮',
+  nagoya:'名古屋',sakae:'栄',sapporo:'札幌',sendai:'仙台',hakata:'博多',fukuoka:'博多',tenjin:'天神',hiroshima:'広島',okayama:'岡山',kanazawa:'金沢',
+  nagano:'長野',niigata:'新潟',kagoshima:'鹿児島中央',kumamoto:'熊本',hakodate:'函館',shinhakodate:'新函館北斗',aomori:'青森',shinaomori:'新青森',
+  morioka:'盛岡',akita:'秋田',yamagata:'山形',fukushima:'福島',utsunomiya:'宇都宮',shizuoka:'静岡',hamamatsu:'浜松',nara:'奈良',wakayama:'和歌山',
+  himeji:'姫路',matsuyama:'松山',takamatsu:'高松',kochi:'高知',tokushima:'徳島',nagasaki:'長崎',oita:'大分',miyazaki:'宮崎',asahikawa:'旭川',
+  kushiro:'釧路',otaru:'小樽',nikko:'日光',kamakura:'鎌倉',atami:'熱海',karuizawa:'軽井沢',toyama:'富山',fukui:'福井',gifu:'岐阜',matsumoto:'松本',
+  kofu:'甲府',mito:'水戸',takasaki:'高崎',kokura:'小倉',kitakyushu:'小倉',maihama:'舞浜',disney:'舞浜',odawara:'小田原',numazu:'沼津',
+  toyohashi:'豊橋',tsuruga:'敦賀',maibara:'米原',shinkobe:'新神戸',kurashiki:'倉敷',matsue:'松江',tottori:'鳥取',yamaguchi:'新山口',saga:'佐賀',
+  beppu:'別府',naha:'県庁前',noboribetsu:'登別',obihiro:'帯広',abashiri:'網走',wakkanai:'稚内',hachinohe:'八戸',kitasenju:'北千住',kinshicho:'錦糸町',
+  oshiage:'押上',skytree:'押上',tsukiji:'築地',toyosu:'豊洲',odaiba:'台場',nakano:'中野',kichijoji:'吉祥寺',tachikawa:'立川',hachioji:'八王子'};
+const GKEY = new Array(NG);
+(() => {
+  const byName = new Map(); for (let g=0; g<NG; g++){ const k = GN[g]; if (!byName.has(k)) byName.set(k, []); byName.get(k).push(g); }
+  for (let g=0; g<NG; g++) GKEY[g] = norm(GN[g]);
+  for (const [en, ja] of Object.entries(ALIAS)) for (const g of byName.get(ja) || []) GKEY[g] += ' ' + en;
+})();
+
+/* =====================================================================
+   State & canvases
+   ===================================================================== */
+const state = {
+  view:{k:60, tx:0, ty:0}, dirty:true, lod:'coarse',
+  focus:-1, sel:-1, hover:-1, A:-1, B:-1, route:null, mode:'fast',
+  trains:true, labels:true, xhair:true, mouse:null,
+};
+const cvBg = $('#bg'), cvRail = $('#rail'), cvFx = $('#fx');
+const cB = cvBg.getContext('2d'), cR = cvRail.getContext('2d'), cF = cvFx.getContext('2d');
+let W=0, H=0, DPR=1;
+function resize(){
+  W = innerWidth; H = innerHeight; DPR = Math.min(2, devicePixelRatio || 1);
+  for (const c of [cvBg, cvRail, cvFx]){ c.width = W*DPR; c.height = H*DPR; }
+  state.dirty = true;
+}
+const w2s = (x,y) => [x*state.view.k + state.view.tx, y*state.view.k + state.view.ty];
+const s2w = (x,y) => [(x-state.view.tx)/state.view.k, (y-state.view.ty)/state.view.k];
+const setWorld = (ctx) => { const v = state.view; ctx.setTransform(DPR*v.k,0,0,DPR*v.k,DPR*v.tx,DPR*v.ty); };
+const setScreen = (ctx) => ctx.setTransform(DPR,0,0,DPR,0,0);
+const panelW = () => innerWidth > 900 ? 400 : 0;
+
+/* =====================================================================
+   Base map: Japan from topojson, grid, dot-matrix land
+   ===================================================================== */
+const topo = window.JAPAN_TOPO, tobj = topo.objects[Object.keys(topo.objects)[0]];
+const ringsToPath = (geom, closed) => {
+  const p = new Path2D();
+  const polys = geom.type === 'MultiPolygon' ? geom.coordinates : geom.type === 'Polygon' ? [geom.coordinates]
+    : geom.type === 'MultiLineString' ? [geom.coordinates] : [[geom.coordinates]];
+  for (const poly of polys) for (const ring of poly){
+    ring.forEach(([lon,lat],i) => { const x=WX(lon), y=WY(lat); i ? p.lineTo(x,y) : p.moveTo(x,y); });
+    if (closed) p.closePath();
+  }
+  return p;
+};
+const LAND = ringsToPath(topojson.merge(topo, tobj.geometries), true);
+const COAST = ringsToPath(topojson.mesh(topo, tobj, (a,b) => a===b), false);
+const PREF = ringsToPath(topojson.mesh(topo, tobj, (a,b) => a!==b), false);
+const dotPattern = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 7; const x = c.getContext('2d');
+  x.fillStyle = 'rgba(0,229,255,.22)'; x.fillRect(3,3,1.2,1.2); return cB.createPattern(c, 'repeat');
+})();
+function niceStep(pxPerDeg, target){
+  const steps = [10,5,2,1,.5,.25,.1,.05,.02,.01,.005];
+  let s = steps[0]; for (const t of steps) if (t*pxPerDeg >= target) s = t; return s;
+}
+function renderBase(){
+  const ctx = cB, v = state.view;
+  setScreen(ctx);
+  const g = ctx.createRadialGradient(W*.55, H*.45, 0, W*.55, H*.45, Math.max(W,H)*.8);
+  g.addColorStop(0, '#05142b'); g.addColorStop(1, '#010409');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  // lat/lon grid
+  const [x0w,y0w] = s2w(0,0), [x1w,y1w] = s2w(W,H);
+  const lon0 = invLon(x0w), lon1 = invLon(x1w), latT = invLat(y0w), latB = invLat(y1w);
+  const step = niceStep(v.k, 110), minor = step/5;
+  ctx.lineWidth = 1;
+  const drawGrid = (st, style) => {
+    ctx.strokeStyle = style; ctx.beginPath();
+    for (let lo = Math.ceil(lon0/st)*st; lo <= lon1; lo += st){ const x = Math.round(WX(lo)*v.k+v.tx)+.5; ctx.moveTo(x,0); ctx.lineTo(x,H); }
+    for (let la = Math.ceil(latB/st)*st; la <= latT; la += st){ const y = Math.round(WY(la)*v.k+v.ty)+.5; ctx.moveTo(0,y); ctx.lineTo(W,y); }
+    ctx.stroke();
+  };
+  if (minor*v.k > 14) drawGrid(minor, 'rgba(0,229,255,.035)');
+  drawGrid(step, 'rgba(0,229,255,.09)');
+  ctx.fillStyle = 'rgba(0,229,255,.45)'; ctx.font = '500 9px "JetBrains Mono"';
+  const dec = step < .1 ? 2 : step < 1 ? 1 : 0;
+  ctx.textAlign = 'left';
+  for (let lo = Math.ceil(lon0/step)*step; lo <= lon1; lo += step){ const x = WX(lo)*v.k+v.tx; if (x > panelW()+10) ctx.fillText(lo.toFixed(dec)+'°E', x+4, 22); }
+  for (let la = Math.ceil(latB/step)*step; la <= latT; la += step){ const y = WY(la)*v.k+v.ty; ctx.fillText(la.toFixed(dec)+'°N', W-70, y-4); }
+  // land: clip and fill with dot matrix
+  setWorld(ctx);
+  ctx.fillStyle = 'rgba(0,70,120,.16)'; ctx.fill(LAND);
+  ctx.save(); ctx.clip(LAND); setScreen(ctx); ctx.fillStyle = dotPattern; ctx.fillRect(0,0,W,H); ctx.restore();
+  setWorld(ctx);
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(0,229,255,.10)'; ctx.lineWidth = 1/v.k; ctx.setLineDash([3/v.k, 3/v.k]); ctx.stroke(PREF); ctx.setLineDash([]);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.strokeStyle = 'rgba(0,229,255,.07)'; ctx.lineWidth = 7/v.k; ctx.stroke(COAST);
+  ctx.strokeStyle = 'rgba(0,229,255,.22)'; ctx.lineWidth = 2.4/v.k; ctx.stroke(COAST);
+  ctx.strokeStyle = 'rgba(120,245,255,.65)'; ctx.lineWidth = .8/v.k; ctx.stroke(COAST);
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* =====================================================================
+   Rail layer: glowing lines, stations, labels
+   ===================================================================== */
+const zf = () => Math.max(.75, Math.min(2.8, Math.pow(state.view.k/180, .32)));
+let DRAWN = [];   // [g, sx, sy, r] of stations drawn in the last frame (for hit-testing)
+function viewBox(){ const [x0,y0] = s2w(0,0), [x1,y1] = s2w(W,H); return [x0,y0,x1,y1]; }
+const isVisLine = L => CATS[L.cat].on;
+function refreshVis(){
+  for (let g=0; g<NG; g++){ let c = 0; for (const l of GL[g]) if (CATS[LINES[l].cat].on) c++; GV[g] = c; }
+  // stats
+  let nl=0, km=0; for (const L of LINES) if (isVisLine(L)){ nl++; km += L.km; }
+  let ns = 0; for (let g=0; g<NG; g++) if (GV[g]) ns++;
+  countTo($('#stL'), nl); countTo($('#stS'), ns); countTo($('#stK'), Math.round(km));
+}
+function countTo(el, target){
+  const from = +el.dataset.v || 0, t0 = performance.now(); el.dataset.v = target;
+  const step = now => { const t = Math.min(1, (now-t0)/700), e = 1-Math.pow(1-t,3); el.textContent = Math.round(from+(target-from)*e).toLocaleString(); if (t<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+const measure = new Map();
+function textW(ctx, s, font){ const k = font+'|'+s; let w = measure.get(k); if (w==null){ ctx.font = font; w = ctx.measureText(s).width; measure.set(k,w); } return w; }
+
+function renderRail(){
+  const ctx = cR, v = state.view, k = v.k, z = zf();
+  setScreen(ctx); ctx.clearRect(0,0,W,H);
+  const [bx0,by0,bx1,by1] = viewBox(), m = 20/k;
+  const lod = k > 650 ? 'fine' : 'coarse'; state.lod = lod;
+  const vis = LINES_DRAW.filter(L => isVisLine(L) && L.bb[2] >= bx0-m && L.bb[0] <= bx1+m && L.bb[3] >= by0-m && L.bb[1] <= by1+m);
+  state.visLines = vis.length;
+  const focus = state.focus, routeOn = !!state.route;
+  const alphaOf = L => focus >= 0 ? (L.i === focus ? 1 : .09) : routeOn ? .32 : 1;
+  setWorld(ctx);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.globalCompositeOperation = 'lighter';
+  const passes = [
+    L => [CATS[L.cat].glow*z*(L.i===focus?1.8:1), .07],
+    L => [CATS[L.cat].w*z*2.6*(L.i===focus?1.5:1), .22],
+    L => [CATS[L.cat].w*z*(L.i===focus?1.6:1), .95],
+  ];
+  passes.forEach((pf, pi) => {
+    for (const L of vis){
+      const [w, a] = pf(L), al = a*alphaOf(L);
+      if (al < .004) continue;
+      ctx.globalAlpha = al; ctx.lineWidth = w/k;
+      ctx.strokeStyle = pi === 2 ? L.core : L.col;
+      ctx.stroke(linePath(L, lod));
+    }
+  });
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
+  // stations
+  setScreen(ctx);
+  DRAWN = [];
+  const showAll = k >= 300, showHub = k >= 110;
+  const focusSet = focus >= 0 ? new Set(LS[focus].map(s => SG[s])) : null;
+  const routeSet = state.route ? state.route.groups : null;
+  const cand = [];
+  for (let g=0; g<NG; g++){
+    if (!GV[g]) continue;
+    const onF = focusSet && focusSet.has(g), onR = routeSet && routeSet.has(g);
+    if (!(showAll || onF || onR || GSHIN[g] || (showHub && GV[g] >= 3))) continue;
+    if (focusSet && !onF && !showAll) continue;
+    const sx = GX[g]*k + v.tx, sy = GY[g]*k + v.ty;
+    if (sx < -20 || sy < -20 || sx > W+20 || sy > H+20) continue;
+    const dim = (focusSet && !onF) || (routeSet && !onR);
+    const xchg = GV[g] >= 2, r = (xchg ? 3.1 : 2.1)*Math.min(z,1.9) + (GSHIN[g] ? .8 : 0);
+    ctx.globalAlpha = dim ? .18 : 1;
+    if (GSHIN[g]){
+      ctx.strokeStyle = 'rgba(255,216,74,.85)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(sx, sy-r-3); ctx.lineTo(sx+r+3, sy); ctx.lineTo(sx, sy+r+3); ctx.lineTo(sx-r-3, sy); ctx.closePath(); ctx.stroke();
+    }
+    if (xchg){
+      ctx.fillStyle = '#02060f'; ctx.strokeStyle = '#e9fdff'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill(); ctx.stroke();
+    } else {
+      const L = LINES[GL[g].find(l => CATS[LINES[l].cat].on) ?? GL[g][0]];
+      ctx.fillStyle = L.core; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
+      ctx.fillStyle = '#02060f'; ctx.beginPath(); ctx.arc(sx, sy, r*.42, 0, 7); ctx.fill();
+    }
+    DRAWN.push([g, sx, sy, r]);
+    if (!dim) cand.push([g, sx, sy, r, onF, onR]);
+  }
+  ctx.globalAlpha = 1;
+
+  // labels: greedy, collision-aware
+  if (state.labels){
+    const pri = c => (c[5]?1e4:0) + (c[4]?5e3:0) + (state.sel===c[0]?1e5:0) + (GSHIN[c[0]]?400:0) + GV[c[0]]*40 + GM[c[0]].length;
+    cand.sort((a,b) => pri(b)-pri(a));
+    const minLines = k < 110 ? 99 : k < 300 ? 3 : k < 700 ? 2 : 1;
+    const boxes = [], maxN = 420;
+    let n = 0;
+    for (const c of cand){
+      const [g, sx, sy, r, onF, onR] = c;
+      if (!(onF || onR || GSHIN[g] || GV[g] >= minLines || state.sel===g)) continue;
+      const big = GSHIN[g] || GV[g] >= 4;
+      const fs = big ? 12.5 : 11, font = `${big?700:500} ${fs}px "Noto Sans JP","Noto Sans TC"`;
+      const w = textW(ctx, GN[g], font) + 4, h = fs + 3;
+      const cs = [[sx+r+5, sy-h/2], [sx-r-5-w, sy-h/2], [sx-w/2, sy-r-5-h], [sx-w/2, sy+r+5]];
+      for (const [lx,ly] of cs){
+        const b = [lx, ly, lx+w, ly+h];
+        if (b[0] < panelW()-10 && b[1] < H) { if (b[2] < panelW()) continue; }
+        let hit = false;
+        for (const o of boxes) if (b[0]<o[2] && b[2]>o[0] && b[1]<o[3] && b[3]>o[1]) { hit = true; break; }
+        if (hit) continue;
+        boxes.push(b);
+        ctx.font = font; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(2,6,15,.92)'; ctx.strokeText(GN[g], lx+2, ly+h/2);
+        ctx.fillStyle = onR ? '#ffffff' : GSHIN[g] ? '#ffe9a3' : big ? '#e6fbff' : '#9fd2ee';
+        ctx.fillText(GN[g], lx+2, ly+h/2);
+        n++; break;
+      }
+      if (n >= maxN) break;
+    }
+  }
+}
+
+/* =====================================================================
+   Trains (simulated pulses that run station to station along real track)
+   ===================================================================== */
+const TRAINS = [];
+function seedTrains(){
+  TRAINS.length = 0;
+  LINES.forEach(L => {
+    const es = LE[L.i]; if (!es.length) return;
+    const n = L.cat === 'shinkansen' ? Math.max(2, Math.round(es.length/1.2)) : Math.max(1, Math.round(es.length/3.2));
+    for (let j=0;j<n;j++){
+      const e = es[(Math.random()*es.length)|0], G = edgeGeom(e), fwd = Math.random() < .5;
+      TRAINS.push({L, e, fwd, d:Math.random()*G.len, dwell:0});
+    }
+  });
+  TRAINS.sort((a,b) => a.L.i - b.L.i);
+}
+function advance(t, dt, spd){
+  if (t.dwell > 0){ t.dwell -= dt; return; }
+  const G = edgeGeom(t.e);
+  t.d += (t.fwd ? 1 : -1) * spd * dt;
+  if (t.d >= 0 && t.d <= G.len) return;
+  const at = t.fwd ? EB[t.e] : EA[t.e];
+  const next = NB[at].filter(e => e !== t.e);
+  if (!next.length){ t.fwd = !t.fwd; t.d = Math.max(0, Math.min(G.len, t.d)); t.dwell = CATS[t.L.cat].dwell*1.5; return; }
+  const e2 = next[(Math.random()*next.length)|0], G2 = edgeGeom(e2);
+  t.e = e2; t.fwd = EA[e2] === at; t.d = t.fwd ? 0 : G2.len;
+  if (G2.len > 1e-5) t.dwell = CATS[t.L.cat].dwell * .35;
+}
+const P1 = [0,0], P2 = [0,0];
+function drawTrains(ctx, dt){
+  const v = state.view, k = v.k, z = zf();
+  const [bx0,by0,bx1,by1] = viewBox();
+  // time-lapse factor shrinks as you zoom in, so motion stays readable at every scale
+  const lapse = 1100 * Math.pow(70/k, .7) / 90 / 3600;
+  setWorld(ctx); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  let cur = null, path = null, heads = new Path2D(), shown = 0;
+  const flush = () => { if (!path) return; const C = CATS[cur.cat], dimA = state.focus>=0 ? (cur.i===state.focus?1:.08) : state.route ? .15 : 1;
+    ctx.globalAlpha = .85*dimA; ctx.strokeStyle = cur.core; ctx.lineWidth = C.w*z*2.2/k; ctx.stroke(path); };
+  for (const t of TRAINS){
+    if (!CATS[t.L.cat].on) continue;
+    advance(t, dt, CATS[t.L.cat].kmh * lapse);
+    const G = edgeGeom(t.e); pointAt(G, t.d, P1);
+    if (P1[0] < bx0 || P1[0] > bx1 || P1[1] < by0 || P1[1] > by1) continue;
+    if (t.L !== cur){ flush(); cur = t.L; path = new Path2D(); }
+    const tr = CATS[t.L.cat].trail * Math.min(1.6, z) / k;
+    pointAt(G, t.d + (t.fwd ? -tr : tr), P2);
+    path.moveTo(P2[0], P2[1]); path.lineTo(P1[0], P1[1]);
+    const hr = (t.L.cat==='shinkansen' ? 1.8 : 1.2) * Math.min(z,1.8) / k;
+    heads.rect(P1[0]-hr, P1[1]-hr, hr*2, hr*2);
+    shown++;
+  }
+  flush();
+  ctx.globalAlpha = state.route || state.focus>=0 ? .3 : .95; ctx.fillStyle = '#ffffff'; ctx.fill(heads);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  return shown;
+}
+
+/* =====================================================================
+   Routing (Dijkstra over station × line nodes with transfers & walks)
+   ===================================================================== */
+function rideMin(e){ const C = CATS[LINES[SL[EA[e]]].cat]; const km = EKM[e]; return km < .05 ? .1 : km/C.kmh*60 + C.dwell*.8; }
+function xferMin(s, t){
+  if (SL[s] === SL[t]) return .1;
+  const a = LINES[SL[s]], b = LINES[SL[t]];
+  if (a.cat==='shinkansen' || b.cat==='shinkansen') return 8;
+  return a.op === b.op ? 3.5 : 5.5;
+}
+function findRoute(gA, gB, mode){
+  const P = mode==='few' ? 30 : 0;
+  const dist = new Float64Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), how = new Int8Array(N), hE = new Int32Array(N).fill(-1), done = new Uint8Array(N);
+  const hk = [], hv = [];
+  const push = (d, s) => { hk.push(d); hv.push(s); let i = hk.length-1; while (i>0){ const p=(i-1)>>1; if (hk[p] <= hk[i]) break; [hk[p],hk[i]]=[hk[i],hk[p]]; [hv[p],hv[i]]=[hv[i],hv[p]]; i=p; } };
+  const pop = () => { const d=hk[0], s=hv[0], ld=hk.pop(), ls=hv.pop(); if (hk.length){ hk[0]=ld; hv[0]=ls; let i=0; for(;;){ const l=2*i+1, r=l+1; let m=i; if (l<hk.length && hk[l]<hk[m]) m=l; if (r<hk.length && hk[r]<hk[m]) m=r; if (m===i) break; [hk[m],hk[i]]=[hk[i],hk[m]]; [hv[m],hv[i]]=[hv[i],hv[m]]; i=m; } } return [d,s]; };
+  const ok = s => CATS[LINES[SL[s]].cat].on;
+  for (const s of GM[gA]) if (ok(s)){ dist[s] = 0; push(0, s); }
+  const relax = (s, t, w, h, e) => { const nd = dist[s] + w; if (nd < dist[t]){ dist[t] = nd; prev[t] = s; how[t] = h; hE[t] = e; push(nd, t); } };
+  let end = -1;
+  while (hk.length){
+    const [d, s] = pop(); if (done[s]) continue; done[s] = 1;
+    if (SG[s] === gB){ end = s; break; }
+    for (const e of NB[s]){ const t = EA[e]===s ? EB[e] : EA[e]; if (ok(t)) relax(s, t, rideMin(e), 0, e); }
+    for (const t of GM[SG[s]]) if (t !== s && ok(t)) relax(s, t, xferMin(s,t) + (SL[s]===SL[t] ? 0 : P), 1, -1);
+    for (const [h, km] of WALK[SG[s]]) for (const t of GM[h]) if (ok(t)) relax(s, t, 3 + km*13 + P, 2, -1);
+  }
+  if (end < 0) return null;
+  const chain = []; for (let s = end; s >= 0; s = prev[s]) chain.unshift(s);
+  const steps = [], legs = []; let cur = null, km = 0;
+  for (let i=1;i<chain.length;i++){
+    const a = chain[i-1], b = chain[i];
+    if (how[b] === 0 || (how[b] === 1 && SL[a] === SL[b])){
+      if (!cur || cur.line !== SL[b]){ cur = {type:'leg', line:SL[b], sts:[a], edges:[], km:0, t:0}; legs.push(cur); steps.push(cur); }
+      cur.sts.push(b);
+      if (how[b] === 0){ const e = hE[b]; cur.edges.push([e, EA[e]===a]); cur.km += EKM[e]; cur.t += rideMin(e); km += EKM[e]; }
+    } else {
+      steps.push({type: how[b]===1 ? 'xfer' : 'walk', a, b, t: dist[b]-dist[a]-(how[b]===1 || how[b]===2 ? P : 0)});
+      cur = null;
+    }
+  }
+  const total = steps.reduce((s,x) => s + x.t, 0);
+  const groups = new Set(); legs.forEach(l => l.sts.forEach(s => groups.add(SG[s])));
+  // world-space paths per leg (real track geometry)
+  legs.forEach(l => {
+    const p = new Path2D(); let first = true;
+    for (const [e, fwd] of l.edges){
+      const G = edgeGeom(e), n = G.cum.length;
+      for (let j=0;j<n;j++){ const q = fwd ? j : n-1-j; const x = G.xy[2*q], y = G.xy[2*q+1]; if (first){ p.moveTo(x,y); first = false; } else p.lineTo(x,y); }
+    }
+    l.path = p;
+  });
+  return {gA, gB, steps, legs, total, km, groups, xfers: legs.length-1};
+}
+const fmtT = m => { m = Math.round(m); return m >= 60 ? `${Math.floor(m/60)}<small>h</small>${String(m%60).padStart(2,'0')}<small>m</small>` : `${m}<small>min</small>`; };
+const fmtTt = m => { m = Math.round(m); return m >= 60 ? `${Math.floor(m/60)} 小時 ${m%60} 分` : `${m} 分`; };
+function runRoute(){
+  const out = $('#res');
+  if (state.A < 0 || state.B < 0){ out.innerHTML = `<div class="note">» 請設定 FROM / TO（可於地圖點選車站）。</div>`; return; }
+  if (state.A === state.B){ out.innerHTML = `<div class="note">» FROM 與 TO 相同。</div>`; return; }
+  const t0 = performance.now();
+  const r = findRoute(state.A, state.B, state.mode);
+  const ms = performance.now()-t0;
+  state.route = r; state.focus = -1; renderFocus(); state.dirty = true;
+  if (!r){ out.innerHTML = `<div class="note">» NO ROUTE — 目前開啟的圖層無法連通，試著開啟「私鐵 / 第三部門」。</div>`; return; }
+  let h = `<div class="sum"><div class="t">${fmtT(r.total)}</div><div class="m">DIST <b>${r.km.toFixed(1)}</b> km · XFER <b>${r.xfers}</b><br>STOPS <b>${r.legs.reduce((a,l)=>a+new Set(l.sts.map(s=>SG[s])).size-1,0)}</b> · SOLVED <b>${ms.toFixed(0)}</b> ms</div></div>`;
+  let clock = 0;
+  r.steps.forEach((s, i) => {
+    if (s.type === 'leg'){
+      const L = LINES[s.line], g0 = SG[s.sts[0]], g1 = SG[s.sts[s.sts.length-1]];
+      const mids = []; s.sts.slice(1,-1).forEach(x => { const n = GN[SG[x]]; if (n !== GN[g0] && n !== GN[g1] && mids[mids.length-1] !== n) mids.push(n); });
+      h += `<div class="stp"><span class="d ${i===0?'a':''}"></span><span class="n">${GN[g0]}</span><span class="tm">+${Math.round(clock)}′</span></div>
+        <div class="leg" style="--c:${L.col}"><span class="bar"></span><div class="inf"><span class="ln">${L.name}</span><span class="op">${L.op} · ${CATS[L.cat].n}</span><br>
+        ${mids.length+1} 站 · ${s.km.toFixed(1)} km · 約 ${fmtTt(s.t)}
+        ${mids.length ? `<details><summary>▸ 經由 ${mids.length} 站</summary><div>${mids.join(' › ')}</div></details>` : ''}</div></div>`;
+      clock += s.t;
+      if (i === r.steps.length-1) h += `<div class="stp"><span class="d b"></span><span class="n">${GN[g1]}</span><span class="tm">+${Math.round(clock)}′</span></div>`;
+    } else {
+      h += `<div class="xf"><span class="w"></span><span>${s.type==='walk' ? `⇢ 步行轉乘 ${GN[SG[s.a]]} → ${GN[SG[s.b]]}` : `⟳ 站內轉乘`} · ${Math.max(1,Math.round(s.t))} 分</span></div>`;
+      clock += s.t;
+    }
+  });
+  h += `<div class="note">※ 依路線距離與車種速度估算（含停站、轉乘），非實際時刻表。</div>`;
+  out.innerHTML = h;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  r.groups.forEach(g => { x0=Math.min(x0,GX[g]); x1=Math.max(x1,GX[g]); y0=Math.min(y0,GY[g]); y1=Math.max(y1,GY[g]); });
+  fitBox(x0,y0,x1,y1, 30000);
+}
+function drawRoute(ctx, time){
+  const r = state.route; if (!r) return;
+  const k = state.view.k;
+  setWorld(ctx); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.globalCompositeOperation = 'lighter';
+  for (const l of r.legs){
+    const L = LINES[l.line];
+    ctx.globalAlpha = .16; ctx.strokeStyle = L.col; ctx.lineWidth = 18/k; ctx.stroke(l.path);
+    ctx.globalAlpha = .5; ctx.lineWidth = 7/k; ctx.stroke(l.path);
+    ctx.globalAlpha = 1; ctx.strokeStyle = L.core; ctx.lineWidth = 3/k; ctx.stroke(l.path);
+    ctx.setLineDash([3/k, 16/k]); ctx.lineDashOffset = -time*0.06/k; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3.2/k; ctx.stroke(l.path); ctx.setLineDash([]);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  setScreen(ctx);
+  r.steps.filter(s => s.type==='walk').forEach(s => {
+    const [ax,ay] = w2s(SX[s.a],SY[s.a]), [bx,by] = w2s(SX[s.b],SY[s.b]);
+    ctx.strokeStyle = '#ffc94d'; ctx.setLineDash([2,4]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke(); ctx.setLineDash([]);
+  });
+}
+
+/* =====================================================================
+   FX layer: reticles, endpoints, crosshair
+   ===================================================================== */
+function reticle(ctx, g, col, time, label){
+  const [x,y] = w2s(GX[g], GY[g]), a = time/900;
+  ctx.save(); ctx.translate(x,y);
+  ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.shadowColor = col; ctx.shadowBlur = 10;
+  for (let i=0;i<4;i++){ ctx.beginPath(); ctx.arc(0,0,15, a+i*Math.PI/2, a+i*Math.PI/2+.8); ctx.stroke(); }
+  const pr = 15 + (time/30 % 26); ctx.globalAlpha = Math.max(0, 1-(pr-15)/26); ctx.beginPath(); ctx.arc(0,0,pr,0,7); ctx.stroke();
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  if (label){
+    ctx.beginPath(); ctx.moveTo(11,-11); ctx.lineTo(26,-26); ctx.lineTo(40,-26); ctx.stroke();
+    ctx.font = '700 9px Orbitron'; ctx.fillStyle = col; ctx.textBaseline = 'bottom'; ctx.fillText(label, 42, -24);
+  }
+  ctx.restore();
+}
+let lastT = performance.now(), fpsAcc = 0, fpsN = 0;
+function frame(now){
+  const dt = Math.min(.05, (now-lastT)/1000); lastT = now;
+  fpsAcc += dt; fpsN++; if (fpsAcc > .5){ $('#sF').textContent = Math.round(fpsN/fpsAcc); fpsAcc = 0; fpsN = 0; }
+  if (state.dirty){ renderBase(); renderRail(); state.dirty = false; updateStatus(); }
+  const ctx = cF; setScreen(ctx); ctx.clearRect(0,0,W,H);
+  drawRoute(ctx, now);
+  let shown = 0;
+  if (state.trains) shown = drawTrains(ctx, dt);
+  $('#sT').textContent = shown.toLocaleString();
+  setScreen(ctx);
+  if (state.A >= 0) reticle(ctx, state.A, '#00e5ff', now, 'FROM');
+  if (state.B >= 0) reticle(ctx, state.B, '#ff2bd6', now, 'TO');
+  if (state.sel >= 0 && state.sel !== state.A && state.sel !== state.B) reticle(ctx, state.sel, '#ffffff', now, 'TARGET');
+  if (state.hover >= 0){ const [x,y] = w2s(GX[state.hover], GY[state.hover]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x,y,9,0,7); ctx.stroke(); }
+  if (state.xhair && state.mouse && !drag.moved){
+    const [mx,my] = state.mouse;
+    ctx.strokeStyle = 'rgba(0,229,255,.16)'; ctx.lineWidth = 1; ctx.beginPath();
+    ctx.moveTo(0,my+.5); ctx.lineTo(W,my+.5); ctx.moveTo(mx+.5,0); ctx.lineTo(mx+.5,H); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,229,255,.7)'; ctx.strokeRect(mx-6.5, my-6.5, 13, 13);
+  }
+  drawMini(now);
+  requestAnimationFrame(frame);
+}
+
+/* =====================================================================
+   Minimap radar
+   ===================================================================== */
+const mini = $('#miniC'), mctx = mini.getContext('2d'), MS = 214;
+const MB = (() => { const x0 = WX(128.3), x1 = WX(146.2), y0 = WY(45.8), y1 = WY(30.6); const s = Math.min((MS-24)/(x1-x0), (MS-30)/(y1-y0));
+  return {s, ox: (MS - (x1-x0)*s)/2 - x0*s, oy: 18 + (MS-24 - (y1-y0)*s)/2 - y0*s}; })();
+let miniBase = null;
+function buildMini(){
+  mini.width = MS*DPR; mini.height = MS*DPR; mini.style.width = mini.style.height = MS+'px';
+  const c = document.createElement('canvas'); c.width = c.height = MS*DPR; const x = c.getContext('2d');
+  x.setTransform(DPR*MB.s,0,0,DPR*MB.s,DPR*MB.ox,DPR*MB.oy);
+  x.fillStyle = 'rgba(0,229,255,.08)'; x.fill(LAND);
+  x.strokeStyle = 'rgba(0,229,255,.5)'; x.lineWidth = .6/MB.s; x.stroke(COAST);
+  x.globalCompositeOperation = 'lighter';
+  for (const L of LINES) if (L.cat==='shinkansen' || L.cat==='jr'){ x.strokeStyle = L.col; x.globalAlpha = L.cat==='shinkansen' ? .9 : .35; x.lineWidth = (L.cat==='shinkansen'?1.3:.6)/MB.s; x.stroke(linePath(L,'coarse')); }
+  miniBase = c;
+}
+function drawMini(now){
+  const x = mctx; x.setTransform(DPR,0,0,DPR,0,0); x.clearRect(0,0,MS,MS);
+  if (miniBase) x.drawImage(miniBase, 0, 0, MS, MS);
+  const cx = MS/2, cy = MS/2+8, a = now/1600 % (Math.PI*2);
+  if (x.createConicGradient){
+    const g = x.createConicGradient(a - .9, cx, cy);
+    g.addColorStop(0, 'rgba(0,229,255,0)'); g.addColorStop(.14, 'rgba(0,229,255,.22)'); g.addColorStop(.145, 'rgba(0,229,255,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, MS*.7, 0, 7); x.fill();
+  }
+  x.strokeStyle = 'rgba(0,229,255,.12)'; x.lineWidth = 1;
+  for (const r of [30,60,90]){ x.beginPath(); x.arc(cx,cy,r,0,7); x.stroke(); }
+  const [vx0,vy0,vx1,vy1] = viewBox();
+  const rx0 = vx0*MB.s+MB.ox, ry0 = vy0*MB.s+MB.oy, rx1 = vx1*MB.s+MB.ox, ry1 = vy1*MB.s+MB.oy;
+  x.strokeStyle = '#ffffff'; x.lineWidth = 1.2; x.shadowColor = '#00e5ff'; x.shadowBlur = 6;
+  x.strokeRect(Math.max(1,rx0), Math.max(1,ry0), Math.max(3, Math.min(MS-2,rx1)-Math.max(1,rx0)), Math.max(3, Math.min(MS-2,ry1)-Math.max(1,ry0)));
+  x.shadowBlur = 0;
+  for (const [g, c] of [[state.A,'#00e5ff'],[state.B,'#ff2bd6']]) if (g >= 0){
+    const px = GX[g]*MB.s+MB.ox, py = GY[g]*MB.s+MB.oy, pr = 3 + (now/120 % 8);
+    x.fillStyle = c; x.beginPath(); x.arc(px,py,2.5,0,7); x.fill();
+    x.strokeStyle = c; x.globalAlpha = 1 - (pr-3)/8; x.beginPath(); x.arc(px,py,pr,0,7); x.stroke(); x.globalAlpha = 1;
+  }
+}
+mini.addEventListener('click', e => {
+  const r = mini.getBoundingClientRect(), mx = e.clientX-r.left, my = e.clientY-r.top;
+  const wx = (mx-MB.ox)/MB.s, wy = (my-MB.oy)/MB.s;
+  centerWorld(wx, wy, state.view.k);
+});
+
+/* =====================================================================
+   View control
+   ===================================================================== */
+const KMIN = 25, KMAX = 90000;
+function zoomAt(mx, my, f){
+  const v = state.view, k2 = Math.max(KMIN, Math.min(KMAX, v.k*f)), r = k2/v.k;
+  v.tx = mx - (mx-v.tx)*r; v.ty = my - (my-v.ty)*r; v.k = k2; state.dirty = true;
+}
+let fly = 0;
+function flyTo(t, ms=800){
+  cancelAnimationFrame(fly);
+  const f = {...state.view}, t0 = performance.now(), cx = W/2, cy = H/2;
+  const wf = [(cx-f.tx)/f.k, (cy-f.ty)/f.k], wt = [(cx-t.tx)/t.k, (cy-t.ty)/t.k];
+  // zoom out a little mid-flight for long hops
+  const dist = Math.hypot(wt[0]-wf[0], wt[1]-wf[1]), peak = Math.min(f.k, t.k, Math.max(KMIN, Math.min(W,H)/(dist*1.6+1e-6)));
+  const ease = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
+  const step = now => {
+    const p = Math.min(1,(now-t0)/ms), e = ease(p);
+    let lk = Math.log(f.k)*(1-e) + Math.log(t.k)*e;
+    const bump = Math.log(Math.min(f.k,t.k)) - Math.log(peak);
+    if (bump > 0) lk -= bump * Math.sin(Math.PI*e);
+    const k = Math.exp(lk), wx = wf[0]+(wt[0]-wf[0])*e, wy = wf[1]+(wt[1]-wf[1])*e;
+    state.view.k = k; state.view.tx = cx - wx*k; state.view.ty = cy - wy*k; state.dirty = true;
+    if (p < 1) fly = requestAnimationFrame(step);
+  };
+  fly = requestAnimationFrame(step);
+}
+function viewFor(wx, wy, k){ const cx = panelW() + (W-panelW())/2, cy = H/2; return {k, tx: cx - wx*k, ty: cy - wy*k}; }
+function centerWorld(wx, wy, k){ flyTo(viewFor(wx, wy, k)); }
+function fitBox(x0,y0,x1,y1, maxK=KMAX, animate=true){
+  const pl = panelW()+50, pr = 90, pt = 60, pb = 70, aw = W-pl-pr, ah = H-pt-pb;
+  const k = Math.max(KMIN, Math.min(maxK, aw/Math.max(1e-4,x1-x0), ah/Math.max(1e-4,y1-y0)));
+  const t = {k, tx: pl + aw/2 - k*(x0+x1)/2, ty: pt + ah/2 - k*(y0+y1)/2};
+  if (animate) flyTo(t); else { Object.assign(state.view, t); state.dirty = true; }
+}
+const fitJapan = (anim=true) => fitBox(WX(129.2), WY(45.6), WX(145.9), WY(31.0), KMAX, anim);
+
+/* ---------- pointer ---------- */
+const drag = {on:false, moved:false, x:0, y:0, id:null, pts:new Map(), pinch:null};
+cvFx.addEventListener('wheel', e => { e.preventDefault(); cancelAnimationFrame(fly); zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY*(e.ctrlKey?.01:.0018))); }, {passive:false});
+cvFx.addEventListener('pointerdown', e => {
+  cancelAnimationFrame(fly);
+  drag.pts.set(e.pointerId, [e.clientX, e.clientY]);
+  if (drag.pts.size === 2){ const [a,b] = [...drag.pts.values()]; drag.pinch = {d:Math.hypot(a[0]-b[0],a[1]-b[1]), cx:(a[0]+b[0])/2, cy:(a[1]+b[1])/2}; }
+  drag.on = true; drag.moved = false; drag.x = e.clientX; drag.y = e.clientY;
+  cvFx.setPointerCapture(e.pointerId);
+});
+cvFx.addEventListener('pointermove', e => {
+  state.mouse = [e.clientX, e.clientY];
+  const [wx, wy] = s2w(e.clientX, e.clientY);
+  $('#sLat').textContent = invLat(wy).toFixed(4)+'°N'; $('#sLon').textContent = invLon(wx).toFixed(4)+'°E';
+  if (drag.on && drag.pts.has(e.pointerId)){
+    drag.pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (drag.pts.size === 2 && drag.pinch){
+      const [a,b] = [...drag.pts.values()], d = Math.hypot(a[0]-b[0],a[1]-b[1]), cx = (a[0]+b[0])/2, cy = (a[1]+b[1])/2;
+      state.view.tx += cx-drag.pinch.cx; state.view.ty += cy-drag.pinch.cy; zoomAt(cx, cy, d/drag.pinch.d); drag.pinch = {d,cx,cy}; drag.moved = true; return;
+    }
+    const dx = e.clientX-drag.x, dy = e.clientY-drag.y;
+    if (!drag.moved && Math.hypot(dx,dy) < 4) return;
+    drag.moved = true; cvFx.classList.add('drag'); hideTip();
+    state.view.tx += dx; state.view.ty += dy; drag.x = e.clientX; drag.y = e.clientY; state.dirty = true;
+    return;
+  }
+  hoverAt(e.clientX, e.clientY);
+});
+const endDrag = e => {
+  drag.pts.delete(e.pointerId); if (drag.pts.size < 2) drag.pinch = null;
+  if (drag.pts.size === 0){
+    const wasDrag = drag.moved; drag.on = false; cvFx.classList.remove('drag');
+    if (!wasDrag && e.type === 'pointerup'){ if (state.hover >= 0) openGroup(state.hover); else closeCard(); }
+    setTimeout(() => drag.moved = false, 0);
+  }
+};
+cvFx.addEventListener('pointerup', endDrag); cvFx.addEventListener('pointercancel', endDrag);
+cvFx.addEventListener('pointerleave', () => { state.mouse = null; state.hover = -1; hideTip(); });
+cvFx.addEventListener('dblclick', e => { cancelAnimationFrame(fly); zoomAt(e.clientX, e.clientY, 2); });
+function hoverAt(x, y){
+  let best = -1, bd = 14*14;
+  for (const [g, sx, sy] of DRAWN){ const d = (sx-x)**2 + (sy-y)**2; if (d < bd){ bd = d; best = g; } }
+  state.hover = best;
+  if (best < 0){ hideTip(); return; }
+  showTip(best, x, y);
+}
+const tip = $('#tip');
+function linesOfGroup(g){ return GL[g].map(l => LINES[l]).sort((a,b) => CAT_ORDER.indexOf(b.cat)-CAT_ORDER.indexOf(a.cat)); }
+function showTip(g, x, y){
+  const ls = linesOfGroup(g).filter(isVisLine);
+  tip.innerHTML = `<div class="n">${GN[g]}</div><div class="l">${ls.slice(0,10).map(L => `<span style="--c:${L.col}">${L.name}</span>`).join('')}${ls.length>10?`<span style="--c:#8aa">+${ls.length-10}</span>`:''}</div>`;
+  tip.style.opacity = 1;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.min(W-w-12, x+18)+'px'; tip.style.top = Math.max(10, y-h-14)+'px';
+}
+function hideTip(){ tip.style.opacity = 0; }
+
+/* =====================================================================
+   Station card
+   ===================================================================== */
+const card = $('#card');
+function openGroup(g, fly=false){
+  state.sel = g; state.dirty = true;
+  $('#cName').textContent = GN[g];
+  $('#cCo').textContent = `${R.gr.y[g].toFixed(4)}°N  ${R.gr.x[g].toFixed(4)}°E  ·  NODE #${String(g).padStart(4,'0')}`;
+  const ls = linesOfGroup(g);
+  $('#cTag').textContent = `STATION // ${ls.length} LINE${ls.length>1?'S':''}${GSHIN[g]?' // SHINKANSEN':''}`;
+  const rows = ls.map(L => {
+    const nbn = new Set();
+    for (const s of GM[g]) if (SL[s] === L.i) for (const e of NB[s]){ const t = EA[e]===s ? EB[e] : EA[e]; if (SG[t] !== g) nbn.add(GN[SG[t]]); }
+    return `<div class="cl" data-l="${L.i}" style="--c:${L.col};${isVisLine(L)?'':'opacity:.45'}"><span class="b"></span><div><span class="ln">${L.name}</span><span class="op">${L.op} · ${CATS[L.cat].n}</span>
+      <div class="nb">${nbn.size ? '⇆ ' + [...nbn].join(' · ') : '— 終點 —'}</div></div></div>`;
+  }).join('');
+  const walks = WALK[g].map(([h]) => `<a href="#" data-g="${h}" style="color:var(--am)">${GN[h]}</a>`);
+  $('#cBody').innerHTML = rows + (walks.length ? `<div class="note" style="color:var(--mu)">⇢ 步行可達：${walks.join('、')}</div>` : '');
+  $('#cBody').querySelectorAll('.cl').forEach(el => el.onclick = () => focusLine(+el.dataset.l));
+  $('#cBody').querySelectorAll('[data-g]').forEach(a => a.onclick = ev => { ev.preventDefault(); openGroup(+a.dataset.g, true); });
+  card.classList.add('on');
+  if (fly) centerWorld(GX[g], GY[g], Math.max(state.view.k, 2200));
+}
+function closeCard(){ if (state.sel < 0) return; state.sel = -1; card.classList.remove('on'); state.dirty = true; }
+$('#cX').onclick = closeCard;
+$('#cA').onclick = () => setEnd('A', state.sel);
+$('#cB').onclick = () => setEnd('B', state.sel);
+function setEnd(w, g){
+  if (g < 0) return;
+  state[w] = g; $('#in'+w).value = GN[g];
+  if (state.A >= 0 && state.B >= 0) runRoute(); else state.dirty = true;
+}
+
+/* =====================================================================
+   Autocomplete
+   ===================================================================== */
+function search(q, max=10){
+  q = norm(q); if (!q) return [];
+  const out = [];
+  for (let g=0; g<NG; g++){
+    const k = GKEY[g], i = k.indexOf(q);
+    if (i < 0) continue;
+    const exact = k === q || k.split(' ').includes(q);
+    out.push([g, (exact?0:i===0?1:2)*1000 - GL[g].length*10 - (GSHIN[g]?50:0)]);
+  }
+  out.sort((a,b) => a[1]-b[1]);
+  return out.slice(0, max).map(x => x[0]);
+}
+function setupAC(inp, box, onPick){
+  let items = [], cur = 0;
+  const render = () => {
+    items = search(inp.value); cur = 0;
+    if (!inp.value.trim()){ box.classList.remove('on'); return; }
+    box.innerHTML = items.length ? items.map((g,i) => {
+      const ls = linesOfGroup(g);
+      const ops = [...new Set(ls.map(L => L.op))].slice(0,3).join(' / ');
+      return `<div data-i="${i}" class="${i===0?'on':''}"><span class="nm">${GN[g]}</span><span class="dots">${ls.slice(0,12).map(L => `<i style="background:${L.col};color:${L.col}" title="${L.name}"></i>`).join('')}</span><span class="ops">${ops}</span></div>`;
+    }).join('') : `<div style="color:var(--mu)">NO MATCH</div>`;
+    box.classList.add('on');
+    box.querySelectorAll('[data-i]').forEach(d => d.onmousedown = e => { e.preventDefault(); pick(+d.dataset.i); });
+  };
+  const pick = i => { const g = items[i]; if (g == null) return; box.classList.remove('on'); inp.value = GN[g]; inp.blur(); onPick(g); };
+  inp.addEventListener('input', render);
+  inp.addEventListener('focus', () => { inp.select(); render(); });
+  inp.addEventListener('blur', () => setTimeout(() => box.classList.remove('on'), 120));
+  inp.addEventListener('keydown', e => {
+    if (!box.classList.contains('on')) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); cur = (cur + (e.key==='ArrowDown'?1:-1) + items.length) % Math.max(1,items.length);
+      box.querySelectorAll('[data-i]').forEach((d,i) => d.classList.toggle('on', i===cur)); }
+    else if (e.key === 'Enter'){ e.preventDefault(); pick(cur); }
+    else if (e.key === 'Escape') box.classList.remove('on');
+  });
+}
+setupAC($('#inS'), $('#acS'), g => openGroup(g, true));
+setupAC($('#inA'), $('#acA'), g => { setEnd('A', g); if (state.B < 0) centerWorld(GX[g], GY[g], Math.max(state.view.k, 1500)); });
+setupAC($('#inB'), $('#acB'), g => { setEnd('B', g); if (state.A < 0) centerWorld(GX[g], GY[g], Math.max(state.view.k, 1500)); });
+document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+  state.mode = b.dataset.m; document.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x===b)); if (state.route) runRoute();
+});
+$('#go').onclick = runRoute;
+$('#swap').onclick = () => { [state.A, state.B] = [state.B, state.A]; $('#inA').value = state.A>=0 ? GN[state.A] : ''; $('#inB').value = state.B>=0 ? GN[state.B] : ''; if (state.A>=0 && state.B>=0) runRoute(); };
+
+/* =====================================================================
+   Layers, cities, line list, focus
+   ===================================================================== */
+function renderLayers(){
+  const counts = {}; LINES.forEach(L => counts[L.cat] = (counts[L.cat]||0) + 1);
+  $('#layers').innerHTML = Object.entries(CATS).map(([k,C]) =>
+    `<div class="lay${C.on?' on':''}" data-k="${k}" style="--c:${C.col}"><div class="sw"></div><div class="n">${C.n}</div><div class="e">${C.e}</div><div class="c">${counts[k]||0}</div></div>`).join('');
+  $('#layers').querySelectorAll('.lay').forEach(el => el.onclick = () => {
+    const C = CATS[el.dataset.k]; C.on = !C.on; el.classList.toggle('on', C.on);
+    refreshVis(); renderLineList(); state.dirty = true;
+    if (state.route && state.A>=0 && state.B>=0) runRoute();
+  });
+}
+const CITIES = [['全國',null],['札幌',[141.35,43.065,2600]],['仙台',[140.882,38.262,2600]],['東京',[139.745,35.686,2300]],['橫濱',[139.62,35.47,2600]],
+  ['名古屋',[136.905,35.165,2600]],['京都',[135.77,35.0,3000]],['大阪',[135.505,34.69,2600]],['神戶',[135.18,34.69,3000]],['廣島',[132.47,34.39,2600]],['福岡',[130.41,33.6,2800]],
+  ['北海道',[142.8,43.4,170]],['東北',[140.7,39.3,170]],['關東',[139.6,36.0,320]],['關西',[135.5,34.75,380]],['九州',[130.9,32.6,200]]];
+$('#cities').innerHTML = CITIES.map(([n],i) => `<button class="btn" data-c="${i}">${n}</button>`).join('');
+$('#cities').querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
+  const c = CITIES[+b.dataset.c][1];
+  if (!c) fitJapan(); else centerWorld(WX(c[0]), WY(c[1]), c[2]);
+});
+function renderLineList(){
+  const q = norm($('#lf').value);
+  const groups = new Map();
+  LINES.forEach(L => {
+    if (q && !norm(L.name + L.op).includes(q)) return;
+    if (!q && !isVisLine(L)) return;
+    const key = L.cat === 'shinkansen' ? '新幹線' : L.op;
+    if (!groups.has(key)) groups.set(key, []); groups.get(key).push(L);
+  });
+  let h = '';
+  for (const [op, ls] of groups){
+    h += `<div class="lop">${op} · ${ls.length}</div>`;
+    h += ls.map(L => `<div class="li${isVisLine(L)?'':' off'}" data-l="${L.i}" style="--c:${L.col}"><span class="b"></span><span class="n">${L.name}</span><span class="k">${Math.round(L.km)} km</span></div>`).join('');
+  }
+  $('#llist').innerHTML = h || `<div class="note">NO LINES</div>`;
+  $('#llist').querySelectorAll('.li').forEach(el => el.onclick = () => focusLine(+el.dataset.l));
+}
+$('#lf').addEventListener('input', renderLineList);
+function lineOrder(li){
+  // DFS from a terminal so branches appear as contiguous runs
+  const sts = LS[li]; if (!sts.length) return [];
+  const deg = s => NB[s].length;
+  const start = sts.find(s => deg(s) === 1) ?? sts[0];
+  const seen = new Set(), out = [];
+  const stack = [start];
+  while (stack.length){
+    const s = stack.pop(); if (seen.has(s)) continue; seen.add(s); out.push(s);
+    const nx = NB[s].map(e => EA[e]===s ? EB[e] : EA[e]).filter(t => !seen.has(t));
+    for (let i = nx.length-1; i >= 0; i--) stack.push(nx[i]);
+  }
+  for (const s of sts) if (!seen.has(s)) out.push(s);
+  const res = []; for (const s of out) if (!res.length || res[res.length-1] !== SG[s]) res.push(SG[s]);
+  return res;
+}
+function focusLine(li){
+  const L = LINES[li];
+  if (!CATS[L.cat].on){ CATS[L.cat].on = true; renderLayers(); refreshVis(); renderLineList(); }
+  state.focus = li; state.route = null; $('#res').innerHTML = ''; state.dirty = true;
+  renderFocus();
+  const [x0,y0,x1,y1] = L.bb; fitBox(x0,y0,x1,y1, 20000);
+  $('#focus').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function renderFocus(){
+  const el = $('#focus');
+  if (state.focus < 0){ el.innerHTML = ''; return; }
+  const L = LINES[state.focus], seq = lineOrder(L.i);
+  el.innerHTML = `<div class="focus" style="--c:${L.col}"><div class="row" style="justify-content:space-between"><h2>${L.name}</h2><button class="btn sm" id="fClr">CLEAR ✕</button></div>
+    <div class="meta">${L.op} · ${CATS[L.cat].n} ${CATS[L.cat].e}<br>LENGTH <b>${L.km.toFixed(1)}</b> km · STATIONS <b>${seq.length}</b></div>
+    <div class="seq">${seq.map(g => { const others = GL[g].filter(l => l !== L.i && isVisLine(LINES[l]));
+      return `<div class="s${others.length?' x':''}" data-g="${g}"><i></i><span class="sn">${GN[g]}</span><span class="xd">${others.slice(0,8).map(l => `<b style="background:${LINES[l].col}"></b>`).join('')}</span></div>`; }).join('')}</div></div>`;
+  $('#fClr').onclick = () => { state.focus = -1; renderFocus(); state.dirty = true; };
+  el.querySelectorAll('[data-g]').forEach(d => d.onclick = () => openGroup(+d.dataset.g, true));
+}
+
+/* =====================================================================
+   Tools, status, keyboard
+   ===================================================================== */
+const zoomBtn = f => { const t = viewFor(...s2w(panelW()+(W-panelW())/2, H/2), Math.max(KMIN, Math.min(KMAX, state.view.k*f))); flyTo(t, 350); };
+$('#zIn').onclick = () => zoomBtn(1.8); $('#zOut').onclick = () => zoomBtn(1/1.8); $('#zFit').onclick = () => fitJapan();
+$('#tTr').onclick = e => { state.trains = !state.trains; e.currentTarget.classList.toggle('on', state.trains); };
+$('#tLb').onclick = e => { state.labels = !state.labels; e.currentTarget.classList.toggle('on', state.labels); state.dirty = true; };
+$('#tXh').onclick = e => { state.xhair = !state.xhair; e.currentTarget.classList.toggle('on', state.xhair); };
+function updateStatus(){
+  const k = state.view.k, cy = invLat((H/2 - state.view.ty)/k);
+  const pxPerKm = k / (111.32*Math.cos(cy*D2R));
+  const nice = [.1,.2,.5,1,2,5,10,20,50,100,200,500].find(v => v*pxPerKm >= 60) || 500;
+  $('#sbar').style.width = Math.round(nice*pxPerKm)+'px';
+  $('#sS').textContent = nice < 1 ? nice*1000+' m' : nice+' km';
+  $('#sZ').textContent = 'Z' + (Math.log2(k/25)+5).toFixed(1) + ' · ' + state.lod.toUpperCase();
+}
+setInterval(() => { const d = new Date(Date.now()+9*3600e3); $('#sC').textContent = d.toISOString().slice(11,19); }, 1000);
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key==='+' || e.key==='=') zoomBtn(1.6); else if (e.key==='-') zoomBtn(1/1.6);
+  else if (e.key==='0') fitJapan();
+  else if (e.key==='Escape'){ closeCard(); if (state.route){ state.route = null; $('#res').innerHTML = ''; state.dirty = true; } if (state.focus>=0){ state.focus=-1; renderFocus(); state.dirty = true; } }
+});
+window.addEventListener('resize', resize);
+
+/* =====================================================================
+   Boot
+   ===================================================================== */
+(async () => {
+  const bootLines = [
+    '> JAPAN RAIL GRID v2.4 — initialising',
+    `> loading MLIT N02-24 railway dataset ............ <b>OK</b>`,
+    `> lines        ${LINES.length.toString().padStart(6)} ............................ <b>OK</b>`,
+    `> stations     ${N.toString().padStart(6)} (${NG} transfer groups) ....... <b>OK</b>`,
+    `> track links  ${NE.toString().padStart(6)} ............................ <b>OK</b>`,
+    `> building routing graph & walking links ......... <b>OK</b>`,
+    `> spawning train simulation ...................... <b>OK</b>`,
+    '> RENDER PIPELINE ONLINE_',
+  ];
+  const bt = $('#bootTxt');
+  for (const l of bootLines){ bt.innerHTML += l + '\n'; await new Promise(r => setTimeout(r, 90)); }
+  resize(); refreshVis(); renderLayers(); renderLineList(); seedTrains(); buildMini();
+  fitJapan(false);
+  // deep links: #from=東京&to=博多  |  #line=山手線  |  #city=大阪
+  const h = new URLSearchParams(decodeURIComponent(location.hash.slice(1)));
+  const findG = name => search(name, 1)[0] ?? -1;
+  if (h.get('layers')) for (const k of Object.keys(CATS)) CATS[k].on = h.get('layers').split(',').includes(k);
+  if (h.get('layers')){ renderLayers(); refreshVis(); renderLineList(); }
+  if (h.get('city')){ const c = CITIES.find(c => c[0] === h.get('city')); if (c && c[1]) { Object.assign(state.view, viewFor(WX(c[1][0]), WY(c[1][1]), c[1][2])); } }
+  if (h.get('line')){ const L = LINES.find(L => L.name === h.get('line')); if (L) focusLine(L.i); }
+  if (h.get('from') && h.get('to')){ const a = findG(h.get('from')), b = findG(h.get('to')); if (a>=0 && b>=0){ state.A = a; state.B = b; $('#inA').value = GN[a]; $('#inB').value = GN[b]; runRoute(); } }
+  if (h.get('station')){ const g = findG(h.get('station')); if (g >= 0) openGroup(g, true); }
+  requestAnimationFrame(frame);
+  setTimeout(() => $('#boot').classList.add('hide'), 250);
+  setTimeout(() => { $('#boot').style.display = 'none'; }, 900);
+})();
+})();
+</script>
+</body>
+</html>
